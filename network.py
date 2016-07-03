@@ -4,6 +4,7 @@ import socket
 import json
 import traceback
 import threading
+import logging
 
 from copy import deepcopy
 
@@ -12,7 +13,7 @@ PORT = 9090
 
 
 class Client:
-    def __init__(self, server_ip, *args, **kwargs):
+    def __init__(self, server_ip=None, *args, **kwargs):
         self.server_ip = server_ip
         self.recv_sock = self.create_recv_socket()
         self.ip = self.get_ip_addr()
@@ -22,6 +23,7 @@ class Client:
         threading.Thread(target=self.handle_recv).start()
         if server_ip is not None:
             self.connect()
+        self.chatting()
 
     def create_send_socket(self):
         send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -142,11 +144,12 @@ class Client:
                 return (ip[0], PORT)
 
     def chatting(self):
+        global PORT
         while True:
-            host = raw_input('Enter user: ')
-            message = raw_input('Enter message: ')
+            host = input('[?] Enter user: ')
+            message = input('[?] Enter message: ')
             data = self.create_data(msg=message, src=self.ip[0])
-            send_msg(host=host, msg=data)
+            self.send_msg(host=(host, PORT), msg=data)
 
 
 if __name__ == '__main__':
