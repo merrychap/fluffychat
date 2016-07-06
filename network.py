@@ -1,3 +1,4 @@
+'''Module for network clients'''
 #!/usr/bin/env python3
 
 import socket
@@ -10,6 +11,24 @@ from copy import deepcopy
 
 
 PORT = 9090
+LOG_FILE = 'network.log'
+
+
+def create_logger():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(level=logging.DEBUG)
+
+    handler = logging.FileHandler(LOG_FILE)
+    handler.setLevel(logging.INFO)
+
+    formatter = logging.Formatter(('%(asctime)s-%(levelname)s-%(message)s'))
+    handler.setFormatter(formatter)
+
+    logger.addHandler(handler)
+    return logger
+
+
+logger = create_logger()
 
 
 class Client:
@@ -18,12 +37,16 @@ class Client:
         self.recv_sock = self.create_recv_socket()
         self.ip = self.get_ip_addr()
         self.connected = set()
+
+        self.current_msg = ''
+        self.prev_msg = ''
+
         self.connected.add(self.ip)
 
+    def start(self):
         threading.Thread(target=self.handle_recv).start()
-        if server_ip is not None:
+        if self.server_ip is not None:
             self.connect()
-        self.chatting()
 
     def create_send_socket(self):
         send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -37,12 +60,12 @@ class Client:
         return recv
 
     def connect(self):
-        print('[*] Connecting to: %s' % str(self.server_ip))
+        logger.info('[*] Connecting to: %s' % str(self.server_ip))
         data = self.create_data(conn_hosts=[self.ip])
         self.send_msg(host=self.server_ip, msg=data)
 
     def disconnect(self):
-        print('[*] Disconnecting: %s' % self.ip)
+        logger.info('[*] Disconnecting: %s' % self.ip)
         data = self.create_data(dconn_hosts=[self.ip])
         self.send_msg(host=self.server_ip, msg=data)
 
@@ -64,32 +87,31 @@ class Client:
             send_sock.connect(host)
             send_sock.sendall(bytes(msg, 'utf-8'))
         except Exception as e:
-            print('[-] Connection failed: %s' % str(host))
+            logger.error('[-] Connection failed: %s' % str(host))
             traceback.print_exc()
         finally:
             send_sock.close()
 
     def handle_recv(self):
         while True:
-            print('[*] Waiting for connection')
+            logger.info('[*] Waiting for connection')
             conn, addr = self.recv_sock.accept()
             try:
-                print('[+] Connection from: %s' % str(addr))
+                logger.info('[+] Connection from: %s' % str(addr))
                 data = bytes()
                 while True:
                     recieved_data = conn.recv(1024)
                     if not recieved_data:
-                        print('[-] No more data from: %s' % str(addr))
+                        logger.info('[-] No more data from: %s' % str(addr))
                         break
                     data += recieved_data
-                print('[+] Recieved: %s' % data)
+                logger.info('[+] Recieved: %s' % data)
                 self.parse_data(data.decode('utf-8'))
             finally:
                 conn.close()
 
     def parse_data(self, json_data):
         data = json.loads(json_data)
-
         # We have request for connection. Then we should send this ip to all
         # host in our network
         if data['conn_hosts'] is not None:
@@ -101,10 +123,10 @@ class Client:
             self.handle_conn_hosts(data=data, action_type='dconn_hosts',
                                    message='[+] Removing host: ')
         if data['message'] != '':
-            print('%s: %s' % (data['src'], data['message']))
+            self.current_msg = '%s: %s' % (data['src'], data['message'])
 
         if 'connected' in data:
-            print('[*] Updating tables of connected hosts')
+            logger.info('[*] Updating tables of connected hosts')
             for host in data['connected']:
                 self.connected.add(tuple(host))
 
@@ -113,7 +135,7 @@ class Client:
             if host[0] == self.ip[0]:
                 continue
             host = tuple(host)
-            print('[*] Updating tables of connected hosts')
+            logger.info('[*] Updating tables of connected hosts')
             # Updating table of connected hosts for each host in network
             if data['is_server'] == '0':
                 data['is_server'] = '1'
@@ -122,7 +144,7 @@ class Client:
                     self.send_msg(host=conn, msg=data)
 
             if host not in self.connected:
-                print(message + str(host))
+                logger.info(message + str(host))
                 if action_type == 'conn_hosts':
                     self.connected.add(host)
                 else:
@@ -143,14 +165,6 @@ class Client:
             if ip:
                 return (ip[0], PORT)
 
-    def chatting(self):
-        global PORT
-        while True:
-            host = input('[?] Enter user: ')
-            message = input('[?] Enter message: ')
-            data = self.create_data(msg=message, src=self.ip[0])
-            self.send_msg(host=(host, PORT), msg=data)
-
-
 if __name__ == '__main__':
     client = Client(('192.168.0.102', PORT))
+    client.start()
