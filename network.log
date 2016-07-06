@@ -1,39 +1,17 @@
-2016-07-04 16:26:20,055-INFO-[*] Waiting for connection
-2016-07-04 16:26:20,056-INFO-[*] Connecting to: ('192.168.0.102', 9090)
-2016-07-06 18:11:41,087-ERROR-[-] Connection failed: 192.168.0.12
-2016-07-06 18:14:59,336-ERROR-[-] Connection failed: (('192.168.0.12', 9090), 9090)
-2016-07-06 18:16:49,802-ERROR-[-] Connection failed: (('192.168.0.12', 9090), 9090)
-2016-07-06 18:19:54,226-INFO-[*] Waiting for connection
-2016-07-06 18:20:06,505-INFO-[+] Connection from: ('192.168.0.12', 55552)
-2016-07-06 18:20:06,506-INFO-[-] No more data from: ('192.168.0.12', 55552)
-2016-07-06 18:20:06,506-INFO-[+] Recieved: b'{"dconn_hosts": [], "conn_hosts": [], "src": "", "message": "hello", "is_server": 0, "dst": ""}'
-2016-07-06 18:20:06,506-INFO-[*] Waiting for connection
-2016-07-06 18:20:53,097-INFO-[*] Waiting for connection
-2016-07-06 18:21:09,958-INFO-[+] Connection from: ('192.168.0.12', 55553)
-2016-07-06 18:21:09,959-INFO-[-] No more data from: ('192.168.0.12', 55553)
-2016-07-06 18:21:09,959-INFO-[+] Recieved: b'{"is_server": 0, "message": "helo", "dst": "", "dconn_hosts": [], "src": "", "conn_hosts": []}'
-2016-07-06 18:21:09,960-INFO-[*] Waiting for connection
-2016-07-06 18:21:58,612-INFO-[*] Waiting for connection
-2016-07-06 18:22:10,471-INFO-[+] Connection from: ('192.168.0.12', 55554)
-2016-07-06 18:22:10,471-INFO-[-] No more data from: ('192.168.0.12', 55554)
-2016-07-06 18:22:10,471-INFO-[+] Recieved: b'{"dst": "", "message": "hello", "src": "192.168.0.12", "is_server": 0, "dconn_hosts": [], "conn_hosts": []}'
-2016-07-06 18:22:10,471-INFO-[*] Waiting for connection
-2016-07-06 18:22:44,412-INFO-[*] Waiting for connection
-2016-07-06 18:22:55,970-INFO-[+] Connection from: ('192.168.0.12', 55555)
-2016-07-06 18:22:55,970-INFO-[-] No more data from: ('192.168.0.12', 55555)
-2016-07-06 18:22:55,970-INFO-[+] Recieved: b'{"dst": "", "dconn_hosts": [], "src": "192.168.0.12", "conn_hosts": [], "message": "hello", "is_server": 0}'
-2016-07-06 18:22:55,970-INFO-[*] Waiting for connection
-2016-07-06 18:23:10,368-INFO-[*] Waiting for connection
-2016-07-06 18:23:19,032-INFO-[+] Connection from: ('192.168.0.12', 55557)
-2016-07-06 18:23:19,032-INFO-[-] No more data from: ('192.168.0.12', 55557)
-2016-07-06 18:23:19,032-INFO-[+] Recieved: b'{"dconn_hosts": [], "dst": "", "is_server": 0, "message": "helo", "src": "192.168.0.12", "conn_hosts": []}'
-2016-07-06 18:23:19,033-INFO-[*] Waiting for connection
-2016-07-06 18:23:32,621-INFO-[+] Connection from: ('192.168.0.12', 55558)
-2016-07-06 18:23:32,621-INFO-[-] No more data from: ('192.168.0.12', 55558)
-2016-07-06 18:23:32,621-INFO-[+] Recieved: b'{"dconn_hosts": [], "dst": "", "is_server": 0, "message": "hello", "src": "192.168.0.12", "conn_hosts": []}'
-2016-07-06 18:23:32,621-INFO-[*] Waiting for connection
-2016-07-06 18:24:29,209-INFO-[*] Waiting for connection
-2016-07-06 18:24:39,269-INFO-[+] Connection from: ('192.168.0.12', 55559)
-2016-07-06 18:24:39,270-INFO-[-] No more data from: ('192.168.0.12', 55559)
-2016-07-06 18:24:39,270-INFO-[+] Recieved: b'{"is_server": 0, "dst": "", "message": "hello", "conn_hosts": [], "dconn_hosts": [], "src": "192.168.0.12"}'
-2016-07-06 18:24:39,271-INFO-[*] Waiting for connection
+2016-07-06 19:25:52,051-INFO-[*] Waiting for connection
+2016-07-06 19:25:52,051-INFO-[*] Connecting to: ('192.168.0.12', 9090)
+2016-07-06 19:25:52,051-INFO-[+] Connection from: ('192.168.0.12', 55897)
+2016-07-06 19:25:52,052-INFO-[-] No more data from: ('192.168.0.12', 55897)
+2016-07-06 19:25:52,052-INFO-[+] Recieved: b'{"action": "connect", "is_server": 0, "host": ["192.168.0.12", 9090], "message": "", "username": ""}'
+2016-07-06 19:27:36,668-INFO-[*] Waiting for connection
+2016-07-06 19:27:36,668-INFO-[*] Connecting to: ('192.168.0.12', 9090)
+2016-07-06 19:27:36,668-INFO-[+] Connection from: ('192.168.0.12', 55898)
+2016-07-06 19:27:36,669-INFO-[-] No more data from: ('192.168.0.12', 55898)
+2016-07-06 19:27:36,669-INFO-[+] Recieved: b'{"message": "", "host": ["192.168.0.12", 9090], "is_server": 0, "action": "connect", "username": ""}'
+2016-07-06 19:27:36,669-INFO-[*] Waiting for connection
+2016-07-06 19:36:10,425-INFO-[*] Waiting for connection
+2016-07-06 19:36:10,425-INFO-[*] Connecting to: ('192.168.0.12', 9090)
+2016-07-06 19:36:10,425-INFO-[+] Connection from: ('192.168.0.12', 55942)
+2016-07-06 19:36:10,426-INFO-[-] No more data from: ('192.168.0.12', 55942)
+2016-07-06 19:36:10,426-INFO-[+] Recieved: b'{"message": "", "is_server": 0, "username": "lalka", "action": "connect", "host": ["192.168.0.12", 9090]}'
+2016-07-06 19:36:10,426-INFO-[*] Waiting for connection

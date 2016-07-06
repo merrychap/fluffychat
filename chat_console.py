@@ -9,7 +9,7 @@ from network import Client
 
 
 class Chat():
-    def __init__(self, client, *args, **kwargs):
+    def __init__(self, client):
         self.client = client
         self.commands = self.create_command_descrpt()
         self.message_commands = self.create_message_command_descrypt()
@@ -26,8 +26,6 @@ class Chat():
     def send_message(self, username, text):
         message = self.client.create_data(msg=text, src=username)
         self.client.send_msg(host=(username, 9090), msg=message)
-        time.sleep(1)
-        print(self.client.current_msg)
 
     def recv_message(self):
         pass
@@ -44,6 +42,7 @@ class Chat():
             self.exit()
 
     def exit(self):
+        print ('\nBye!')
         exit(0)
 
     def print_help(self, commands, message=None):
@@ -58,7 +57,6 @@ class Chat():
             'help': 'Shows this output.',
             'message': ('Switches to message typing mode.'),
             'exit': 'Closes chat.'
-
         }
         return commands
 
@@ -67,9 +65,8 @@ class Chat():
             'help': 'Shows this output',
             'groups': 'Shows available groups',
             'users': 'Shows online users',
-            'username "message"': 'Sends message to @username',
-            'username': 'Switches to user message mode',
-            'groupname': 'Switches to group message mode',
+            'user "username"': 'Switches to user message mode',
+            'room "roomname"': 'Switches to room message mode',
             'back': 'Switches to command mode'
         }
         return commands
@@ -98,6 +95,15 @@ class Chat():
                 self.send_message(username=username , text=text)
 
 
+class User:
+    def __init__(self):
+        pass
+
+
+class Room:
+    def __init__(self):
+        pass
+
 def main():
     parser = optparse.OptionParser('usage %prog -H <connected host> ' +
                                    '-p <connected port>')
@@ -115,9 +121,9 @@ def main():
         exit(0)
 
     if conn_host is None:
-        client = Client()
+        client = ChatClient()
     else:
-        client = Client((conn_host, conn_port))
+        client = ChatClient((conn_host, conn_port))
 
     # Create entity of chat
     chat = Chat(client=client)

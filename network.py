@@ -31,21 +31,22 @@ def create_logger():
 logger = create_logger()
 
 
-class Client:
-    def __init__(self, server_ip=None, *args, **kwargs):
-        self.server_ip = server_ip
+class BaseClient:
+    def __init__(self, username, server_host=None):
+        self.server_host = server_host
         self.recv_sock = self.create_recv_socket()
-        self.ip = self.get_ip_addr()
+        self.host = self.get_ip_addr()
         self.connected = set()
+        self.username = username
 
         self.current_msg = ''
         self.prev_msg = ''
 
-        self.connected.add(self.ip)
+        self.connected.add(self.host)
 
     def start(self):
         threading.Thread(target=self.handle_recv).start()
-        if self.server_ip is not None:
+        if self.server_host is not None:
             self.connect()
 
     def create_send_socket(self):
@@ -60,24 +61,23 @@ class Client:
         return recv
 
     def connect(self):
-        logger.info('[*] Connecting to: %s' % str(self.server_ip))
-        data = self.create_data(conn_hosts=[self.ip])
-        self.send_msg(host=self.server_ip, msg=data)
+        logger.info('[*] Connecting to: %s' % str(self.server_host))
+        data = self.create_data(host=self.host, action='connect',
+                                username=self.username)
+        self.send_msg(host=self.server_host, msg=data)
 
     def disconnect(self):
-        logger.info('[*] Disconnecting: %s' % self.ip)
-        data = self.create_data(dconn_hosts=[self.ip])
-        self.send_msg(host=self.server_ip, msg=data)
+        logger.info('[*] Disconnecting: %s' % self.host)
+        data = self.create_data(host=self.host, action='disconnect')
+        self.send_msg(host=self.server_host, msg=data)
 
-    def create_data(self, msg='', conn_hosts=[], dconn_hosts=[], is_server=0,
-                    src='', dst=''):
+    def create_data(self, msg='', host='', action='', is_server=0, username=''):
         data = {
             'message': msg,
-            'conn_hosts': conn_hosts,
+            'host': host,
             'is_server': is_server,
-            'dconn_hosts': dconn_hosts,
-            'src': src,
-            'dst': dst
+            'action': action,
+            'username': username
         }
         return json.dumps(data)
 
@@ -114,13 +114,13 @@ class Client:
         data = json.loads(json_data)
         # We have request for connection. Then we should send this ip to all
         # host in our network
-        if data['conn_hosts'] is not None:
-            self.handle_conn_hosts(data=data, action_type='conn_hosts',
+        if data['action'] == 'connect':
+            self.handle_host_action(data=data, action_type='connect',
                                    message='[+] Adding host: ')
 
         # The same with disconnection
-        if data['dconn_hosts'] is not None:
-            self.handle_conn_hosts(data=data, action_type='dconn_hosts',
+        if data['action'] == 'disconnect':
+            self.handle_host_action(data=data, action_type='disconnect',
                                    message='[+] Removing host: ')
         if data['message'] != '':
             self.current_msg = '%s: %s' % (data['src'], data['message'])
@@ -130,29 +130,29 @@ class Client:
             for host in data['connected']:
                 self.connected.add(tuple(host))
 
-    def handle_conn_hosts(self, data, action_type, message):
-        for host in data[action_type]:
-            if host[0] == self.ip[0]:
-                continue
-            host = tuple(host)
-            logger.info('[*] Updating tables of connected hosts')
-            # Updating table of connected hosts for each host in network
-            if data['is_server'] == '0':
-                data['is_server'] = '1'
-                # Update table for existent hosts
-                for conn in self.connected:
-                    self.send_msg(host=conn, msg=data)
+    def handle_host_action(self, data, action_type, message):
+        host = data['host']
+        if host[0] == self.host[0]:
+            return
+        host = tuple(host)
+        logger.info('[*] Updating tables of connected hosts')
+        # Updating table of connected hosts for each host in network
+        if data['is_server'] == '0':
+            data['is_server'] = '1'
+            # Update table for existent hosts
+            for conn in self.connected:
+                self.send_msg(host=conn, msg=data)
 
-            if host not in self.connected:
-                logger.info(message + str(host))
-                if action_type == 'conn_hosts':
-                    self.connected.add(host)
-                else:
-                    self.connected.remove(host)
-            # Send table to connected host
-            tun_data = deepcopy(data)
-            tun_data['connected'] = list(self.connected)
-            self.send_msg(host=host, msg=json.dumps(tun_data))
+        if host not in self.connected:
+            logger.info(message + str(host))
+            if action_type == 'connect':
+                self.connected.add(host)
+            else:
+                self.connected.remove(host)
+        # Send table to connected host
+        tun_data = deepcopy(data)
+        tun_data['connected'] = list(self.connected)
+        self.send_msg(host=host, msg=json.dumps(tun_data))
 
     def get_ip_addr(self):
         global PORT
@@ -166,5 +166,5 @@ class Client:
                 return (ip[0], PORT)
 
 if __name__ == '__main__':
-    client = Client(('192.168.0.102', PORT))
+    client = BaseClient(server_host=('192.168.0.12', 9090), username='lalka')
     client.start()
