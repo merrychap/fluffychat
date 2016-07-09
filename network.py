@@ -1,53 +1,44 @@
 '''Module for network clients'''
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 
 import socket
 import json
 import traceback
 import threading
 import logging
+import db_helper
 
 from copy import deepcopy
 
 
 PORT = 9090
-LOG_FILE = 'network.log'
+logger = logging.getLogger(__name__)
 
 
-def create_logger():
-    logger = logging.getLogger(__name__)
-    logger.setLevel(level=logging.DEBUG)
+class ChatClient:
+    def __init__(self, server_host=None):
+        self._server_host = server_host
+        self._recv_sock = self.create_recv_socket()
+        self._host = self.get_ip_addr()
+        self._connected = set()
+        self._db = db_helper.DBHelper()
 
-    handler = logging.FileHandler(LOG_FILE)
-    handler.setLevel(logging.INFO)
+        self.username = ''
+        self.host2username = dict()
 
-    formatter = logging.Formatter(('%(asctime)s-%(levelname)s-%(message)s'))
-    handler.setFormatter(formatter)
+        self._db.try_create_database()
 
-    logger.addHandler(handler)
-    return logger
-
-
-logger = create_logger()
-
-
-class BaseClient:
-    def __init__(self, username, server_host=None):
-        self.server_host = server_host
-        self.recv_sock = self.create_recv_socket()
-        self.host = self.get_ip_addr()
-        self.connected = set()
-        self.username = username
-
-        self.current_msg = ''
-        self.prev_msg = ''
-
-        self.connected.add(self.host)
+        self._connected.add(self._host)
 
     def start(self):
         threading.Thread(target=self.handle_recv).start()
-        if self.server_host is not None:
+        if self._server_host is not None:
             self.connect()
+
+    def specify_username(self, username):
+        self.username = username
+        self._db.save_user(self.username)
+        self.host2username[self.username] = self._host
 
     def create_send_socket(self):
         send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -61,17 +52,18 @@ class BaseClient:
         return recv
 
     def connect(self):
-        logger.info('[*] Connecting to: %s' % str(self.server_host))
-        data = self.create_data(host=self.host, action='connect',
+        logger.info('[*] Connecting to: %s' % str(self._server_host))
+        data = self.create_data(host=self._host, action='connect',
                                 username=self.username)
-        self.send_msg(host=self.server_host, msg=data)
+        self.send_msg(host=self._server_host, msg=data)
 
     def disconnect(self):
-        logger.info('[*] Disconnecting: %s' % self.host)
-        data = self.create_data(host=self.host, action='disconnect')
-        self.send_msg(host=self.server_host, msg=data)
+        logger.info('[*] Disconnecting: %s' % self._host)
+        data = self.create_data(host=self._host, action='disconnect')
+        self.send_msg(host=self._server_host, msg=data)
 
-    def create_data(self, msg='', host='', action='', is_server=0, username=''):
+    def create_data(self, msg='', host='', action='', is_server=0,
+                    username=''):
         data = {
             'message': msg,
             'host': host,
@@ -95,7 +87,7 @@ class BaseClient:
     def handle_recv(self):
         while True:
             logger.info('[*] Waiting for connection')
-            conn, addr = self.recv_sock.accept()
+            conn, addr = self._recv_sock.accept()
             try:
                 logger.info('[+] Connection from: %s' % str(addr))
                 data = bytes()
@@ -116,23 +108,27 @@ class BaseClient:
         # host in our network
         if data['action'] == 'connect':
             self.handle_host_action(data=data, action_type='connect',
-                                   message='[+] Adding host: ')
+                                    message='[+] Adding host: ')
 
         # The same with disconnection
         if data['action'] == 'disconnect':
             self.handle_host_action(data=data, action_type='disconnect',
-                                   message='[+] Removing host: ')
+                                    message='[+] Removing host: ')
+        # TODO save messages in database or file
         if data['message'] != '':
-            self.current_msg = '%s: %s' % (data['src'], data['message'])
+            self._db.save_message(src=data['username'], dst=self.username,
+                                  message=data['message'])
 
         if 'connected' in data:
             logger.info('[*] Updating tables of connected hosts')
             for host in data['connected']:
-                self.connected.add(tuple(host))
+                host = tuple(host)
+                self._connected.add(host)
+                self._db.save_user(self.host2username[host])
 
     def handle_host_action(self, data, action_type, message):
         host = data['host']
-        if host[0] == self.host[0]:
+        if host[0] == self._host[0]:
             return
         host = tuple(host)
         logger.info('[*] Updating tables of connected hosts')
@@ -140,18 +136,20 @@ class BaseClient:
         if data['is_server'] == '0':
             data['is_server'] = '1'
             # Update table for existent hosts
-            for conn in self.connected:
+            for conn in self._connected:
                 self.send_msg(host=conn, msg=data)
 
-        if host not in self.connected:
+        if host not in self._connected:
             logger.info(message + str(host))
             if action_type == 'connect':
-                self.connected.add(host)
+                self._connected.add(host)
+                self.host2username[host] = data['username']
             else:
-                self.connected.remove(host)
+                self._connected.remove(host)
+                self.host2username.pop(host, None)
         # Send table to connected host
         tun_data = deepcopy(data)
-        tun_data['connected'] = list(self.connected)
+        tun_data['connected'] = list(self._connected)
         self.send_msg(host=host, msg=json.dumps(tun_data))
 
     def get_ip_addr(self):
@@ -162,9 +160,11 @@ class BaseClient:
                    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]]
                   [0][1]]
         for ip in [ip_lt1, ip_lt2]:
-            if ip:
+            if ip and ip[0].startswith('192.'):
                 return (ip[0], PORT)
 
-if __name__ == '__main__':
-    client = BaseClient(server_host=('192.168.0.12', 9090), username='lalka')
-    client.start()
+    def get_history(self, username, count):
+        return self._db.get_history(self.username, username, count)
+
+    def get_username(self, user_id):
+        return self._db.get_username(user_id)

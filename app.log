@@ -1,0 +1,105 @@
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55326)
+INFO:network:[-] No more data from: ('192.168.0.4', 55326)
+INFO:network:[+] Recieved: b'{"action": "", "message": "hi", "host": "", "is_server": 0, "username": "test"}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55538)
+INFO:network:[-] No more data from: ('192.168.0.4', 55538)
+INFO:network:[+] Recieved: b'{"is_server": 0, "message": "ds", "username": "test", "action": "", "host": ""}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55834)
+INFO:network:[-] No more data from: ('192.168.0.4', 55834)
+INFO:network:[+] Recieved: b'{"username": "test", "is_server": 0, "message": "hi", "action": "", "host": ""}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55835)
+INFO:network:[-] No more data from: ('192.168.0.4', 55835)
+INFO:network:[+] Recieved: b'{"username": "test", "is_server": 0, "message": "another message", "action": "", "host": ""}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55836)
+INFO:network:[-] No more data from: ('192.168.0.4', 55836)
+INFO:network:[+] Recieved: b'{"is_server": 0, "host": "", "message": "i", "username": "test", "action": ""}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55846)
+INFO:network:[-] No more data from: ('192.168.0.4', 55846)
+INFO:network:[+] Recieved: b'{"host": "", "message": "yet message", "is_server": 0, "action": "", "username": "test"}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55868)
+INFO:network:[-] No more data from: ('192.168.0.4', 55868)
+INFO:network:[+] Recieved: b'{"action": "", "host": "", "message": "fuck", "is_server": 0, "username": "test"}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55869)
+INFO:network:[-] No more data from: ('192.168.0.4', 55869)
+INFO:network:[+] Recieved: b'{"host": "", "action": "", "message": "shit", "username": "test", "is_server": 0}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55870)
+INFO:network:[-] No more data from: ('192.168.0.4', 55870)
+INFO:network:[+] Recieved: b'{"host": "", "action": "", "is_server": 0, "message": "fuck you", "username": "test"}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55871)
+INFO:network:[-] No more data from: ('192.168.0.4', 55871)
+INFO:network:[+] Recieved: b'{"host": "", "action": "", "is_server": 0, "message": "shit", "username": "test"}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "test" already exists
+INFO:network:[*] Waiting for connection
+INFO:network:[+] Connection from: ('192.168.0.4', 55879)
+INFO:network:[-] No more data from: ('192.168.0.4', 55879)
+INFO:network:[+] Recieved: b'{"message": "you are little shit", "host": "", "username": "test", "is_server": 0, "action": ""}'
+INFO:db_helper:[+] Message from test to test saved
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[-] User "test" already exists
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[-] User "test" already exists
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[-] User "test" already exists
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[-] User "test" already exists
