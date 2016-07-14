@@ -55,8 +55,8 @@ class MainChat(BaseChat):
         self.commands = self.create_command_descrypt()
 
     def run(self):
-        self.client.start()
         self.specify_username()
+        self.client.start()
         self.command_mode()
 
     def exit(self):

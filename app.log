@@ -103,3 +103,41 @@ INFO:db_helper:[-] User "test" already exists
 INFO:db_helper:[+] Database successuflly created(updated)
 INFO:network:[*] Waiting for connection
 INFO:db_helper:[-] User "test" already exists
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] User "Mike" created successuflly
+INFO:network:[+] Connection from: ('192.168.0.3', 61571)
+INFO:network:[-] No more data from: ('192.168.0.3', 61571)
+INFO:network:[+] Recieved: b'{"action": "connect", "message": "", "host": ["192.168.0.3", 9090], "is_server": 0, "username": ""}'
+INFO:network:[*] Updating tables of connected hosts
+INFO:network:[+] Adding host: ('192.168.0.3', 9090)
+INFO:network:[*] Waiting for connection
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:network:[*] Waiting for connection
+INFO:network:[*] Connecting to: ('192.168.0.3', 9090)
+INFO:network:[+] Connection from: ('192.168.0.3', 61592)
+INFO:network:[-] No more data from: ('192.168.0.3', 61592)
+INFO:network:[+] Recieved: b'{"is_server": 0, "action": "connect", "connected": [["192.168.0.4", 9090], ["192.168.0.3", 9090]], "message": "", "username": "", "host": ["192.168.0.4", 9090]}'
+INFO:network:[*] Updating tables of connected hosts
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:network:[*] Waiting for connection
+INFO:network:[*] Connecting to: ('192.168.0.3', 9090)
+INFO:network:[+] Connection from: ('192.168.0.3', 61618)
+INFO:network:[-] No more data from: ('192.168.0.3', 61618)
+INFO:network:[+] Recieved: b'{"is_server": 0, "action": "connect", "connected": [["192.168.0.4", 9090], ["192.168.0.3", 9090]], "host": ["192.168.0.4", 9090], "username": "", "message": ""}'
+INFO:network:[*] Updating tables of connected hosts
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:network:[*] Waiting for connection
+INFO:network:[*] Connecting to: ('192.168.0.3', 9090)
+INFO:network:[+] Connection from: ('192.168.0.3', 61619)
+INFO:network:[-] No more data from: ('192.168.0.3', 61619)
+INFO:network:[+] Recieved: b'{"is_server": 0, "action": "connect", "connected": [["192.168.0.4", 9090], ["192.168.0.3", 9090]], "host": ["192.168.0.4", 9090], "username": "", "message": ""}'
+INFO:network:[*] Updating tables of connected hosts
+INFO:db_helper:[+] Database successuflly created(updated)
+INFO:db_helper:[-] User "Mike" already exists
+INFO:network:[*] Waiting for connection
+INFO:network:[*] Connecting to: ('192.168.0.3', 9090)
+INFO:network:[+] Connection from: ('192.168.0.3', 61620)
+INFO:network:[-] No more data from: ('192.168.0.3', 61620)
+INFO:network:[+] Recieved: b'{"is_server": 0, "action": "connect", "connected": [["192.168.0.4", 9090], ["192.168.0.3", 9090]], "host": ["192.168.0.4", 9090], "username": "Mike", "message": ""}'
+INFO:network:[*] Updating tables of connected hosts

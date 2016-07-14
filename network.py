@@ -3,6 +3,7 @@
 
 import socket
 import json
+import time
 import traceback
 import threading
 import logging
@@ -121,6 +122,8 @@ class ChatClient:
 
         if 'connected' in data:
             logger.info('[*] Updating tables of connected hosts')
+            print(data['connected'])
+            time.sleep(100);
             for host in data['connected']:
                 host = tuple(host)
                 self._connected.add(host)
@@ -149,7 +152,8 @@ class ChatClient:
                 self.host2username.pop(host, None)
         # Send table to connected host
         tun_data = deepcopy(data)
-        tun_data['connected'] = list(self._connected)
+        print(self.host2username.items())
+        tun_data['connected'] = list(self.host2username.items())
         self.send_msg(host=host, msg=json.dumps(tun_data))
 
     def get_ip_addr(self):
