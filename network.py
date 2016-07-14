@@ -26,6 +26,7 @@ class ChatClient:
 
         self.username = ''
         self.host2username = dict()
+        self.username2host = dict()
 
         self._db.try_create_database()
 
@@ -39,7 +40,8 @@ class ChatClient:
     def specify_username(self, username):
         self.username = username
         self._db.save_user(self.username)
-        self.host2username[self.username] = self._host
+        self.host2username[self._host] = self.username
+        self.username2host[self.username] = self._host
 
     def create_send_socket(self):
         send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -122,10 +124,11 @@ class ChatClient:
 
         if 'connected' in data:
             logger.info('[*] Updating tables of connected hosts')
-            print(data['connected'])
-            time.sleep(100);
-            for host in data['connected']:
-                host = tuple(host)
+            for host_data in data['connected']:
+                host = tuple(host_data[0])
+                self.host2username[host] = str(host_data[1])
+                self.username2host[str(host_data[1])] = host
+
                 self._connected.add(host)
                 self._db.save_user(self.host2username[host])
 
@@ -145,15 +148,17 @@ class ChatClient:
         if host not in self._connected:
             logger.info(message + str(host))
             if action_type == 'connect':
-                self._connected.add(host)
+                self.username2host[data['username']] = host
                 self.host2username[host] = data['username']
+                
+                self._connected.add(host)
             else:
                 self._connected.remove(host)
                 self.host2username.pop(host, None)
         # Send table to connected host
         tun_data = deepcopy(data)
-        print(self.host2username.items())
-        tun_data['connected'] = list(self.host2username.items())
+        tun_data['connected'] = [(host, name) for host, name in
+                                 self.host2username.items()]
         self.send_msg(host=host, msg=json.dumps(tun_data))
 
     def get_ip_addr(self):

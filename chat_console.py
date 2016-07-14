@@ -34,7 +34,7 @@ class BaseChat():
 
     def send_message(self, username, text):
         message = self.client.create_data(msg=text, username=username)
-        host = self.client.host2username[username]
+        host = self.client.username2host[username]
         self.client.send_msg(host=host, msg=message)
 
     def print_recv_message(self, username):
@@ -89,7 +89,7 @@ class MainChat(BaseChat):
                 self.print_help(commands=self.commands)
             elif command == '@users':
                 print('\n' + 30*'=')
-                for user in self.client.host2username.keys():
+                for user in self.client.host2username.values():
                     print('+ %s' % user)
                 print(30*'=' + '\n')
             elif command == '@exit':
