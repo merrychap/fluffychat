@@ -172,7 +172,7 @@ class DBHelper:
                     SELECT reply, reply_id, user_id_fk  FROM conversation_reply
                     WHERE c_id_fk LIKE ? ORDER BY cr_id DESC LIMIT ?''', (c_id,
                                                                       count))
-                messages = cur.fetchall()
+                for msg in range(0, count):
+                    yield cur.fetchone()
             except Exception as e:
-                messages = [('', -1)]
-            return messages
+                yield [('', -1)]

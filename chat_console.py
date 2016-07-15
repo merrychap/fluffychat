@@ -14,6 +14,7 @@ from network import PORT
 
 
 LOG_FILE = 'logging_config.ini'
+INF = 1e9
 lock = threading.Lock()
 
 class BaseChat():
@@ -36,20 +37,24 @@ class BaseChat():
     def send_message(self, username, text):
         message = self.client.create_data(msg=text, username=self.client.username)
         host = self.client.username2host[username]
-        if username != self.client.username:
-            self.client.save_message(username, text)
+        self.client.save_message(username, text)
         self.client.send_msg(host=host, msg=message)
 
+    def get_last_message(self, username):
+        for message in self.client.get_history(username, INF):
+            if self.client.get_username(message[2]) == username:
+                return message
+
     def print_recv_message(self, username):
-        last_msg_id = self.client.get_history(username, 1)[0][1]
+        last_msg = self.get_last_message(username)
         while True:
-            cur_msg_id = self.client.get_history(username, 1)[0][1]
-            if last_msg_id != cur_msg_id:
+            cur_msg = self.get_last_message(username)
+            if last_msg[1] != cur_msg[1] and last_msg[2] == cur_msg[2]:
                 messages = self.client.get_history(username,
-                                                   cur_msg_id - last_msg_id)
+                                                   cur_msg[1] - last_msg[1])
                 for message in messages:
                     print('{0}:> {1}'.format(username, message[0]))
-                last_msg_id = cur_msg_id
+                last_msg = cur_msg
 
 
 class MainChat(BaseChat):
@@ -116,10 +121,10 @@ class UserChat(BaseChat):
 
     def open(self):
         print()
-        for message in self.client.get_history(self.username, 10):
-            if message[1] == -1:
+        for message in list(self.client.get_history(self.username, 10))[::-1]:
+            if message == None or message[1] == -1:
                 continue
-            print('{0}:> {1}'.format(str(self.client.get_username(message[2])),
+            print('{0}:> {1}'.format(self.client.get_username(message[2])[0],
                                      message[0]))
 
         while True:

@@ -153,6 +153,7 @@ class ChatClient:
                 self.username2host[data['username']] = host
                 self.host2username[host] = data['username']
                 self._connected.add(host)
+                self._db,save_user(data['username'])
 
         if action_type == 'disconnect':
             self._connected.remove(host)
