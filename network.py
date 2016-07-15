@@ -61,9 +61,10 @@ class ChatClient:
         self.send_msg(host=self._server_host, msg=data)
 
     def disconnect(self):
-        logger.info('[*] Disconnecting: %s' % self._host)
-        data = self.create_data(host=self._host, action='disconnect')
-        self.send_msg(host=self._server_host, msg=data)
+        logger.info('[*] Disconnecting: %s' % str(self._host))
+        data = self.create_data(host=self._host, action='disconnect',
+                                username=self.username)
+        self.send_msg(host=next(iter(self._connected)), msg=data)
 
     def create_data(self, msg='', host='', action='', is_server=0,
                     username=''):
@@ -81,7 +82,7 @@ class ChatClient:
             send_sock = self.create_send_socket()
             send_sock.connect(host)
             send_sock.sendall(bytes(msg, 'utf-8'))
-        except Exception as e:
+        except (Exception, socket.error) as e:
             logger.error('[-] Connection failed: %s' % str(host))
             traceback.print_exc()
         finally:
@@ -134,6 +135,7 @@ class ChatClient:
 
     def handle_host_action(self, data, action_type, message):
         host = data['host']
+        username = data['username']
         if host[0] == self._host[0]:
             return
         host = tuple(host)
@@ -150,11 +152,13 @@ class ChatClient:
             if action_type == 'connect':
                 self.username2host[data['username']] = host
                 self.host2username[host] = data['username']
-                
                 self._connected.add(host)
-            else:
-                self._connected.remove(host)
-                self.host2username.pop(host, None)
+
+        if action_type == 'disconnect':
+            self._connected.remove(host)
+            self.host2username.pop(host, None)
+            self.username2host.pop(username, None)
+            return
         # Send table to connected host
         tun_data = deepcopy(data)
         tun_data['connected'] = [(host, name) for host, name in
@@ -177,3 +181,6 @@ class ChatClient:
 
     def get_username(self, user_id):
         return self._db.get_username(user_id)
+
+    def save_message(self, username, message):
+        self._db.save_message(self.username, username, message)

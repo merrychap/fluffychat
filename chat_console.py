@@ -10,6 +10,7 @@ import optparse
 import logging.config
 
 from network import ChatClient
+from network import PORT
 
 
 LOG_FILE = 'logging_config.ini'
@@ -33,8 +34,10 @@ class BaseChat():
         self.client.specify_username(username)
 
     def send_message(self, username, text):
-        message = self.client.create_data(msg=text, username=username)
+        message = self.client.create_data(msg=text, username=self.client.username)
         host = self.client.username2host[username]
+        if username != self.client.username:
+            self.client.save_message(username, text)
         self.client.send_msg(host=host, msg=message)
 
     def print_recv_message(self, username):
@@ -60,7 +63,9 @@ class MainChat(BaseChat):
         self.command_mode()
 
     def exit(self):
+        self.client.disconnect()
         print ('\nBye!')
+        time.sleep(1)
         os._exit(1)
 
     def create_command_descrypt(self):
@@ -110,10 +115,17 @@ class UserChat(BaseChat):
                          args=(username,)).start()
 
     def open(self):
+        print()
+        for message in self.client.get_history(self.username, 10):
+            if message[1] == -1:
+                continue
+            print('{0}:> {1}'.format(str(self.client.get_username(message[2])),
+                                     message[0]))
+
         while True:
             input()
             with lock:
-                message = input('%s:> ' % self.username)
+                message = input('%s:> ' % self.client.username)
             if message == '@help':
                 self.print_help(commands=self.commands)
             elif message == '@back':
@@ -150,25 +162,17 @@ class RoomChat(BaseChat):
 def main():
     logging.basicConfig(filename='app.log', level=logging.DEBUG)
 
-    parser = optparse.OptionParser('usage %prog -H <connected host> ' +
-                                   '-p <connected port>')
+    parser = optparse.OptionParser('usage %prog -H <connected host> ')
     parser.add_option('-H', dest='conn_host', type='string',
                       help='specify connected host')
-    parser.add_option('-p', dest='conn_port', type=int,
-                      help='specify connected port')
     (options, args) = parser.parse_args()
     conn_host = options.conn_host
-    conn_port = options.conn_port
 
-    if (conn_host is None and conn_port is not None) or \
-       (conn_host is not None and conn_port is None):
-        print(parser.usage)
-        exit(0)
     # TODO check username correctness
     if conn_host is None:
         client = ChatClient()
     else:
-        client = ChatClient((conn_host, conn_port))
+        client = ChatClient((conn_host, PORT))
 
     # Create entity of chat
     chat = MainChat(client=client)

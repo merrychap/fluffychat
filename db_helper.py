@@ -53,7 +53,7 @@ class DBHelper:
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
-            cur.execute(('SELECT username FROM users WHERE'
+            cur.execute(('SELECT username FROM users WHERE '
                          'user_id LIKE {0}').format(user_id))
             return cur.fetchone()
 
@@ -166,10 +166,13 @@ class DBHelper:
             # Get users id
             src_id, dst_id = self.get_sd_id(cur, src, dst)
 
-            c_id = self.get_message_data(cur, src_id, dst_id)[0]
-            cur.execute('''
-                SELECT reply, reply_id, user_id_fk  FROM conversation_reply
-                WHERE c_id_fk LIKE ? ORDER BY cr_id DESC LIMIT ?''', (c_id,
+            try:
+                c_id = self.get_message_data(cur, src_id, dst_id)[0]
+                cur.execute('''
+                    SELECT reply, reply_id, user_id_fk  FROM conversation_reply
+                    WHERE c_id_fk LIKE ? ORDER BY cr_id DESC LIMIT ?''', (c_id,
                                                                       count))
-            messages = cur.fetchall()
+                messages = cur.fetchall()
+            except Exception as e:
+                messages = [('', -1)]
             return messages
