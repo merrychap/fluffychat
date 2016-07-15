@@ -14,7 +14,7 @@ from network import PORT
 
 
 LOG_FILE = 'logging_config.ini'
-INF = 1e9
+INF = 1000
 lock = threading.Lock()
 
 class BaseChat():
@@ -42,18 +42,24 @@ class BaseChat():
 
     def get_last_message(self, username):
         for message in self.client.get_history(username, INF):
-            if self.client.get_username(message[2]) == username:
-                return message
+            if message != None and \
+               self.client.get_username(message[2])[0] == username:
+               return message
+        return ('', 0, -1)
 
     def print_recv_message(self, username):
         last_msg = self.get_last_message(username)
         while True:
             cur_msg = self.get_last_message(username)
+            # print(last_msg)
+            # print(cur_msg)
+            # print()
             if last_msg[1] != cur_msg[1] and last_msg[2] == cur_msg[2]:
                 messages = self.client.get_history(username,
                                                    cur_msg[1] - last_msg[1])
                 for message in messages:
-                    print('{0}:> {1}'.format(username, message[0]))
+                    if self.client.get_username(message[2])[0] == username:
+                        print('{0}:> {1}'.format(username, message[0]))
                 last_msg = cur_msg
 
 

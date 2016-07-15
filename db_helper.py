@@ -3,6 +3,7 @@
 
 import sqlite3 as sql
 import sys
+import time
 import traceback
 import logging
 
@@ -173,6 +174,9 @@ class DBHelper:
                     WHERE c_id_fk LIKE ? ORDER BY cr_id DESC LIMIT ?''', (c_id,
                                                                       count))
                 for msg in range(0, count):
-                    yield cur.fetchone()
+                    message = cur.fetchone()
+                    if message is None:
+                        break
+                    yield message
             except Exception as e:
-                yield [('', -1)]
+                yield None
