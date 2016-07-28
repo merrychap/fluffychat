@@ -25,12 +25,11 @@ class ChatClient:
         self._connected = set()
         self._db = db_helper.DBHelper()
 
-        self.username = ''
-        self.user_id = 1
+        self.init_user_data()
+        self._db.try_create_database()
+        
         self.host2user_id = dict()
         self.user_id2host = dict()
-
-        self._db.try_create_database()
 
         self._connected.add(self._host)
 
@@ -43,10 +42,19 @@ class ChatClient:
             self.host2user_id[self._host] = self.user_id
             self.user_id2host[self.user_id] = self._host
 
+    def init_user_data(self):
+        user = self._db.get_current_user()
+        if user is not None:
+            self.user_id = user[0]
+            self.username = user[1]
+        else:
+            self.username = ''
+            self.user_id = 1
+
     def specify_username(self, username):
-        self.username = username
         self._db.save_user(self.username)
         self.user_id = self._db.get_user_id(self.username)
+        self.username = self._db.get_username(self.user_id)
         self.host2user_id[self._host] = self.user_id
         self.user_id2host[self.user_id] = self._host
 
@@ -62,18 +70,18 @@ class ChatClient:
         return recv
 
     def get_connected(self):
-        print('[*] Getting connected hosts')
+        logger.info('[*] Getting connected hosts')
         data = self.create_data(host=self._host, action='get_connected')
         self.send_msg(host=self._server_host, msg=data)
 
     def connect(self):
-        print('[*] Connecting to: %s' % str(self._server_host))
+        logger.info('[*] Connecting to: %s' % str(self._server_host))
         data = self.create_data(host=self._host, action='connect',
                                 username=self.username, user_id=self.user_id)
         self.send_msg(host=self._server_host, msg=data)
 
     def disconnect(self):
-        print('[*] Disconnecting: %s' % str(self._host))
+        logger.info('[*] Disconnecting: %s' % str(self._host))
         data = self.create_data(host=self._host, action='disconnect',
                                 username=self.username)
         self.send_msg(host=next(iter(self._connected)), msg=data)
@@ -105,18 +113,18 @@ class ChatClient:
 
     def handle_recv(self):
         while True:
-            print('[*] Waiting for connection')
+            logger.info('[*] Waiting for connection')
             conn, addr = self._recv_sock.accept()
             try:
-                print('[+] Connection from: %s' % str(addr))
+                logger.info('[+] Connection from: %s' % str(addr))
                 data = bytes()
                 while True:
                     recieved_data = conn.recv(1024)
                     if not recieved_data:
-                        print('[-] No more data from: %s' % str(addr))
+                        logger.info('[-] No more data from: %s' % str(addr))
                         break
                     data += recieved_data
-                print('[+] Recieved: %s' % data)
+                logger.info('[+] Recieved: %s' % data)
                 self.parse_data(data.decode('utf-8'))
             finally:
                 conn.close()
@@ -144,17 +152,32 @@ class ChatClient:
                                   message=data['message'], time=cur_time)
 
         if 'connected' in data:
-            print('[*] Updating tables of connected hosts')
-            for host_data in data['connected']:
-                host = tuple(host_data[0])
-                self.host2user_id[host] = host_data[1]
-                self.user_id2host[host_data[1]] = host
+            logger.info('[*] Updating tables of connected hosts')
+            self.update_connected(data)
 
-                self._connected.add(host)
-                self._db.save_user(user_id=host_data[1],
-                                   username=host_data[2])
-            print(self._connected)
-            self.user_id = len(self._connected)
+        if 'new_username' in data:
+            self.update_username(data)
+
+    def update_connected(self, data):
+        for host_data in data['connected']:
+            host = tuple(host_data[0])
+            self.host2user_id[host] = host_data[1]
+            self.user_id2host[host_data[1]] = host
+
+            self._connected.add(host)
+            self._db.save_user(user_id=host_data[1],
+                               username=host_data[2])
+        logger.info('[+] Connected host: %s' % str(self._connected))
+        self.user_id = len(self._connected)
+
+    def update_username(self, data):
+        username = data['username']
+        new_username = data['new_username']
+        user_id = data['user_id']
+
+        logger.info('[*] {0} changed username to {1}'
+                    .format(username, new_username))
+        self._db.change_username(user_id, new_username)
 
     def handle_host_action(self, data, action_type, message):
         host = data['host']
@@ -164,7 +187,7 @@ class ChatClient:
         if host[0] == self._host[0]:
             return
         host = tuple(host)
-        print('[*] Updating tables of connected hosts')
+        logger.info('[*] Updating tables of connected hosts')
         # Updating table of connected hosts for each host in network
         if data['is_server'] == '0':
             data['is_server'] = '1'
@@ -173,7 +196,7 @@ class ChatClient:
                 self.send_msg(host=conn, msg=data)
 
         if host not in self._connected:
-            print(message + str(host))
+            logger.info(message + str(host))
             if action_type == 'connect':
                 self.user_id2host[user_id] = host
                 self.host2user_id[host] = user_id
@@ -191,7 +214,7 @@ class ChatClient:
         tun_data = self.create_data(json_format=False)
         tun_data['connected'] = [(host, user_id, self._db.get_username(user_id)) \
                                   for host, user_id in self.host2user_id.items()]
-        print('[*] Sending connected hosts to: %s' % str(host))
+        logger.info('[*] Sending connected hosts to: %s' % str(host))
         self.send_msg(host=host, msg=json.dumps(tun_data))
 
     def get_ip_addr(self):
@@ -214,6 +237,13 @@ class ChatClient:
     def save_message(self, username, message):
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         self._db.save_message(self.username, username, message, cur_time)
+
+    def change_username(self, new_username):
+        data = self.create_data(username=self.username)
+        data['new_username'] = new_username
+        for host in self._connected:
+            self.send_msg(host=host, msg=data)
+
 
 if __name__ == '__main__':
     client = ChatClient(('192.168.0.101', PORT))

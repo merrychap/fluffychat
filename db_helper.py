@@ -42,7 +42,7 @@ class DBHelper:
         '''.format(src_id, dst_id))
         return cur.fetchone() is not None
 
-    def user_exist(self, cur, username):
+    def user_exists(self, cur, username):
         cur.execute('''
             SELECT user_id FROM users WHERE username LIKE ?
         ''', (username, ))
@@ -54,6 +54,13 @@ class DBHelper:
             cur = con.cursor()
             cur.execute(('SELECT username FROM users WHERE '
                          'user_id LIKE {0}').format(user_id))
+            return cur.fetchone()[0]
+
+    def get_current_user(self):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            cur.execute('SELECT * FROM `current_user`')
             return cur.fetchone()
 
     # TODO pick out try...except of main DBHelper functions
@@ -69,6 +76,13 @@ class DBHelper:
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
+
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS `current_user` (
+                    `user_id` INTEGER NOT NULL UNIQUE,
+                    `username` VARCHAR(25) NOT NULL UNIQUE
+                );''')
+
             cur.execute('''
                 CREATE TABLE IF NOT EXISTS `users` (
                    `user_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -137,7 +151,7 @@ class DBHelper:
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
-            if not self.user_exist(cur, username):
+            if not self.user_exists(cur, username):
                 if user_id is not None:
                     cur.execute('''
                         INSERT OR IGNORE INTO users (user_id, username, password)
@@ -152,16 +166,32 @@ class DBHelper:
                 logger.info('[-] User "{0}" already exists'.format(username))
                 return False
 
-    def change_username(user_id, new_username):
+    def save_current_user(self, username, user_id):
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
-            if not self.user_exist(cur, new_username):
+            user = self.get_current_user()
+            if user is None:
+                cur.execute('''
+                    INSERT OR IGNORE INTO `current_user`
+                    VALUES (?, ?);''', (user_id, username))
+                logger.info('[+] Current user saved')
+            else:
+                cur.execute('''
+                    UPDATE `current_user` SET username = ? WHERE user_id = ?;
+                ''', (username, user_id))
+
+    def change_username(self, user_id, new_username):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            if not self.user_exists(cur, new_username):
                 cur.execute('''
                     UPDATE users SET username = ? WHERE user_id = ?;''',
                     (username, user_id))
                 logger.info('[+] User {0} changed username: {1}'.format(user_id,
                                                                         username))
+                self.save_current_user(user_id=user_id, username=new_username)
                 return True
             else:
                 logger.info('[-] User with "{0}" username already exists')

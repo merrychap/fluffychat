@@ -49,8 +49,11 @@ class BaseChat():
                return message
         return ('', 0, -1)
 
+    def cur_user_exists(self):
+        return self.client.username != ''
+
     def change_username(username):
-        pass
+        self.client.change_username(username)
 
     def print_recv_message(self, username):
         last_msg = self.get_last_message(username)
@@ -76,7 +79,8 @@ class MainChat(BaseChat):
 
     def run(self):
         self.client.start()
-        self.specify_username()
+        if not self.cur_user_exists():
+            self.specify_username()
         self.command_mode()
 
     def exit(self):
