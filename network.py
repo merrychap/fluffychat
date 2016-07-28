@@ -25,9 +25,9 @@ class ChatClient:
         self._connected = set()
         self._db = db_helper.DBHelper()
 
-        self.init_user_data()
         self._db.try_create_database()
-        
+        self.init_user_data()
+
         self.host2user_id = dict()
         self.user_id2host = dict()
 
@@ -52,9 +52,13 @@ class ChatClient:
             self.user_id = 1
 
     def specify_username(self, username):
-        self._db.save_user(self.username)
-        self.user_id = self._db.get_user_id(self.username)
+        self._db.save_user(username)
+
+        self.user_id = self._db.get_user_id(username)
         self.username = self._db.get_username(self.user_id)
+
+        self._db.save_current_user(username=self.username, user_id=self.user_id)
+
         self.host2user_id[self._host] = self.user_id
         self.user_id2host[self.user_id] = self._host
 

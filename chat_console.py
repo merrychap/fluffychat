@@ -81,6 +81,7 @@ class MainChat(BaseChat):
         self.client.start()
         if not self.cur_user_exists():
             self.specify_username()
+        print('Hello again, %s!' % self.client.username)
         self.command_mode()
 
     def exit(self):
