@@ -243,10 +243,13 @@ class ChatClient:
         self._db.save_message(self.username, username, message, cur_time)
 
     def change_username(self, new_username):
-        data = self.create_data(username=self.username)
+        data = self.create_data(username=self.username, json_format=False)
         data['new_username'] = new_username
         for host in self._connected:
-            self.send_msg(host=host, msg=data)
+            self.send_msg(host=host, msg=json.dumps(data))
+        self.username = new_username
+        self._db.save_user(user_id=self.user_id, username=self.username)
+        self._db.save_current_user(user_id=self.user_id, username=self.username)
 
 
 if __name__ == '__main__':

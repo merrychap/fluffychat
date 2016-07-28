@@ -52,8 +52,9 @@ class BaseChat():
     def cur_user_exists(self):
         return self.client.username != ''
 
-    def change_username(username):
+    def change_username(self, username):
         self.client.change_username(username)
+        print('\n[+] Username changed, %s!\n' % username)
 
     def print_recv_message(self, username):
         last_msg = self.get_last_message(username)
@@ -130,7 +131,7 @@ class MainChat(BaseChat):
             elif room_parse != None:
                 roomname = room_parse.group(1)
             elif username_pattern != None:
-                self.change_username(username.group(1))
+                self.change_username(username_parse.group(1))
 
 
 class UserChat(BaseChat):

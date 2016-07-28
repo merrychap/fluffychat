@@ -188,7 +188,7 @@ class DBHelper:
             if not self.user_exists(cur, new_username):
                 cur.execute('''
                     UPDATE users SET username = ? WHERE user_id = ?;''',
-                    (username, user_id))
+                    (new_username, user_id))
                 logger.info('[+] User {0} changed username: {1}'.format(user_id,
                                                                         username))
                 self.save_current_user(user_id=user_id, username=new_username)
