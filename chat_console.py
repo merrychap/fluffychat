@@ -35,9 +35,11 @@ class BaseChat():
         self.client.specify_username(username)
 
     def send_message(self, username, text):
-        message = self.client.create_data(msg=text, username=self.client.username)
+        message = self.client.create_data(msg=text,
+                                          username=self.client.username)
         host = self.client.username2host[username]
-        self.client.save_message(username, text)
+        if username != self.client.username:
+            self.client.save_message(username, text)
         self.client.send_msg(host=host, msg=message)
 
     def get_last_message(self, username):
@@ -46,6 +48,9 @@ class BaseChat():
                self.client.get_username(message[2])[0] == username:
                return message
         return ('', 0, -1)
+
+    def change_username(username):
+        pass
 
     def print_recv_message(self, username):
         last_msg = self.get_last_message(username)
@@ -59,7 +64,8 @@ class BaseChat():
                                                    cur_msg[1] - last_msg[1])
                 for message in messages:
                     if self.client.get_username(message[2])[0] == username:
-                        print('{0}:> {1}'.format(username, message[0]))
+                        print('{0} : {1}:> {2}'.format(message[3],
+                                                       username, message[0]))
                 last_msg = cur_msg
 
 
@@ -69,8 +75,8 @@ class MainChat(BaseChat):
         self.commands = self.create_command_descrypt()
 
     def run(self):
-        self.specify_username()
         self.client.start()
+        self.specify_username()
         self.command_mode()
 
     def exit(self):
@@ -82,6 +88,7 @@ class MainChat(BaseChat):
     def create_command_descrypt(self):
         return {
             'help': 'Shows this output',
+            'username "username"': 'Changes username',
             'groups': 'Shows available groups',
             'users': 'Shows online users',
             'user "username"': 'Switches to user message mode',
@@ -91,6 +98,7 @@ class MainChat(BaseChat):
 
     def command_mode(self):
         user_pattern = re.compile(r'^@user ([a-zA-Z_.]+)$')
+        username_pattern = re.compile(r'@username ([a-zA-Z_.]+)$')
         room_pattern = re.compile(r'^@room ([a-zA-Z_.])$')
 
         print('\nType "@help" for list of commands with description')
@@ -100,6 +108,7 @@ class MainChat(BaseChat):
 
             user_parse = user_pattern.match(command)
             room_parse = room_pattern.match(command)
+            username_parse = username_pattern.match(command)
 
             if command == '@help':
                 self.print_help(commands=self.commands)
@@ -115,6 +124,8 @@ class MainChat(BaseChat):
                 UserChat(username=username, client=self.client).open()
             elif room_parse != None:
                 roomname = room_parse.group(1)
+            elif username_pattern != None:
+                self.change_username(username.group(1))
 
 
 class UserChat(BaseChat):
@@ -130,8 +141,9 @@ class UserChat(BaseChat):
         for message in list(self.client.get_history(self.username, 10))[::-1]:
             if message == None or message[1] == -1:
                 continue
-            print('{0}:> {1}'.format(self.client.get_username(message[2])[0],
-                                     message[0]))
+            print('{0} : {1}:> {1}'.format(message[3],
+                                    self.client.get_username(message[2])[0],
+                                    message[0]))
 
         while True:
             input()

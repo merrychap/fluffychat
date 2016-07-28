@@ -102,7 +102,7 @@ class DBHelper:
                 );''')
             logger.info('[+] Database successuflly created(updated)')
 
-    def save_message(self, src, dst, message):
+    def save_message(self, src, dst, message, time):
         def increment_total_messages(cur, src_id, dst_id):
             cur.execute('''
                 UPDATE conversation SET total_messages = total_messages + 1
@@ -132,26 +132,45 @@ class DBHelper:
             # Save message
             cur.execute('''
                 INSERT INTO conversation_reply (reply, reply_id, user_id_fk,
-                c_id_fk) VALUES (?, ?, ?, ?);''', (message, total_messages + 1,
-                                                   src_id, c_id))
+                c_id_fk, time) VALUES (?, ?, ?, ?, ?);''', (message, total_messages + 1,
+                                                   src_id, c_id, time))
             increment_total_messages(cur, src_id, dst_id)
 
             logger.info('[+] Message from {0} to {1} saved'.format(src, dst))
 
-    def save_user(self, username, password=''):
+    def save_user(self, username, user_id=None, password=''):
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
             if not self.user_exist(cur, username):
-                cur.execute('''
-                    INSERT OR IGNORE INTO users (username, password)
-                    VALUES (?, ?);''', (username, password))
+                if user_id is not None:
+                    cur.execute('''
+                        INSERT OR IGNORE INTO users (user_id, username, password)
+                        VALUES (?, ?, ?);''', (user_id, username, password))
+                else:
+                    cur.execute('''
+                        INSERT OR IGNORE INTO users (username, password)
+                        VALUES (?, ?);''', (username, password))
                 logger.info('[+] User "{0}" created successuflly'.format(username))
                 return True
             else:
                 logger.info('[-] User "{0}" already exists'.format(username))
                 return False
 
+    def change_username(user_id, new_username):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            if not self.user_exist(cur, new_username):
+                cur.execute('''
+                    UPDATE users SET username = ? WHERE user_id = ?;''',
+                    (username, user_id))
+                logger.info('[+] User {0} changed username: {1}'.format(user_id,
+                                                                        username))
+                return True
+            else:
+                logger.info('[-] User with "{0}" username already exists')
+                return False
 
     def delete_user(self, username):
         pass
@@ -170,7 +189,8 @@ class DBHelper:
             try:
                 c_id = self.get_message_data(cur, src_id, dst_id)[0]
                 cur.execute('''
-                    SELECT reply, reply_id, user_id_fk  FROM conversation_reply
+                    SELECT reply, reply_id, user_id_fk, time
+                    FROM conversation_reply
                     WHERE c_id_fk LIKE ? ORDER BY cr_id DESC LIMIT ?''', (c_id,
                                                                       count))
                 for msg in range(0, count):
