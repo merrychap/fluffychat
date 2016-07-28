@@ -24,16 +24,14 @@ class DBHelper:
                                                                  dst_id))
         return cur.fetchone()
 
-    def get_user_id(self, cur, username):
-        cur.execute('''
-            SELECT user_id FROM users WHERE
-            username LIKE ?;''', (username, ))
-        return cur.fetchone()[0]
-
-    def get_sd_id(self, cur, src, dst):
-        src_id = self.get_user_id(cur, src)
-        dst_id = self.get_user_id(cur, dst)
-        return (src_id, dst_id)
+    def get_user_id(self, username):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            cur.execute('''
+                SELECT user_id FROM users WHERE
+                username LIKE ?;''', (username, ))
+            return cur.fetchone()[0]
 
     def conversation_exists(self, cur, src_id, dst_id):
         cur.execute('''
@@ -116,25 +114,22 @@ class DBHelper:
         with con:
             cur = con.cursor()
 
-            # Get users id
-            src_id, dst_id = self.get_sd_id(cur, src, dst)
-
             # Update messages count in `conversation` table
-            if not self.conversation_exists(cur, src_id, dst_id):
+            if not self.conversation_exists(cur, src, dst):
                 cur.execute('''
                     INSERT INTO conversation (user_one, user_two,
                                                         total_messages)
-                    VALUES (?, ?, 0);''', (src_id, dst_id))
+                    VALUES (?, ?, 0);''', (src, dst))
 
             # Get number of message
-            c_id, total_messages = self.get_message_data(cur, src_id, dst_id)
+            c_id, total_messages = self.get_message_data(cur, src, dst)
 
             # Save message
             cur.execute('''
                 INSERT INTO conversation_reply (reply, reply_id, user_id_fk,
-                c_id_fk, time) VALUES (?, ?, ?, ?, ?);''', (message, total_messages + 1,
-                                                   src_id, c_id, time))
-            increment_total_messages(cur, src_id, dst_id)
+                c_id_fk, time) VALUES (?, ?, ?, ?, ?);''',
+                (message, total_messages + 1, src, c_id, time))
+            increment_total_messages(cur, src, dst)
 
             logger.info('[+] Message from {0} to {1} saved'.format(src, dst))
 
@@ -183,11 +178,8 @@ class DBHelper:
         with con:
             cur = con.cursor()
 
-            # Get users id
-            src_id, dst_id = self.get_sd_id(cur, src, dst)
-
             try:
-                c_id = self.get_message_data(cur, src_id, dst_id)[0]
+                c_id = self.get_message_data(cur, src, dst)[0]
                 cur.execute('''
                     SELECT reply, reply_id, user_id_fk, time
                     FROM conversation_reply
