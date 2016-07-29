@@ -39,10 +39,12 @@ class ChatClient:
         threading.Thread(target=self.handle_recv).start()
         if self._server_host is not None:
             self.get_connected()
-            while not user_id_assigned:
+            while not self.user_id_assigned:
                 pass
+            self.handle_username()
             self.connect()
         else:
+            self.handle_username()
             self.host2user_id[self._host] = self.user_id
             self.user_id2host[self.user_id] = self._host
 
@@ -57,10 +59,11 @@ class ChatClient:
 
     def specify_username(self, username):
         self.username = username
-        self._db.change_username(user_id=self.user_id, new_username=username)
 
+    def handle_username(self):
+        self._db.change_username(user_id=self.user_id,
+                                 new_username=self.username)
         self._db.save_user(username=self.username, user_id=self.user_id)
-
         self._db.save_current_user(username=self.username, user_id=self.user_id)
 
         self.host2user_id[self._host] = self.user_id
@@ -169,12 +172,18 @@ class ChatClient:
     def update_connected(self, data):
         for host_data in data['connected']:
             host = tuple(host_data[0])
-            self.host2user_id[host] = host_data[1]
-            self.user_id2host[host_data[1]] = host
+            user_id = int(host_data[1])
+            username = host_data[2]
+
+            logger.info('[+] Connected host: {0}, username: {1}, user_id: {2}'
+                        .format(host, username, user_id))
+
+            self.host2user_id[host] = user_id
+            self.user_id2host[user_id] = host
 
             self._connected.add(host)
-            self._db.save_user(user_id=host_data[1],
-                               username=host_data[2])
+            self._db.save_user(user_id=user_id,
+                               username=username)
         self.user_id = len(self._connected)
         self.user_id_assigned = True
         logger.info('[*] Current user id: %s' % self.user_id)
@@ -211,7 +220,7 @@ class ChatClient:
                 self.user_id2host[user_id] = host
                 self.host2user_id[host] = user_id
                 self._connected.add(host)
-                self._db.save_user(user_id)
+                self._db.save_user(username=username, user_id=user_id)
 
         if action_type == 'disconnect':
             self._connected.remove(host)

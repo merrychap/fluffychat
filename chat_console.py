@@ -76,11 +76,11 @@ class MainChat(BaseChat):
         self.commands = self.create_command_descrypt()
 
     def run(self):
-        self.client.start()
         if not self.cur_user_exists():
             self.specify_username()
         else:
             print('Hello again, %s!' % self.client.username)
+        self.client.start()
         self.command_mode()
 
     def exit(self):
