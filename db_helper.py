@@ -15,13 +15,12 @@ class DBHelper:
     def __init__(self):
         pass
 
-    def get_message_data(self, cur, src_id, dst_id):
+    def get_message_data(self, cur, src, dst):
         cur.execute('''
             SELECT c_id, total_messages FROM conversation WHERE
             (user_one LIKE {0} AND user_two LIKE {1})
             OR
-            (user_one LIKE {1} AND user_two LIKE {0});'''.format(src_id,
-                                                                 dst_id))
+            (user_one LIKE {1} AND user_two LIKE {0});'''.format(src, dst))
         return cur.fetchone()
 
     def get_user_id(self, username):
@@ -215,7 +214,6 @@ class DBHelper:
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
-
             try:
                 c_id = self.get_message_data(cur, src, dst)[0]
                 cur.execute('''

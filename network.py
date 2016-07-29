@@ -248,8 +248,8 @@ class ChatClient:
             if ip and ip[0].startswith('192.'):
                 return (ip[0], PORT)
 
-    def get_history(self, username, count):
-        return self._db.get_history(self.username, username, count)
+    def get_history(self, user_id, count):
+        return self._db.get_history(self.user_id, user_id, count)
 
     def get_username(self, user_id):
         return self._db.get_username(user_id)

@@ -35,19 +35,18 @@ class BaseChat():
         self.client.specify_username(username)
 
     def send_message(self, username, text):
-        user_id = self.client.get_user_id()
+        user_id = self.client.get_user_id(username)
         message = self.client.create_data(msg=text,
-                                          username=self.client.username
-                                          user_id=user_id)
+                                          username=self.client.username,
+                                          user_id=self.client.user_id)
         host = self.client.user_id2host[user_id]
         if user_id != self.client.user_id:
             self.client.save_message(user_id, text)
         self.client.send_msg(host=host, msg=message)
 
-    def get_last_message(self, username):
-        for message in self.client.get_history(username, INF):
-            if message != None and \
-               self.client.get_username(message[2])[0] == username:
+    def get_last_message(self, user_id):
+        for message in self.client.get_history(user_id, INF):
+            if message != None and message[2] == user_id:
                return message
         return ('', 0, -1)
 
@@ -58,17 +57,19 @@ class BaseChat():
         self.client.change_username(username)
         print('\n[+] Username changed, %s!\n' % username)
 
-    def print_recv_message(self, username):
-        last_msg = self.get_last_message(username)
+    def print_recv_message(self, user_id):
+        last_msg = self.get_last_message(user_id)
         while True:
-            cur_msg = self.get_last_message(username)
+            cur_msg = self.get_last_message(user_id)
             if last_msg[1] != cur_msg[1] and last_msg[2] == cur_msg[2]:
-                messages = self.client.get_history(username,
+                messages = self.client.get_history(user_id,
                                                    cur_msg[1] - last_msg[1])
                 for message in messages:
-                    if self.client.get_username(message[2])[0] == username:
-                        print('{0} : {1}:> {2}'.format(message[3],
-                                                       username, message[0]))
+                    if message[2] == user_id:
+                        print('{0} : {1}:> {2}'
+                              .format(message[3],
+                                      self.client.get_username(user_id),
+                                      message[0]))
                 last_msg = cur_msg
 
 
@@ -139,16 +140,21 @@ class UserChat(BaseChat):
         super().__init__(client)
         print('\n[*] Swithes to message mode.\nType "enter" to start typing message')
         self.username = username
+        self.user_id = client.get_user_id(username)
+
+        # ----- DEBUG ----- #
+        print('Dst username: {0}, user_id: {1}'.format(self.username, self.user_id))
+
         threading.Thread(target=self.print_recv_message,
-                         args=(username,)).start()
+                         args=(self.user_id,)).start()
 
     def open(self):
         print()
-        for message in list(self.client.get_history(self.username, 10))[::-1]:
+        for message in list(self.client.get_history(self.user_id, 10))[::-1]:
             if message == None or message[1] == -1:
                 continue
-            print('{0} : {1}:> {1}'.format(message[3],
-                                    self.client.get_username(message[2])[0],
+            print('{0} : {1}:> {2}'.format(message[3],
+                                    self.client.get_username(message[2]),
                                     message[0]))
 
         while True:
