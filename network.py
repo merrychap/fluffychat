@@ -25,6 +25,8 @@ class ChatClient:
         self._connected = set()
         self._db = db_helper.DBHelper()
 
+        self.user_id_assigned = False
+
         self._db.try_create_database()
         self.init_user_data()
 
@@ -37,6 +39,8 @@ class ChatClient:
         threading.Thread(target=self.handle_recv).start()
         if self._server_host is not None:
             self.get_connected()
+            while not user_id_assigned:
+                pass
             self.connect()
         else:
             self.host2user_id[self._host] = self.user_id
@@ -172,6 +176,7 @@ class ChatClient:
             self._db.save_user(user_id=host_data[1],
                                username=host_data[2])
         self.user_id = len(self._connected)
+        self.user_id_assigned = True
         logger.info('[*] Current user id: %s' % self.user_id)
         logger.info('[*] Connected hosts: %s' % str(self._connected))
 
