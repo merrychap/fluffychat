@@ -39,9 +39,6 @@ class ChatClient:
             self.get_connected()
             self.connect()
         else:
-            self._db.save_user(self.username, user_id=self.user_id)
-            self._db.save_current_user(self.username, self.user_id)
-
             self.host2user_id[self._host] = self.user_id
             self.user_id2host[self.user_id] = self._host
 
@@ -55,10 +52,10 @@ class ChatClient:
             self.user_id = 1
 
     def specify_username(self, username):
-        self._db.save_user(username)
+        self.username = username
+        self._db.change_username(user_id=self.user_id, new_username=username)
 
-        self.user_id = self._db.get_user_id(username)
-        self.username = self._db.get_username(self.user_id)
+        self._db.save_user(username=self.username, user_id=self.user_id)
 
         self._db.save_current_user(username=self.username, user_id=self.user_id)
 
@@ -204,7 +201,7 @@ class ChatClient:
                 self.send_msg(host=conn, msg=data)
 
         if host not in self._connected:
-            logger.info(message + str(host))
+            logger.info(message + str(host) + 'user id: %s' % user_id)
             if action_type == 'connect':
                 self.user_id2host[user_id] = host
                 self.host2user_id[host] = user_id

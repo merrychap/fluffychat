@@ -156,33 +156,40 @@ class DBHelper:
                     cur.execute('''
                         INSERT OR IGNORE INTO users (user_id, username, password)
                         VALUES (?, ?, ?);''', (user_id, username, password))
-                        logger.info('[+] User id = {0} created successuflly'
-                                    .format(user_id))
+                    logger.info('[+] User id = {0} created successuflly'
+                                .format(user_id))
                 else:
                     cur.execute('''
                         INSERT OR IGNORE INTO users (username, password)
                         VALUES (?, ?);''', (username, password))
-                        logger.info('[+] User "{0}" created successuflly'
-                                    .format(username))
+                    logger.info('[+] User "{0}" created successuflly'
+                                .format(username))
                 return True
             else:
                 logger.info('[-] User "{0}" already exists'.format(username))
                 return False
 
-    def save_current_user(self, username, user_id):
-        con = sql.connect(DATABASE)
-        with con:
-            cur = con.cursor()
-            user = self.get_current_user()
-            if user is None:
-                cur.execute('''
-                    INSERT OR IGNORE INTO `current_user`
-                    VALUES (?, ?);''', (user_id, username))
-                logger.info('[+] Current user saved')
-            else:
-                cur.execute('''
-                    UPDATE `current_user` SET username = ? WHERE user_id = ?;
-                ''', (username, user_id))
+    def save_current_user(self, username, user_id, cur=None):
+        if cur is None:
+            con = sql.connect(DATABASE)
+            with con:
+                cur = con.cursor()
+                self.handle_saving_cur_user(username, user_id, cur)
+        else:
+            self.handle_saving_cur_user(username, user_id, cur)
+
+    def handle_saving_cur_user(self, username, user_id, cur):
+        user = self.get_current_user()
+        if user is None:
+            cur.execute('''
+                INSERT OR IGNORE INTO `current_user`
+                VALUES (?, ?);''', (user_id, username))
+            logger.info('[+] Current user saved')
+        else:
+            cur.execute('''
+                UPDATE `current_user` SET username = ? WHERE user_id = ?;
+            ''', (username, user_id))
+            logger.info('[+] Current user updated')
 
     def change_username(self, user_id, new_username):
         con = sql.connect(DATABASE)
@@ -192,9 +199,10 @@ class DBHelper:
                 cur.execute('''
                     UPDATE users SET username = ? WHERE user_id = ?;''',
                     (new_username, user_id))
-                logger.info('[+] User {0} changed username: {1}'.format(user_id,
-                                                                        username))
-                self.save_current_user(user_id=user_id, username=new_username)
+                logger.info('[+] User {0} changed username: {1}'
+                            .format(user_id, new_username))
+                self.save_current_user(user_id=user_id, username=new_username,
+                                       cur=cur)
                 return True
             else:
                 logger.info('[-] User with "{0}" username already exists')
