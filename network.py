@@ -95,7 +95,8 @@ class ChatClient:
         logger.info('[*] Disconnecting: %s' % str(self._host))
         data = self.create_data(host=self._host, action='disconnect',
                                 username=self.username)
-        self.send_msg(host=next(iter(self._connected)), msg=data)
+        for host in self._connected:
+            self.send_msg(host=host, msg=data)
 
     def create_data(self, msg='', host='', action='', is_server=0,
                     username='', user_id=-1, json_format=True):
@@ -253,17 +254,24 @@ class ChatClient:
     def get_username(self, user_id):
         return self._db.get_username(user_id)
 
-    def save_message(self, username, message):
+    def get_user_id(self, username):
+        return self._db.get_user_id(username)
+
+    def save_message(self, user_id, message):
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        self._db.save_message(self.username, username, message, cur_time)
+        self._db.save_message(self.user_id, user_id, message, cur_time)
 
     def change_username(self, new_username):
-        data = self.create_data(username=self.username, json_format=False)
+        data = self.create_data(username=self.username, user_id=self.user_id,
+                                json_format=False)
         data['new_username'] = new_username
+        data_dump = json.dumps(data)
         for host in self._connected:
-            self.send_msg(host=host, msg=json.dumps(data))
+            if host != self._host:
+                self.send_msg(host=host, msg=data_dump)
         self.username = new_username
-        self._db.save_user(user_id=self.user_id, username=self.username)
+        self._db.change_username(user_id=self.user_id,
+                                 new_username=new_username)
         self._db.save_current_user(user_id=self.user_id, username=self.username)
 
 

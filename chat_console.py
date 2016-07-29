@@ -35,11 +35,13 @@ class BaseChat():
         self.client.specify_username(username)
 
     def send_message(self, username, text):
+        user_id = self.client.get_user_id()
         message = self.client.create_data(msg=text,
-                                          username=self.client.username)
-        host = self.client.username2host[username]
-        if username != self.client.username:
-            self.client.save_message(username, text)
+                                          username=self.client.username
+                                          user_id=user_id)
+        host = self.client.user_id2host[user_id]
+        if user_id != self.client.user_id:
+            self.client.save_message(user_id, text)
         self.client.send_msg(host=host, msg=message)
 
     def get_last_message(self, username):

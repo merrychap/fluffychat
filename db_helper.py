@@ -115,14 +115,13 @@ class DBHelper:
             logger.info('[+] Database successuflly created(updated)')
 
     def save_message(self, src, dst, message, time):
-        def increment_total_messages(cur, src_id, dst_id):
+        def increment_total_messages(cur, src, dst):
             cur.execute('''
                 UPDATE conversation SET total_messages = total_messages + 1
                 WHERE
                 (user_one LIKE {0} AND user_two LIKE {1})
                 OR
-                (user_one LIKE {1} AND user_two LIKE {0});'''.format(src_id,
-                                                                     dst_id))
+                (user_one LIKE {1} AND user_two LIKE {0});'''.format(src, dst))
 
         con = sql.connect(DATABASE)
         with con:
@@ -201,8 +200,6 @@ class DBHelper:
                     (new_username, user_id))
                 logger.info('[+] User {0} changed username: {1}'
                             .format(user_id, new_username))
-                self.save_current_user(user_id=user_id, username=new_username,
-                                       cur=cur)
                 return True
             else:
                 logger.info('[-] User with "{0}" username already exists')
