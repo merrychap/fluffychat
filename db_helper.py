@@ -156,11 +156,14 @@ class DBHelper:
                     cur.execute('''
                         INSERT OR IGNORE INTO users (user_id, username, password)
                         VALUES (?, ?, ?);''', (user_id, username, password))
+                        logger.info('[+] User id = {0} created successuflly'
+                                    .format(user_id))
                 else:
                     cur.execute('''
                         INSERT OR IGNORE INTO users (username, password)
                         VALUES (?, ?);''', (username, password))
-                logger.info('[+] User "{0}" created successuflly'.format(username))
+                        logger.info('[+] User "{0}" created successuflly'
+                                    .format(username))
                 return True
             else:
                 logger.info('[-] User "{0}" already exists'.format(username))

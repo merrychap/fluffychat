@@ -60,9 +60,6 @@ class BaseChat():
         last_msg = self.get_last_message(username)
         while True:
             cur_msg = self.get_last_message(username)
-            # print(last_msg)
-            # print(cur_msg)
-            # print()
             if last_msg[1] != cur_msg[1] and last_msg[2] == cur_msg[2]:
                 messages = self.client.get_history(username,
                                                    cur_msg[1] - last_msg[1])
@@ -82,7 +79,8 @@ class MainChat(BaseChat):
         self.client.start()
         if not self.cur_user_exists():
             self.specify_username()
-        print('Hello again, %s!' % self.client.username)
+        else:
+            print('Hello again, %s!' % self.client.username)
         self.command_mode()
 
     def exit(self):
@@ -120,8 +118,8 @@ class MainChat(BaseChat):
                 self.print_help(commands=self.commands)
             elif command == '@users':
                 print('\n' + 30*'=')
-                for user in self.client.host2username.values():
-                    print('+ %s' % user)
+                for user_id in self.client.host2user_id.values():
+                    print('+ %s' % self.client.get_username(user_id))
                 print(30*'=' + '\n')
             elif command == '@exit':
                 self.exit()

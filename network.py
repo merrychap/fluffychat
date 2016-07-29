@@ -39,6 +39,9 @@ class ChatClient:
             self.get_connected()
             self.connect()
         else:
+            self._db.save_user(self.username, user_id=self.user_id)
+            self._db.save_current_user(self.username, self.user_id)
+
             self.host2user_id[self._host] = self.user_id
             self.user_id2host[self.user_id] = self._host
 
@@ -156,7 +159,7 @@ class ChatClient:
                                   message=data['message'], time=cur_time)
 
         if 'connected' in data:
-            logger.info('[*] Updating tables of connected hosts')
+            logger.info('[+] Updating tables of connected hosts')
             self.update_connected(data)
 
         if 'new_username' in data:
@@ -171,15 +174,16 @@ class ChatClient:
             self._connected.add(host)
             self._db.save_user(user_id=host_data[1],
                                username=host_data[2])
-        logger.info('[+] Connected host: %s' % str(self._connected))
         self.user_id = len(self._connected)
+        logger.info('[*] Current user id: %s' % self.user_id)
+        logger.info('[*] Connected hosts: %s' % str(self._connected))
 
     def update_username(self, data):
         username = data['username']
         new_username = data['new_username']
         user_id = data['user_id']
 
-        logger.info('[*] {0} changed username to {1}'
+        logger.info('[+] {0} changed username to {1}'
                     .format(username, new_username))
         self._db.change_username(user_id, new_username)
 
@@ -191,7 +195,7 @@ class ChatClient:
         if host[0] == self._host[0]:
             return
         host = tuple(host)
-        logger.info('[*] Updating tables of connected hosts')
+        logger.info('[+] Updating tables of connected hosts')
         # Updating table of connected hosts for each host in network
         if data['is_server'] == '0':
             data['is_server'] = '1'
@@ -218,7 +222,7 @@ class ChatClient:
         tun_data = self.create_data(json_format=False)
         tun_data['connected'] = [(host, user_id, self._db.get_username(user_id)) \
                                   for host, user_id in self.host2user_id.items()]
-        logger.info('[*] Sending connected hosts to: %s' % str(host))
+        logger.info('[+] Sending connected hosts to: %s' % str(host))
         self.send_msg(host=host, msg=json.dumps(tun_data))
 
     def get_ip_addr(self):
