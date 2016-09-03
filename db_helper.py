@@ -1,4 +1,10 @@
-'''Module for managing with database'''
+'''
+Module for local database management
+
+This module provides managing of user and
+its messages.
+'''
+
 # !/usr/bin/env python3
 
 import sqlite3 as sql
@@ -15,13 +21,57 @@ class DBHelper:
     def __init__(self):
         pass
 
-    def get_message_data(self, cur, src, dst):
+    def _increment_total_messages(self, cur, src, src_name, table,
+                                  dst=None, dst_name=None):
+        conv_id = self._get_message_data(cur, src, src_name, table,
+                                         dst, dst_name)[0]
         cur.execute('''
-            SELECT c_id, total_messages FROM conversation WHERE
-            (user_one LIKE {0} AND user_two LIKE {1})
-            OR
-            (user_one LIKE {1} AND user_two LIKE {0});'''.format(src, dst))
+            UPDATE {0} SET total_messages = total_messages + 1
+            WHERE c_id LIKE {1}'''.format(table, conv_id)
+
+    def _conversation_exists(self, cur, src, src_name, table,
+                             dst=None, dst_name=None):
+        data = self._get_message_data(cur, src, src_name,
+                                      table, dst, dst_name)
+        return data is not None
+
+    def _get_message_data(self, cur, src, src_name, table,
+                          dst=None, dst_name=None):
+        where_query = '{0} LIKE {1}'.format(src_name, src)
+        if dst is not None:
+            where_query = '''
+                ({0} LIKE {1} AND {2} LIKE {3})
+                OR
+                ({0} LIKE {3} AND {2} LIKE {1});'''
+                .format(src_name, src, dst_name, dst))
+        cur.execute('SELECT c_id, total_messages FROM {0} WHERE {1}'
+                    .format(table, where_query))
         return cur.fetchone()
+
+    # TODO
+    # Merge two functions below with similar function about users
+    def _get_room_name(self, room_id):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            cur.execute(('SELECT room_name FROM rooms WHERE'
+                         'room_id LIKE {0}').format(room_id))
+            return cur.fetchone()[0]
+
+    def _get_room_id(self, room_name):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            cur.execute(('SELECT room_id FROM rooms WHERE'
+                         'room_name LIKE {0}').format(room_name))
+            return cur.fetchone()[0]
+
+    def _user_exists_in_room(self, cur, room_id, user_id):
+        cur.execute('''
+            SELECT c_id FROM rc_user WHERE
+            room_id LIKE {0} AND user_id LIKE {1});'''
+            .format(room_id, user_id))
+        return cur.fetchone() is not None
 
     def get_user_id(self, username):
         con = sql.connect(DATABASE)
@@ -31,15 +81,6 @@ class DBHelper:
                 SELECT user_id FROM users WHERE
                 username LIKE ?;''', (username, ))
             return cur.fetchone()[0]
-
-    def conversation_exists(self, cur, src_id, dst_id):
-        cur.execute('''
-            SELECT c_id FROM conversation WHERE
-            (user_one LIKE {0} AND user_two LIKE {1})
-            OR
-            (user_one LIKE {1} AND user_two LIKE {0})
-        '''.format(src_id, dst_id))
-        return cur.fetchone() is not None
 
     def user_exists(self, cur, username):
         cur.execute('''
@@ -90,6 +131,13 @@ class DBHelper:
                 );''')
 
             cur.execute('''
+                CREATE TABLE IF NOT EXISTS `rooms` (
+                    `room_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    'room_name' VARCHAR(25) NOT NULL UNIQUE,
+                    `users_count` INT(11) NOT NULL
+                );''')
+
+            cur.execute('''
                 CREATE TABLE IF NOT EXISTS `conversation` (
                     `c_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     `user_one` INT(11) NOT NULL,
@@ -98,6 +146,24 @@ class DBHelper:
                     `total_messages` INT(11) DEFAULT 0,
                     FOREIGN KEY (user_one) REFERENCES users(user_id),
                     FOREIGN KEY (user_two) REFERENCES users(user_id)
+                );''')
+
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS `room_conversation` (
+                    `c_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    `room` INT(11) NOT NULL,
+                    `time` INT(11) DEFAULT NULL,
+                    `total_messages` INT(11) DEFAULT 0,
+                    FOREIGN KEY (room) REFERENCES rooms(room_id)
+                );''')
+
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS `rc_user` (
+                    `с_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    `room_id` INT(11) NOT NULL,
+                    `user_id` INT(11) NOT NULL,
+                    FOREIGN KEY (room_id) REFERENCES rooms(room_id),
+                    FOREIGN KEY (user_id) REFERENCES users(user_id)
                 );''')
 
             cur.execute('''
@@ -111,37 +177,51 @@ class DBHelper:
                     FOREIGN KEY (user_id_fk) REFERENCES users(user_id),
                     FOREIGN KEY (c_id_fk) REFERENCES conversation(c_id)
                 );''')
+
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS `room_conversation_reply` (
+                    `cr_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    `reply` TEXT,
+                    `reply_id` INT(11) NOT NULL,
+                    `user_id_fk` INT(11) NOT NULL,
+                    `c_id_fk` INT(11) NOT NULL,
+                    `time` INT(11) DEFAULT NULL,
+                    FOREIGN KEY (user_id_fk) REFERENCES users(user_id),
+                    FOREIGN KEY (c_id_fk) REFERENCES room_conversation(c_id)
+                )
+            );''')
+
             logger.info('[+] Database successuflly created(updated)')
 
-    def save_message(self, src, dst, message, time):
-        def increment_total_messages(cur, src, dst):
-            cur.execute('''
-                UPDATE conversation SET total_messages = total_messages + 1
-                WHERE
-                (user_one LIKE {0} AND user_two LIKE {1})
-                OR
-                (user_one LIKE {1} AND user_two LIKE {0});'''.format(src, dst))
-
+    def save_message(self, src, dst, message, time, src_name='user_one',
+                     dst_name='user_two', conv_table='conversation',
+                     conv_table_reply='conversation_reply'):
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
 
             # Update messages count in `conversation` table
-            if not self.conversation_exists(cur, src, dst):
+            conv_exists = self._conversation_exists(cur, src, src_name,
+                                                    dst, dst_name, conv_table)
+            if not conv_exists:
                 cur.execute('''
-                    INSERT INTO conversation (user_one, user_two,
-                                                        total_messages)
-                    VALUES (?, ?, 0);''', (src, dst))
+                    INSERT INTO {0} ({1}, {2}, total_messages)
+                    VALUES (?, ?, 0);'''.format(conv_table, src_name, dst_name),
+                                        (src, dst))
 
-            # Get number of message
-            c_id, total_messages = self.get_message_data(cur, src, dst)
+            # Get number of current message in database
+            c_id, total_messages = self._get_message_data(cur, src, src_name,
+                                                          conv_table, dst,
+                                                          dst_name)
 
-            # Save message
+            # Save message in the database
             cur.execute('''
-                INSERT INTO conversation_reply (reply, reply_id, user_id_fk,
-                c_id_fk, time) VALUES (?, ?, ?, ?, ?);''',
-                (message, total_messages + 1, src, c_id, time))
-            increment_total_messages(cur, src, dst)
+                INSERT INTO {0} (reply, reply_id, user_id_fk,
+                c_id_fk, time) VALUES (?, ?, ?, ?, ?);'''
+                .format(conv_table_reply), (message, total_messages + 1,
+                                            src, c_id, time))
+            self._increment_total_messages(cur, src, src_name, conv_table,
+                                           dst, dst_name)
 
             logger.info('[+] Message from {0} to {1} saved'.format(src, dst))
 
@@ -166,6 +246,17 @@ class DBHelper:
             else:
                 logger.info('[-] User "{0}" already exists'.format(username))
                 return False
+
+    def save_room_user(self, user_id, room_name=None, room_id=None):
+        # Invalid function attributes
+        if room_name is None and room_id is None:
+            return
+        if room_id is None:
+            room_id = self._get_room_id(room_name)
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            if not self.user_exists(cur, )
 
     def save_current_user(self, username, user_id, cur=None):
         if cur is None:
@@ -210,17 +301,19 @@ class DBHelper:
     def delete_message(self, cr_id):
         pass
 
-    def get_history(self, src, dst, count):
+    def get_history(self, src, dst, count, src_name='user_one',
+                    dst_name='user_two', conv_table='conversation',
+                    conv_table_reply='conversation_reply'):
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
             try:
-                c_id = self.get_message_data(cur, src, dst)[0]
+                c_id = self._get_message_data(cur, src, dst)[0]
                 cur.execute('''
                     SELECT reply, reply_id, user_id_fk, time
-                    FROM conversation_reply
-                    WHERE c_id_fk LIKE ? ORDER BY cr_id DESC LIMIT ?''', (c_id,
-                                                                      count))
+                    FROM {0}
+                    WHERE c_id_fk LIKE ? ORDER BY cr_id DESC LIMIT ?'''
+                    .format(conv_table_reply), (c_id, count))
                 for msg in range(0, count):
                     message = cur.fetchone()
                     if message is None:

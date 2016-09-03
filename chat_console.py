@@ -61,7 +61,7 @@ class BaseChat():
         last_msg = self.get_last_message(user_id)
         while True:
             cur_msg = self.get_last_message(user_id)
-            if last_msg[1] != cur_msg[1] and last_msg[2] == cur_msg[2]:
+            if last_msg[1] != cur_msg[1]:
                 messages = self.client.get_history(user_id,
                                                    cur_msg[1] - last_msg[1])
                 for message in messages:
@@ -185,7 +185,8 @@ class RoomChat(BaseChat):
         self.roomname = roomname
 
     def open(self):
-        pass
+        print()
+
 
     def create_command_descrypt(self):
         return {
