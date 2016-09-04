@@ -274,6 +274,8 @@ class ChatClient:
                                  new_username=new_username)
         self._db.save_current_user(user_id=self.user_id, username=self.username)
 
+    def user_exists(self, username):
+        return self._db.user_exists(username)
 
 if __name__ == '__main__':
     client = ChatClient(('192.168.0.101', PORT))

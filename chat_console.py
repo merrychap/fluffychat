@@ -24,8 +24,9 @@ class BaseChat():
 
     def print_help(self, commands, message=None):
         print('\n' + 30*'=')
-        print(('Commands types with @ on the left side of '
-               'command\nList of commands:\n'))
+        print(('Type commands with @ on the left side of '
+               'command.\nAnd type names without "".'
+               '\nList of commands:\n'))
         for command, descr in commands.items():
             print('+ %s : %s' % (command, descr))
         print(30*'=' + '\n')
@@ -35,10 +36,16 @@ class BaseChat():
         self.client.specify_username(username)
 
     def send_message(self, username, text):
+        '''
+        Sends message to destination host
+        '''
+
+        # Destination user id
         user_id = self.client.get_user_id(username)
         message = self.client.create_data(msg=text,
                                           username=self.client.username,
                                           user_id=self.client.user_id)
+        # Destination host
         host = self.client.user_id2host[user_id]
         if user_id != self.client.user_id:
             self.client.save_message(user_id, text)
@@ -95,18 +102,20 @@ class MainChat(BaseChat):
     def create_command_descrypt(self):
         return {
             'help': 'Shows this output',
-            'username "username"': 'Changes username',
-            'groups': 'Shows available groups',
-            'users': 'Shows online users',
-            'user "username"': 'Switches to user message mode',
-            'room "roomname"': 'Switches to room message mode',
-            'exit': 'Closes chat'
+            'username "username"': 'Changes current username. ',
+            'rooms': 'Shows available rooms.',
+            'users': 'Shows online users.',
+            'user "username"': 'Switches to user message mode. ',
+            'room "roomname"': 'Switches to room message mode. ',
+            'create_room "roomname"': 'Creates new room. ',
+            'exit': 'Closes chat.'
         }
 
     def command_mode(self):
         user_pattern = re.compile(r'^@user ([a-zA-Z_.]+)$')
         username_pattern = re.compile(r'@username ([a-zA-Z_.]+)$')
         room_pattern = re.compile(r'^@room ([a-zA-Z_.])$')
+        create_room_pattern = re.compile(r'^@create_room ([a-zA-Z_.])+$')
 
         print('\nType "@help" for list of commands with description')
 
@@ -116,6 +125,7 @@ class MainChat(BaseChat):
             user_parse = user_pattern.match(command)
             room_parse = room_pattern.match(command)
             username_parse = username_pattern.match(command)
+            create_room_parse = create_room_pattern.match(command)
 
             if command == '@help':
                 self.print_help(commands=self.commands)
@@ -124,11 +134,16 @@ class MainChat(BaseChat):
                 for user_id in self.client.host2user_id.values():
                     print('+ %s' % self.client.get_username(user_id))
                 print(30*'=' + '\n')
+            elif command == 'rooms':
+                pass
             elif command == '@exit':
                 self.exit()
             elif user_parse != None:
                 username = user_parse.group(1)
-                UserChat(username=username, client=self.client).open()
+                if self.client.user_exists(username):
+                    UserChat(username=username, client=self.client).open()
+                else:
+                    print('[-] No such user in the chat\n')
             elif room_parse != None:
                 roomname = room_parse.group(1)
             elif username_pattern != None:
@@ -138,12 +153,11 @@ class MainChat(BaseChat):
 class UserChat(BaseChat):
     def __init__(self, username, client):
         super().__init__(client)
-        print('\n[*] Swithes to message mode.\nType "enter" to start typing message')
+        print(('\n[*] Swithes to message mode.\n'
+               'Type "enter" to start typing message\n'
+               'You can type @help for list of available commands'))
         self.username = username
         self.user_id = client.get_user_id(username)
-
-        # ----- DEBUG ----- #
-        print('Dst username: {0}, user_id: {1}'.format(self.username, self.user_id))
 
         threading.Thread(target=self.print_recv_message,
                          args=(self.user_id,)).start()
@@ -156,7 +170,6 @@ class UserChat(BaseChat):
             print('{0} : {1}:> {2}'.format(message[3],
                                     self.client.get_username(message[2]),
                                     message[0]))
-
         while True:
             input()
             with lock:
