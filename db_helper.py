@@ -31,9 +31,10 @@ class DBHelper:
         pass
 
     def _increment_total_messages(self, cur, src, src_name, table,
-                                  dst=None, dst_name=None):
+                                  dst=None, dst_name=None, rc_user=None):
         conv_id = self._get_message_data(cur, src, src_name, table,
-                                         dst=dst, dst_name=dst_name)[0]
+                                         dst=dst, dst_name=dst_name,
+                                         rc_user=rc_user)[0]
         cur.execute('''
             UPDATE {0} SET total_messages = total_messages + 1
             WHERE c_id LIKE {1};'''.format(table, conv_id))
@@ -69,21 +70,19 @@ class DBHelper:
                 of the database
         '''
 
-        if rc_user:
-            cur.execute('''
-                SELECT c_id, total_messages FROM {0}
-                WHERE {1} LIKE {2} AND {3} LIKE {4}'''
-                .format(TABLE_RC_USER, src_name, src, dst_name, dst))
-            return cur.fetchone()
-
-        where_query = '"{0}" LIKE {1};'.format(src_name, src)
-        if dst is not None:
-            where_query = '''
-                ("{0}" LIKE {1} AND "{2}" LIKE {3})
-                OR
-                ("{0}" LIKE {3} AND "{2}" LIKE {1});'''.format(src_name, src,
-                                                           dst_name, dst)
-        cur.execute('SELECT c_id, total_messages FROM {0} WHERE {1}'
+        # print('Src: {0}; Src name: {1}; Dst: {2}; Dst name: {3}; Table: {4}; Rc user: {5}'
+        #       .format(src, src_name, dst, dst_name, table, rc_user))
+        if rc_user is not None:
+            where_query = '"{0}" LIKE {1};'.format(dst_name, dst)
+        else:
+            where_query = '"{0}" LIKE {1};'.format(src_name, src)
+            if dst is not None:
+                where_query = '''
+                    ("{0}" LIKE {1} AND "{2}" LIKE {3})
+                    OR
+                    ("{0}" LIKE {3} AND "{2}" LIKE {1});'''.format(src_name, src,
+                                                                   dst_name, dst)
+        cur.execute('SELECT c_id, total_messages FROM "{0}" WHERE {1}'
                     .format(table, where_query))
         return cur.fetchone()
 
@@ -149,6 +148,12 @@ class DBHelper:
             room_id LIKE ? AND user_id LIKE ?;''',
             (room_id, user_id))
         return cur.fetchone() is not None
+
+    def room_exists(self, room_name):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            return self._room_exists(cur, room_name)
 
     def _room_exists(self, cur, room_name):
         '''
@@ -452,7 +457,7 @@ class DBHelper:
                     cur.execute('''
                         INSERT INTO {0} ({1}, total_messages)
                         VALUES (?, 0);'''
-                        .format(TABLE_ROOM_CONVERSATION, 'room_id'), dst)
+                        .format(TABLE_ROOM_CONVERSATION, 'room_id'), (dst,))
             # Get number of current message in database
             c_id, total_messages = self._get_message_data(cur, src, src_name,
                                                           conv_table, dst=dst,
@@ -465,7 +470,7 @@ class DBHelper:
                 .format(conv_table_reply), (message, total_messages + 1,
                                             src, c_id, time))
             self._increment_total_messages(cur, src, src_name, conv_table,
-                                           dst, dst_name)
+                                           dst, dst_name, rc_user)
             print('[+] Message from {0} to {1} was saved'.format(src, dst))
 
     def save_room_message(self, src, message, time, room_name):
@@ -579,15 +584,49 @@ class DBHelper:
     def remove_message(self, cr_id):
         pass
 
+    def remove_room(self, room_name, room_id=None):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            if room_id is None:
+                room_id = self._get_room_id(cur, room_name)
+            cur.execute('''
+                ''')
+            print('[+] Room "{0}" was sucessfully removed'.format(room_name))
+
     def get_history(self, src, dst, count, src_name='user_one',
                     dst_name='user_two', conv_table=TABLE_CONVERSATION,
-                    conv_table_reply=TABLE_CONVERATION_REPLY):
+                    conv_table_reply=TABLE_CONVERATION_REPLY, room=None):
+        '''
+        Returns message history of users conversation
+        or conversation user in room. For this purpose here is
+        room flag.
+
+        Args:
+            src (int) Id of source user
+            dst (int) Id of destination user or room
+            count (int) Number of returned messages
+            src_name (str) Source filed name in the table of
+                the database
+            dst_name (str) Destintaion filed name in the table
+                of the database
+            conv_table (str) Name of conversation table
+            conv_table_reply (str) Name of conversation reply table
+            room (bool) Flag for conversation in room
+        '''
+
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
             try:
-                c_id = self._get_message_data(cur, src, src_name,
-                                              conv_table)[0]
+                msg_data = self._get_message_data(cur, src=src, src_name=src_name,
+                                                  table=conv_table, dst=dst,
+                                                  dst_name=dst_name,
+                                                  rc_user=room)
+                if msg_data is not None:
+                    c_id = msg_data[0]
+                else:
+                    return
                 cur.execute('''
                     SELECT reply, reply_id, user_id_fk, time
                     FROM {0}
@@ -599,7 +638,18 @@ class DBHelper:
                         break
                     yield message
             except Exception as e:
+                traceback.print_exc()
                 yield None
+
+    def get_room_history(self, src, room_name, count):
+        '''
+        It yields message history in room
+        '''
+        return self.get_history(src=src, dst=self.get_room_id(room_name),
+                                count=count, src_name='user_id',
+                                dst_name='room_id',
+                                room=True, conv_table=TABLE_ROOM_CONVERSATION,
+                                conv_table_reply=TABLE_ROOM_CONVERSATION_REPLY)
 
 if __name__ == '__main__':
     db = DBHelper()
@@ -622,6 +672,7 @@ if __name__ == '__main__':
     db.save_room_message(src=1, message='hi all', time=1, room_name='Wolf and Spice')
 
     for message in db.get_history(src=1, dst=1, count=10, src_name='user_id',
-                                  dst_name='room_id', conv_table=TABLE_ROOM_CONVERSATION,
+                                  dst_name='room_id', room=True,
+                                  conv_table=TABLE_ROOM_CONVERSATION,
                                   conv_table_reply=TABLE_ROOM_CONVERSATION_REPLY):
         print(message)

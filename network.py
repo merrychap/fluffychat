@@ -248,8 +248,12 @@ class ChatClient:
             if ip and (ip[0].startswith('192.') or ip[0].startswith('10.')):
                 return (ip[0], PORT)
 
-    def get_history(self, user_id, count):
-        return self._db.get_history(self.user_id, user_id, count)
+    # TODO MOVE ALL CODE BELOW INTO SEPARATE MODULE!!!
+    def get_history(self, dst, count, room=False):
+        if not room:
+            return self._db.get_history(self.user_id, dst, count)
+        else:
+            return self._db.get_room_history(self.user_id, dst, count)
 
     def get_username(self, user_id):
         return self._db.get_username(user_id)
@@ -260,6 +264,10 @@ class ChatClient:
     def save_message(self, user_id, message):
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         self._db.save_message(self.user_id, user_id, message, cur_time)
+
+    def create_room(self, room_name):
+        self._db.try_create_room(room_name=room_name,
+                                 creator_name=self.username)
 
     def change_username(self, new_username):
         data = self.create_data(username=self.username, user_id=self.user_id,
@@ -277,8 +285,14 @@ class ChatClient:
     def user_exists(self, username):
         return self._db.user_exists(username)
 
+    def room_exists(self, room_name):
+        return self._db.room_exists(room_name)
+
     def get_user_rooms(self):
         return self._db.get_user_rooms(self.username)
+
+    def get_room_id(self, room_name):
+        return self._db.get_room_id(room_name)
 
 if __name__ == '__main__':
     client = ChatClient(('192.168.0.101', PORT))

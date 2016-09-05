@@ -17,18 +17,26 @@ LOG_FILE = 'logging_config.ini'
 INF = 1000
 lock = threading.Lock()
 
+INDENT = 38 * '='
+
 class BaseChat():
     def __init__(self, client):
         self.client = client
         self.commands = self.create_command_descrypt()
 
     def print_help(self, commands, message=None):
-        print('\n' + 30*'=')
+        print('\n' + INDENT)
         print(('Type commands with @ on the left side of command.'
                '\nList of commands:\n'))
         for command, descr in commands.items():
             print('+ %s : %s' % (command, descr))
-        print(30*'=' + '\n')
+        print(INDENT + '\n')
+
+    def print_mode_help(self, mode):
+        print(('\n[*] Switched to %s mode\n'
+               'Type "enter" to start typing message\n'
+               'You can type @help for list of available '
+               'commands\n' + INDENT + '\n') % mode)
 
     def specify_username(self):
         username = input('[*] Please, specify your username(a-zA-Z_.):> ')
@@ -54,6 +62,10 @@ class BaseChat():
             self.client.save_message(user_id, text)
         self.client.send_msg(host=host, msg=message)
 
+    def get_last_room_message(self, room_id):
+        for message in self.client.get_history(room_id, 10, True):
+            print(message)
+
     def get_last_message(self, user_id):
         for message in self.client.get_history(user_id, INF):
             if message != None and message[2] == user_id:
@@ -67,7 +79,14 @@ class BaseChat():
         self.client.change_username(username)
         print('\n[+] Username changed, %s!\n' % username)
 
-    def print_last_messages(self):
+    def print_last_messages(self, dst, room=False):
+        for message in list(self.client.get_history(dst, 10, room))[::-1]:
+            if message == None or message[1] == -1:
+                continue
+            print('{0} : {1}:> {2}'.format(message[3],
+                                    self.client.get_username(message[2]),
+                                    message[0]))
+    def print_recv_room_message(self, room_id):
         pass
 
     def print_recv_message(self, user_id):
@@ -78,7 +97,7 @@ class BaseChat():
                 messages = self.client.get_history(user_id,
                                                    cur_msg[1] - last_msg[1])
                 for message in messages:
-                    if message[2] == user_id:
+                    if message[2] == dst:
                         print('{0} : {1}:> {2}'
                               .format(message[3],
                                       self.client.get_username(user_id),
@@ -113,7 +132,7 @@ class MainChat(BaseChat):
             'users': 'Shows online users.',
             'user "username"': 'Switches to user message mode. ',
             'room "roomname"': 'Switches to room message mode. ',
-            'remove_room "roomname": Removes created room.',
+            'remove_room "roomname"': 'Removes created room.',
             'create_room "roomname"': 'Creates new room. ',
             'exit': 'Closes chat.'
         }
@@ -121,8 +140,8 @@ class MainChat(BaseChat):
     def command_mode(self):
         user_pattern = re.compile(r'^@user "([a-zA-Z_.]+)"$')
         username_pattern = re.compile(r'@username "([a-zA-Z_.]+)"$')
-        room_pattern = re.compile(r'^@room "([a-zA-Z_.])"$')
-        create_room_pattern = re.compile(r'^@create_room "([a-zA-Z_.])+"$')
+        room_pattern = re.compile(r'^@room "([a-zA-Z_.]+)"$')
+        create_room_pattern = re.compile(r'^@create_room "([a-zA-Z_.]+)"$')
 
         print('\nType "@help" for list of commands with description')
 
@@ -137,15 +156,15 @@ class MainChat(BaseChat):
             if command == '@help':
                 self.print_help(commands=self.commands)
             elif command == '@users':
-                print('\n' + 30*'=')
+                print('\n' + INDENT)
                 for user_id in self.client.host2user_id.values():
                     print('+ %s' % self.client.get_username(user_id))
-                print(30*'=' + '\n')
+                print(INDENT + '\n')
             elif command == '@rooms':
-                print('\n' + 30*'=')
+                print('\n' + INDENT)
                 for room in self.client.get_user_rooms():
                     print('+ %s' % room)
-                print(30*'=' + '\n')
+                print(INDENT + '\n')
             elif command == '@exit':
                 self.exit()
             elif user_parse != None:
@@ -156,8 +175,15 @@ class MainChat(BaseChat):
                     print('[-] No such user in the chat\n')
             elif room_parse != None:
                 room_name = room_parse.group(1)
-
-            elif username_pattern != None:
+                if self.client.room_exists(room_name):
+                    RoomChat(room_name=room_name, client=self.client).open()
+                else:
+                    print('[-] No such room in the chat\n')
+            elif create_room_parse != None:
+                room_name = create_room_parse.group(1)
+                self.client.create_room(room_name)
+                print('\n[+] You\'ve created room "{0}"\n'.format(room_name) )
+            elif username_parse != None:
                 self.change_username(username_parse.group(1))
             else:
                 pass
@@ -166,23 +192,19 @@ class MainChat(BaseChat):
 class UserChat(BaseChat):
     def __init__(self, username, client):
         super().__init__(client)
-        print(('\n[*] Swithes to message mode.\n'
-               'Type "enter" to start typing message\n'
-               'You can type @help for list of available commands'))
+
         self.username = username
         self.user_id = client.get_user_id(username)
+
+        self.print_mode_help('message')
 
         threading.Thread(target=self.print_recv_message,
                          args=(self.user_id,)).start()
 
     def open(self):
         print()
-        for message in list(self.client.get_history(self.user_id, 10))[::-1]:
-            if message == None or message[1] == -1:
-                continue
-            print('{0} : {1}:> {2}'.format(message[3],
-                                    self.client.get_username(message[2]),
-                                    message[0]))
+        self.print_last_messages(self.user_id)
+
         while True:
             input()
             with lock:
@@ -190,7 +212,7 @@ class UserChat(BaseChat):
             if message == '@help':
                 self.print_help(commands=self.commands)
             elif message == '@back':
-                print('\n[*] Switches to command mode\n')
+                print('\n[*] Switched to command mode\n' + INDENT + '\n')
                 break
             elif message == '@test':
                 print(self.client.get_history(self.username, 1))
@@ -205,15 +227,31 @@ class UserChat(BaseChat):
 
 
 class RoomChat(BaseChat):
-    def __init__(self, username, roomname, client):
-        self.super().__init__(client)
-        self.username = username
-        self.roomname = roomname
+    def __init__(self, room_name, client):
+        super().__init__(client)
+
+        self.room_name = room_name
+        self.room_id = self.client.get_room_id(room_name)
+
+        self.print_mode_help('room message')
+
+        self.get_last_room_message(self.room_id)
+        # threading.Thread(target=self.print_recv_message,
+        #                  args=(self.user_id,)).start()
 
     def open(self):
         print()
-        for message in list()
+        self.print_last_messages(self.room_name, True)
 
+        while True:
+            input()
+            with lock:
+                message = input('%s:> ' % self.client.username)
+            if message == '@help':
+                self.print_help(commands=self.commands)
+            elif message == '@back':
+                print('\n[*] Switched to command mode\n' + INDENT + '\n')
+                break
 
     def create_command_descrypt(self):
         return {
