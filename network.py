@@ -20,15 +20,15 @@ logger = logging.getLogger(__name__)
 class ChatClient:
     def __init__(self, server_host=None):
         self._server_host = server_host
-        self._recv_sock = self.create_recv_socket()
-        self._host = self.get_ip_addr()
+        self._recv_sock = self._create_recv_socket()
+        self._host = self._get_ip_addr()
         self._connected = set()
         self._db = db_helper.DBHelper()
 
         self.user_id_assigned = False
 
         self._db.try_create_database()
-        self.init_user_data()
+        self._init_user_data()
 
         self.host2user_id = dict()
         self.user_id2host = dict()
@@ -36,19 +36,19 @@ class ChatClient:
         self._connected.add(self._host)
 
     def start(self):
-        threading.Thread(target=self.handle_recv).start()
+        threading.Thread(target=self._handle_recv).start()
         if self._server_host is not None:
-            self.get_connected()
+            self._get_connected()
             while not self.user_id_assigned:
                 pass
-            self.handle_username()
+            self._handle_username()
             self.connect()
         else:
-            self.handle_username()
+            self._handle_username()
             self.host2user_id[self._host] = self.user_id
             self.user_id2host[self.user_id] = self._host
 
-    def init_user_data(self):
+    def _init_user_data(self):
         user = self._db.get_current_user()
         if user is not None:
             self.user_id = user[0]
@@ -60,7 +60,7 @@ class ChatClient:
     def specify_username(self, username):
         self.username = username
 
-    def handle_username(self):
+    def _handle_username(self):
         self._db.change_username(user_id=self.user_id,
                                  new_username=self.username)
         self._db.save_user(username=self.username, user_id=self.user_id)
@@ -69,23 +69,23 @@ class ChatClient:
         self.host2user_id[self._host] = self.user_id
         self.user_id2host[self.user_id] = self._host
 
-    def create_send_socket(self):
+    def _create_send_socket(self):
         send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         return send
 
-    def create_recv_socket(self):
+    def _create_recv_socket(self):
         recv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         recv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         recv.bind(('', PORT))
         recv.listen(10)
         return recv
 
-    def get_connected(self):
+    def _get_connected(self):
         logger.info('[*] Getting connected hosts')
-        data = self.create_data(host=self._host, action='get_connected')
+        data = self.create_data(host=self._host, action='_get_connected')
         self.send_msg(host=self._server_host, msg=data)
 
-    def connect(self):
+    def _connect(self):
         logger.info('[*] Connecting to: %s' % str(self._server_host))
         data = self.create_data(host=self._host, action='connect',
                                 username=self.username, user_id=self.user_id)
@@ -114,7 +114,7 @@ class ChatClient:
 
     def send_msg(self, host, msg):
         try:
-            send_sock = self.create_send_socket()
+            send_sock = self._create_send_socket()
             send_sock.connect(host)
             send_sock.sendall(bytes(msg, 'utf-8'))
         except (Exception, socket.error) as e:
@@ -123,7 +123,7 @@ class ChatClient:
         finally:
             send_sock.close()
 
-    def handle_recv(self):
+    def _handle_recv(self):
         while True:
             logger.info('[*] Waiting for connection')
             conn, addr = self._recv_sock.accept()
@@ -137,25 +137,25 @@ class ChatClient:
                         break
                     data += recieved_data
                 logger.info('[+] Recieved: %s' % data)
-                self.parse_data(data.decode('utf-8'))
+                self._parse_data(data.decode('utf-8'))
             finally:
                 conn.close()
 
-    def parse_data(self, json_data):
+    def _parse_data(self, json_data):
         data = json.loads(json_data)
         # We have request for connection. Then we should send this ip to all
         # host in our network
         if data['action'] == 'connect':
-            self.handle_host_action(data=data, action_type='connect',
+            self._handle_host_action(data=data, action_type='connect',
                                     message='[+] Adding host: ')
 
         # The same with disconnection
         if data['action'] == 'disconnect':
-            self.handle_host_action(data=data, action_type='disconnect',
+            self._handle_host_action(data=data, action_type='disconnect',
                                     message='[+] Removing host: ')
 
-        if data['action'] == 'get_connected':
-            self.send_connected(host=data['host'])
+        if data['action'] == '_get_connected':
+            self._send_connected(host=data['host'])
 
         # TODO save messages in database or file
         if data['message'] != '':
@@ -165,12 +165,12 @@ class ChatClient:
 
         if 'connected' in data:
             logger.info('[+] Updating tables of connected hosts')
-            self.update_connected(data)
+            self._update_connected(data)
 
         if 'new_username' in data:
-            self.update_username(data)
+            self._update_username(data)
 
-    def update_connected(self, data):
+    def _update_connected(self, data):
         for host_data in data['connected']:
             host = tuple(host_data[0])
             user_id = int(host_data[1])
@@ -190,7 +190,7 @@ class ChatClient:
         logger.info('[*] Current user id: %s' % self.user_id)
         logger.info('[*] Connected hosts: %s' % str(self._connected))
 
-    def update_username(self, data):
+    def _update_username(self, data):
         username = data['username']
         new_username = data['new_username']
         user_id = data['user_id']
@@ -199,7 +199,7 @@ class ChatClient:
                     .format(username, new_username))
         self._db.change_username(user_id, new_username)
 
-    def handle_host_action(self, data, action_type, message):
+    def _handle_host_action(self, data, action_type, message):
         host = data['host']
         username = data['username']
         user_id = data['user_id']
@@ -229,7 +229,7 @@ class ChatClient:
             self.user_id2host.pop(user_id, None)
             return
 
-    def send_connected(self, host):
+    def _send_connected(self, host):
         host = tuple(host)
         tun_data = self.create_data(json_format=False)
         tun_data['connected'] = [(host, user_id, self._db.get_username(user_id)) \
@@ -237,7 +237,7 @@ class ChatClient:
         logger.info('[+] Sending connected hosts to: %s' % str(host))
         self.send_msg(host=host, msg=json.dumps(tun_data))
 
-    def get_ip_addr(self):
+    def _get_ip_addr(self):
         global PORT
         ip_lt1 = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
                   if not ip.startswith("127.")][:1]
@@ -245,7 +245,7 @@ class ChatClient:
                    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]]
                   [0][1]]
         for ip in [ip_lt1, ip_lt2]:
-            if ip and ip[0].startswith('192.'):
+            if ip and (ip[0].startswith('192.') or ip[0].startswith('10.')):
                 return (ip[0], PORT)
 
     def get_history(self, user_id, count):
@@ -276,6 +276,9 @@ class ChatClient:
 
     def user_exists(self, username):
         return self._db.user_exists(username)
+
+    def get_user_rooms(self):
+        return self._db.get_user_rooms(self.username)
 
 if __name__ == '__main__':
     client = ChatClient(('192.168.0.101', PORT))

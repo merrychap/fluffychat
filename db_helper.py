@@ -17,6 +17,15 @@ import logging
 logger = logging.getLogger(__name__)
 DATABASE = 'database.db'
 
+TABLE_CURRENT_USER = 'current_user'
+TABLE_USERS = 'users'
+TABLE_ROOMS = 'rooms'
+TABLE_CONVERSATION = 'conversation'
+TABLE_ROOM_CONVERSATION = 'room_conversation'
+TABLE_RC_USER = 'rc_user'
+TABLE_CONVERATION_REPLY = 'conversation_reply'
+TABLE_ROOM_CONVERSATION_REPLY = 'room_conversation_reply'
+
 class DBHelper:
     def __init__(self):
         pass
@@ -41,7 +50,32 @@ class DBHelper:
         return data is not None
 
     def _get_message_data(self, cur, src, src_name, table,
-                          dst=None, dst_name=None):
+                          dst=None, dst_name=None, rc_user=None):
+        '''
+        Returns conversation id and total message in conversation.
+        It provides both getting message data from user to user and
+        getting data from user to room. For last purpose here is
+        rc_user flag.
+
+        Args:
+            cur (Cursor) Database cursor
+            src (int) Source user id
+            src_name (str) Source filed name in the table of
+                the database
+            table (str) Name of table where is stored information
+                about conversation
+            dst (int) Destionation user or room id
+            dst_name (str) Destintaion filed name in the table
+                of the database
+        '''
+
+        if rc_user:
+            cur.execute('''
+                SELECT c_id, total_messages FROM {0}
+                WHERE {1} LIKE {2} AND {3} LIKE {4}'''
+                .format(TABLE_RC_USER, src_name, src, dst_name, dst))
+            return cur.fetchone()
+
         where_query = '"{0}" LIKE {1};'.format(src_name, src)
         if dst is not None:
             where_query = '''
@@ -55,23 +89,44 @@ class DBHelper:
 
     # TODO
     # Merge two functions below with similar function about users
-    def _get_room_name(self, room_id):
-        con = sql.connect(DATABASE)
-        with con:
-            cur = con.cursor()
-            cur.execute(('SELECT room_name FROM rooms WHERE '
-                         'room_id LIKE ?;'), (room_id,))
-            return cur.fetchone()[0]
+    def _get_room_name(self, cur, room_id):
+        '''
+        Returns room name by its id
 
-    def _get_room_id(self, room_name):
+        Args:
+            room_id (int) Room id
+
+        Returns:
+            (str) Room name
+        '''
+        cur.execute(('SELECT room_name FROM rooms WHERE '
+                     'room_id LIKE ?;'), (room_id,))
+        return cur.fetchone()
+
+    def get_room_id(self, room_name):
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
-            cur.execute(('SELECT room_id FROM rooms WHERE '
-                         'room_name LIKE ?;'), (room_name,))
-            fetched = cur.fetchone()
-            if fetched is not None:
-                return fetched[0]
+            return self._get_room_id(cur, room_name)
+
+    def _get_room_id(self, cur, room_name):
+        '''
+        Returns room id by its name. And if such room doesn't
+        exist then it returns None
+
+        Args:
+            room_name (str) Room name
+
+        Returns:
+            (int) Room id
+        '''
+
+        cur.execute(('SELECT room_id FROM rooms WHERE '
+                     'room_name LIKE ?;'), (room_name,))
+
+        fetched = cur.fetchone()
+        if fetched is not None:
+            return fetched[0]
 
     def _user_exists_in_room(self, cur, room_id, user_id):
         '''
@@ -108,7 +163,7 @@ class DBHelper:
             bool True if room exists, else False
         '''
 
-        room_id = self._get_room_id(room_name)
+        room_id = self._get_room_id(cur, room_name)
         return room_id is not None
 
     def get_user_id(self, username):
@@ -146,6 +201,17 @@ class DBHelper:
         return cur.fetchone()[0]
 
     def user_exists(self, username):
+        '''
+        Checks if user with passed username exists in the
+        database. It uses private method with the same function
+
+        Args:
+            username (str) Passed username
+
+        Returns:
+            bool True if user exists, else False
+        '''
+
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
@@ -202,17 +268,27 @@ class DBHelper:
             return cur.fetchone()
 
     def get_user_rooms(self, username, user_id=None):
+        '''
+        Yields rooms, in which certain user is located.
+
+        Args:
+            username (str) Passed username
+            user_id (optional, int) User id
+
+        Yields:
+            str Name of each room
+        '''
+
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
             if user_id is None:
                 user_id = self._get_user_id(cur, username)
-            # cur.execute('''
-            #     SELECT room_id FROM rc_user WHERE
-            #     user_id LIKE ?;''', (user_id,))
-            cur.execute('SELECT * FROM rc_user;')
-            for room in cur.fetchall():
-                print(room)
+            cur.execute('''
+                SELECT room_id FROM rc_user WHERE
+                user_id LIKE ?;''', (user_id,))
+            for room_id in cur.fetchall():
+                yield self._get_room_name(cur, room_id[0])
 
     # TODO pick out try...except of main DBHelper functions
     # into execute function
@@ -252,7 +328,6 @@ class DBHelper:
                             .format(room_name))
                 return False
 
-
     def try_create_database(self):
         '''
         Creates tables of database if they don't exist
@@ -263,29 +338,29 @@ class DBHelper:
             cur = con.cursor()
 
             cur.execute('''
-                CREATE TABLE IF NOT EXISTS `current_user` (
+                CREATE TABLE IF NOT EXISTS {0} (
                     `user_id` INTEGER NOT NULL UNIQUE,
                     `username` VARCHAR(25) NOT NULL UNIQUE
-                );''')
+                );'''.format(TABLE_CURRENT_USER))
 
             cur.execute('''
-                CREATE TABLE IF NOT EXISTS `users` (
+                CREATE TABLE IF NOT EXISTS {0} (
                    `user_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                    `username` VARCHAR(25) NOT NULL UNIQUE,
                    `password` VARCHAR(50) DEFAULT NULL
-                );''')
+                );'''.format(TABLE_USERS))
 
             cur.execute('''
-                CREATE TABLE IF NOT EXISTS `rooms` (
+                CREATE TABLE IF NOT EXISTS {0} (
                     `room_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     'room_name' VARCHAR(25) NOT NULL UNIQUE,
                     'creator' INT(11) NOT NULL,
                     `users_count` INT(11) DEFAULT 0,
                     FOREIGN KEY (creator) REFERENCES users(user_id)
-                );''')
+                );'''.format(TABLE_ROOMS))
 
             cur.execute('''
-                CREATE TABLE IF NOT EXISTS `conversation` (
+                CREATE TABLE IF NOT EXISTS {0} (
                     `c_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     `user_one` INT(11) NOT NULL,
                     `user_two` INT(11) NOT NULL,
@@ -293,28 +368,28 @@ class DBHelper:
                     `total_messages` INT(11) DEFAULT 0,
                     FOREIGN KEY (user_one) REFERENCES users(user_id),
                     FOREIGN KEY (user_two) REFERENCES users(user_id)
-                );''')
+                );'''.format(TABLE_CONVERSATION))
 
             cur.execute('''
-                CREATE TABLE IF NOT EXISTS `room_conversation` (
+                CREATE TABLE IF NOT EXISTS {0} (
                     `c_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                    `room` INT(11) NOT NULL,
+                    `room_id` INT(11) NOT NULL,
                     `time` INT(11) DEFAULT NULL,
                     `total_messages` INT(11) DEFAULT 0,
-                    FOREIGN KEY (room) REFERENCES rooms(room_id)
-                );''')
+                    FOREIGN KEY (room_id) REFERENCES rooms(room_id)
+                );'''.format(TABLE_ROOM_CONVERSATION))
 
             cur.execute('''
-                CREATE TABLE IF NOT EXISTS `rc_user` (
+                CREATE TABLE IF NOT EXISTS {0} (
                     `с_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     `room_id` INT(11) NOT NULL,
                     `user_id` INT(11) NOT NULL,
                     FOREIGN KEY (room_id) REFERENCES rooms(room_id),
                     FOREIGN KEY (user_id) REFERENCES users(user_id)
-                );''')
+                );'''.format(TABLE_RC_USER))
 
             cur.execute('''
-                CREATE TABLE IF NOT EXISTS `conversation_reply` (
+                CREATE TABLE IF NOT EXISTS {0} (
                     `cr_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     `reply` TEXT,
                     `reply_id` INT(11) NOT NULL,
@@ -323,10 +398,10 @@ class DBHelper:
                     `time` INT(11) DEFAULT NULL,
                     FOREIGN KEY (user_id_fk) REFERENCES users(user_id),
                     FOREIGN KEY (c_id_fk) REFERENCES conversation(c_id)
-                );''')
+                );'''.format(TABLE_CONVERATION_REPLY))
 
             cur.execute('''
-                CREATE TABLE IF NOT EXISTS `room_conversation_reply` (
+                CREATE TABLE IF NOT EXISTS {0} (
                     `cr_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     `reply` TEXT,
                     `reply_id` INT(11) NOT NULL,
@@ -335,15 +410,30 @@ class DBHelper:
                     `time` INT(11) DEFAULT NULL,
                     FOREIGN KEY (user_id_fk) REFERENCES users(user_id),
                     FOREIGN KEY (c_id_fk) REFERENCES room_conversation(c_id)
-            );''')
+                );'''.format(TABLE_ROOM_CONVERSATION_REPLY))
 
             print('[+] Database was successfully created(updated)')
 
     def save_message(self, src, dst, message, time, src_name='user_one',
-                     dst_name='user_two', conv_table='conversation',
-                     conv_table_reply='conversation_reply'):
+                     dst_name='user_two', conv_table=TABLE_CONVERSATION,
+                     conv_table_reply=TABLE_CONVERATION_REPLY, rc_user=None):
         '''
-        Saves message from src to dst.
+        Saves message from user to user\\room in the local database.
+
+        Saving message to the user or room depends on the rc_user
+        flag. If it is true then destination is room, else user.
+
+        Args:
+            src (int) Id of source user
+            dst (int) Id of destination user or room
+            message (str) Text of message
+            time (int) Time of sending message
+            src_name (str) Source filed name in the table of
+                the database
+            dst_name (str) Destintaion filed name in the table
+                of the database
+            conv_table (str) Name of conversation table
+            conv_table_reply (str) Name of conversation reply table
         '''
 
         con = sql.connect(DATABASE)
@@ -353,14 +443,21 @@ class DBHelper:
             conv_exists = self._conversation_exists(cur, src, src_name,
                                                     conv_table, dst, dst_name)
             if not conv_exists:
-                cur.execute('''
-                    INSERT INTO {0} ({1}, {2}, total_messages)
-                    VALUES (?, ?, 0);'''.format(conv_table, src_name, dst_name),
-                                        (src, dst))
+                if rc_user is None:
+                    cur.execute('''
+                        INSERT INTO {0} ({1}, {2}, total_messages)
+                        VALUES (?, ?, 0);'''.format(conv_table, src_name,
+                                                    dst_name), (src, dst))
+                else:
+                    cur.execute('''
+                        INSERT INTO {0} ({1}, total_messages)
+                        VALUES (?, 0);'''
+                        .format(TABLE_ROOM_CONVERSATION, 'room_id'), dst)
             # Get number of current message in database
             c_id, total_messages = self._get_message_data(cur, src, src_name,
                                                           conv_table, dst=dst,
-                                                          dst_name=dst_name)
+                                                          dst_name=dst_name,
+                                                          rc_user=rc_user)
             # Save message in the database
             cur.execute('''
                 INSERT INTO {0} (reply, reply_id, user_id_fk,
@@ -370,6 +467,24 @@ class DBHelper:
             self._increment_total_messages(cur, src, src_name, conv_table,
                                            dst, dst_name)
             print('[+] Message from {0} to {1} was saved'.format(src, dst))
+
+    def save_room_message(self, src, message, time, room_name):
+        '''
+        It is separate function of saving message in the database.
+        It uses save_message function, that provides saving room
+        messages, but for clarity current function exists.
+
+        Args:
+            src (int) Id of source user
+            message (str) Text of message
+            time (int) Time of sending message
+            room_name (str) Name of room, in which was sent message
+        '''
+        room_id = self.get_room_id(room_name)
+        self.save_message(src=src, dst=room_id, message=message, time=time,
+                          src_name='user_id', dst_name='room_id',
+                          conv_table=TABLE_ROOM_CONVERSATION, rc_user=True,
+                          conv_table_reply=TABLE_ROOM_CONVERSATION_REPLY)
 
     def save_user(self, username, user_id=None, password=''):
         con = sql.connect(DATABASE)
@@ -403,10 +518,9 @@ class DBHelper:
                       room_id=None):
         # Invalid function attributes
         if room_id is None:
-            room_id = self._get_room_id(room_name)
+            room_id = self._get_room_id(cur, room_name)
         if user_id is None:
             user_id = self.get_user_id(username)
-        print(room_id, user_id)
         if not self._user_exists_in_room(cur, user_id=user_id,
                                          room_id=room_id):
             cur.execute('''
@@ -455,18 +569,19 @@ class DBHelper:
                             .format(user_id, new_username))
                 return True
             else:
-                print('[-] User with "{0}" username already exists')
+                print('[-] "{0}" already exists'
+                      .format(new_username))
                 return False
 
-    def delete_user(self, username):
+    def remove_user(self, username):
         pass
 
-    def delete_message(self, cr_id):
+    def remove_message(self, cr_id):
         pass
 
     def get_history(self, src, dst, count, src_name='user_one',
-                    dst_name='user_two', conv_table='conversation',
-                    conv_table_reply='conversation_reply'):
+                    dst_name='user_two', conv_table=TABLE_CONVERSATION,
+                    conv_table_reply=TABLE_CONVERATION_REPLY):
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
@@ -497,8 +612,16 @@ if __name__ == '__main__':
     db.save_message(src=1, dst=2, message='hi', time=1)
 
     db.try_create_room(room_name='Wolf and Spice', creator_name='Holo')
+
     db.add_user2room(username='Mike', room_name='Wolf and Spice')
 
     db.try_create_room(room_name='Hyouka', creator_name='Mike')
 
     db.get_user_rooms(username='Mike')
+
+    db.save_room_message(src=1, message='hi all', time=1, room_name='Wolf and Spice')
+
+    for message in db.get_history(src=1, dst=1, count=10, src_name='user_id',
+                                  dst_name='room_id', conv_table=TABLE_ROOM_CONVERSATION,
+                                  conv_table_reply=TABLE_ROOM_CONVERSATION_REPLY):
+        print(message)

@@ -24,8 +24,7 @@ class BaseChat():
 
     def print_help(self, commands, message=None):
         print('\n' + 30*'=')
-        print(('Type commands with @ on the left side of '
-               'command.\nAnd type names without "".'
+        print(('Type commands with @ on the left side of command.'
                '\nList of commands:\n'))
         for command, descr in commands.items():
             print('+ %s : %s' % (command, descr))
@@ -38,6 +37,10 @@ class BaseChat():
     def send_message(self, username, text):
         '''
         Sends message to destination host
+
+        Args:
+            username (str) Username of user that should recieve message
+            text (str) Text of message
         '''
 
         # Destination user id
@@ -63,6 +66,9 @@ class BaseChat():
     def change_username(self, username):
         self.client.change_username(username)
         print('\n[+] Username changed, %s!\n' % username)
+
+    def print_last_messages(self):
+        pass
 
     def print_recv_message(self, user_id):
         last_msg = self.get_last_message(user_id)
@@ -107,15 +113,16 @@ class MainChat(BaseChat):
             'users': 'Shows online users.',
             'user "username"': 'Switches to user message mode. ',
             'room "roomname"': 'Switches to room message mode. ',
+            'remove_room "roomname": Removes created room.',
             'create_room "roomname"': 'Creates new room. ',
             'exit': 'Closes chat.'
         }
 
     def command_mode(self):
-        user_pattern = re.compile(r'^@user ([a-zA-Z_.]+)$')
-        username_pattern = re.compile(r'@username ([a-zA-Z_.]+)$')
-        room_pattern = re.compile(r'^@room ([a-zA-Z_.])$')
-        create_room_pattern = re.compile(r'^@create_room ([a-zA-Z_.])+$')
+        user_pattern = re.compile(r'^@user "([a-zA-Z_.]+)"$')
+        username_pattern = re.compile(r'@username "([a-zA-Z_.]+)"$')
+        room_pattern = re.compile(r'^@room "([a-zA-Z_.])"$')
+        create_room_pattern = re.compile(r'^@create_room "([a-zA-Z_.])+"$')
 
         print('\nType "@help" for list of commands with description')
 
@@ -134,8 +141,11 @@ class MainChat(BaseChat):
                 for user_id in self.client.host2user_id.values():
                     print('+ %s' % self.client.get_username(user_id))
                 print(30*'=' + '\n')
-            elif command == 'rooms':
-                pass
+            elif command == '@rooms':
+                print('\n' + 30*'=')
+                for room in self.client.get_user_rooms():
+                    print('+ %s' % room)
+                print(30*'=' + '\n')
             elif command == '@exit':
                 self.exit()
             elif user_parse != None:
@@ -145,9 +155,12 @@ class MainChat(BaseChat):
                 else:
                     print('[-] No such user in the chat\n')
             elif room_parse != None:
-                roomname = room_parse.group(1)
+                room_name = room_parse.group(1)
+
             elif username_pattern != None:
                 self.change_username(username_parse.group(1))
+            else:
+                pass
 
 
 class UserChat(BaseChat):
@@ -199,6 +212,7 @@ class RoomChat(BaseChat):
 
     def open(self):
         print()
+        for message in list()
 
 
     def create_command_descrypt(self):
