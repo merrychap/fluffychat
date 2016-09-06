@@ -99,14 +99,15 @@ class ChatClient:
             self.send_msg(host=host, msg=data)
 
     def create_data(self, msg='', host='', action='', is_server=0,
-                    username='', user_id=-1, json_format=True):
+                    username='', user_id=-1, json_format=True, room=""):
         data = {
             'message': msg,
             'host': host,
             'is_server': is_server,
             'action': action,
             'username': username,
-            'user_id': user_id
+            'user_id': user_id,
+            'room': room
         }
         if json_format:
             return json.dumps(data)
@@ -160,6 +161,13 @@ class ChatClient:
         # TODO save messages in database or file
         if data['message'] != '':
             cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+            if data['room_message'] != "":
+                print(data)
+                return
+                self._db.save_room_message(src=data['user_id'],
+                                           message=data['message'],
+                                           time=cur_time,room_name=data['room'])
+                return
             self._db.save_message(src=data['user_id'], dst=self.user_id,
                                   message=data['message'], time=cur_time)
 
@@ -293,6 +301,9 @@ class ChatClient:
 
     def get_room_id(self, room_name):
         return self._db.get_room_id(room_name)
+
+    def get_users_by_room(self, room_name, room_id=None):
+        return self._db.get_users_by_room(room_name, room_id)
 
 if __name__ == '__main__':
     client = ChatClient(('192.168.0.101', PORT))

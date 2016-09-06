@@ -42,6 +42,18 @@ class BaseChat():
         username = input('[*] Please, specify your username(a-zA-Z_.):> ')
         self.client.specify_username(username)
 
+    def send_room_message(self, room_name):
+        '''
+        Sends message to the certain room
+
+        Args:
+            room_name (str) Passed name of the room
+        '''
+
+        room_id = self.client.get_room_id(room_name)
+        for user in self.client.get_users_by_room(room_name, room_id):
+            print(user)
+
     def send_message(self, username, text):
         '''
         Sends message to destination host
@@ -62,8 +74,8 @@ class BaseChat():
             self.client.save_message(user_id, text)
         self.client.send_msg(host=host, msg=message)
 
-    def get_last_room_message(self, room_id):
-        for message in self.client.get_history(room_id, 10, True):
+    def get_last_room_message(self, room_name):
+        for message in self.client.get_history(room_name, 10, True):
             print(message)
 
     def get_last_message(self, user_id):
@@ -235,7 +247,7 @@ class RoomChat(BaseChat):
 
         self.print_mode_help('room message')
 
-        self.get_last_room_message(self.room_id)
+        self.get_last_room_message(self.room_name)
         # threading.Thread(target=self.print_recv_message,
         #                  args=(self.user_id,)).start()
 
@@ -252,6 +264,8 @@ class RoomChat(BaseChat):
             elif message == '@back':
                 print('\n[*] Switched to command mode\n' + INDENT + '\n')
                 break
+            else:
+                self.send_room_message(self.room_name)
 
     def create_command_descrypt(self):
         return {
