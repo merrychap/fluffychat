@@ -123,11 +123,11 @@ class BaseChat():
                                                    cur_msg[1] - last_msg[1],
                                                    room_name != '')
                 for message in messages:
-                    # if message[2] == user_id:
-                    print('{0} : {1}:> {2}'
-                          .format(message[3],
-                                  self.client.get_username(message[2]),
-                                  message[0]))
+                    if message[2] != self.client.user_id:
+                        print('{0} : {1}:> {2}'
+                              .format(message[3],
+                                      self.client.get_username(message[2]),
+                                      message[0]))
                 last_msg = cur_msg
 
 
