@@ -161,9 +161,7 @@ class ChatClient:
         # TODO save messages in database or file
         if data['message'] != '':
             cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-            if data['room_message'] != "":
-                print(data)
-                return
+            if data['room'] != "":
                 self._db.save_room_message(src=data['user_id'],
                                            message=data['message'],
                                            time=cur_time,room_name=data['room'])
@@ -267,7 +265,6 @@ class ChatClient:
         return self._db.get_username(user_id)
 
     def get_user_id(self, username):
-        print(username)
         return self._db.get_user_id(username)
 
     def save_message(self, user_id, message):

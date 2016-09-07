@@ -42,7 +42,7 @@ class BaseChat():
         username = input('[*] Please, specify your username(a-zA-Z_.):> ')
         self.client.specify_username(username)
 
-    def send_room_message(self, room_name):
+    def send_room_message(self, room_name, text):
         '''
         Sends message to the certain room
 
@@ -52,7 +52,7 @@ class BaseChat():
 
         room_id = self.client.get_room_id(room_name)
         for user in self.client.get_users_by_room(room_name, room_id):
-            self.send_message(user_id=user, room=room_name)
+            self.send_message(user_id=user, room=room_name, text=text)
 
 
     def send_message(self, room="", user_id=None,
@@ -70,7 +70,7 @@ class BaseChat():
            logger.info('[-] Invalid data for sending message')
            return
         # Destination user id
-        if user_id is not None:
+        if user_id is None:
             user_id = self.client.get_user_id(username)
         message = self.client.create_data(msg=text,
                                           username=self.client.username,
@@ -82,14 +82,16 @@ class BaseChat():
             self.client.save_message(user_id, text)
         self.client.send_msg(host=host, msg=message)
 
-    def get_last_room_message(self, room_name):
-        for message in self.client.get_history(room_name, 10, True):
-            print(message)
-
-    def get_last_message(self, user_id):
-        for message in self.client.get_history(user_id, INF):
-            if message != None and message[2] == user_id:
-               return message
+    def get_last_message(self, user_id=None, room_name=''):
+        # Invalid arguments
+        if (user_id is None and room_name == '') or \
+           (user_id is not None and room_name != ''):
+            return
+        dst = user_id if user_id is not None else room_name
+        for message in self.client.get_history(dst, 1, room_name != ''):
+            return message
+            # if message != None and message[2] == user_id:
+            #    return message
         return ('', 0, -1)
 
     def cur_user_exists(self):
@@ -109,19 +111,23 @@ class BaseChat():
     def print_recv_room_message(self, room_id):
         pass
 
-    def print_recv_message(self, user_id):
-        last_msg = self.get_last_message(user_id)
+    def print_recv_message(self, user_id=None, room_name=''):
+        dst = user_id if user_id is not None else room_name
+
+
+        last_msg = self.get_last_message(user_id=user_id, room_name=room_name)
         while True:
-            cur_msg = self.get_last_message(user_id)
+            cur_msg = self.get_last_message(user_id=user_id, room_name=room_name)
             if last_msg[1] != cur_msg[1]:
-                messages = self.client.get_history(user_id,
-                                                   cur_msg[1] - last_msg[1])
+                messages = self.client.get_history(dst,
+                                                   cur_msg[1] - last_msg[1],
+                                                   room_name != '')
                 for message in messages:
-                    if message[2] == dst:
-                        print('{0} : {1}:> {2}'
-                              .format(message[3],
-                                      self.client.get_username(user_id),
-                                      message[0]))
+                    # if message[2] == user_id:
+                    print('{0} : {1}:> {2}'
+                          .format(message[3],
+                                  self.client.get_username(message[2]),
+                                  message[0]))
                 last_msg = cur_msg
 
 
@@ -255,9 +261,8 @@ class RoomChat(BaseChat):
 
         self.print_mode_help('room message')
 
-        self.get_last_room_message(self.room_name)
-        # threading.Thread(target=self.print_recv_message,
-        #                  args=(self.user_id,)).start()
+        threading.Thread(target=self.print_recv_message,
+                         args=(None,self.room_name,)).start()
 
     def open(self):
         print()
@@ -273,7 +278,7 @@ class RoomChat(BaseChat):
                 print('\n[*] Switched to command mode\n' + INDENT + '\n')
                 break
             else:
-                self.send_room_message(self.room_name)
+                self.send_room_message(self.room_name, message)
 
     def create_command_descrypt(self):
         return {
