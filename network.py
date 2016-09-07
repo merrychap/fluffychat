@@ -267,6 +267,7 @@ class ChatClient:
         return self._db.get_username(user_id)
 
     def get_user_id(self, username):
+        print(username)
         return self._db.get_user_id(username)
 
     def save_message(self, user_id, message):

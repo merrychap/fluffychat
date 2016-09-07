@@ -52,22 +52,30 @@ class BaseChat():
 
         room_id = self.client.get_room_id(room_name)
         for user in self.client.get_users_by_room(room_name, room_id):
-            print(user)
+            self.send_message(user_id=user, room=room_name)
 
-    def send_message(self, username, text):
+
+    def send_message(self, room="", user_id=None,
+                     username=None, text=None):
         '''
         Sends message to destination host
 
         Args:
             username (str) Username of user that should recieve message
             text (str) Text of message
+            message (data) Formated data of message
         '''
 
+        if (user_id is None and username is None):
+           logger.info('[-] Invalid data for sending message')
+           return
         # Destination user id
-        user_id = self.client.get_user_id(username)
+        if user_id is not None:
+            user_id = self.client.get_user_id(username)
         message = self.client.create_data(msg=text,
                                           username=self.client.username,
-                                          user_id=self.client.user_id)
+                                          user_id=self.client.user_id,
+                                          room=room)
         # Destination host
         host = self.client.user_id2host[user_id]
         if user_id != self.client.user_id:
@@ -229,7 +237,7 @@ class UserChat(BaseChat):
             elif message == '@test':
                 print(self.client.get_history(self.username, 1))
             else:
-                self.send_message(self.username, message)
+                self.send_message(username=self.username, text=message)
 
     def create_command_descrypt(self):
         return {
