@@ -42,7 +42,7 @@ class ChatClient:
             while not self.user_id_assigned:
                 pass
             self._handle_username()
-            self.connect()
+            self._connect()
         else:
             self._handle_username()
             self.host2user_id[self._host] = self.user_id
