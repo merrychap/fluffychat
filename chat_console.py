@@ -23,6 +23,7 @@ class BaseChat():
     def __init__(self, client):
         self.client = client
         self.commands = self.create_command_descrypt()
+        self.stop_printing = True
 
     def print_help(self, commands, message=None):
         print('\n' + INDENT)
@@ -116,7 +117,7 @@ class BaseChat():
 
 
         last_msg = self.get_last_message(user_id=user_id, room_name=room_name)
-        while True:
+        while not self.stop_printing:
             cur_msg = self.get_last_message(user_id=user_id, room_name=room_name)
             if last_msg[1] != cur_msg[1]:
                 messages = self.client.get_history(dst,
@@ -224,6 +225,7 @@ class UserChat(BaseChat):
 
         self.print_mode_help('message')
 
+        self.stop_printing = False
         threading.Thread(target=self.print_recv_message,
                          args=(self.user_id,)).start()
 
@@ -238,6 +240,7 @@ class UserChat(BaseChat):
             if message == '@help':
                 self.print_help(commands=self.commands)
             elif message == '@back':
+                self.stop_printing = True
                 print('\n[*] Switched to command mode\n' + INDENT + '\n')
                 break
             elif message == '@test':
@@ -261,6 +264,7 @@ class RoomChat(BaseChat):
 
         self.print_mode_help('room message')
 
+        self.stop_printing = False
         threading.Thread(target=self.print_recv_message,
                          args=(None,self.room_name,)).start()
 
@@ -275,6 +279,7 @@ class RoomChat(BaseChat):
             if message == '@help':
                 self.print_help(commands=self.commands)
             elif message == '@back':
+                self.stop_printing = True
                 print('\n[*] Switched to command mode\n' + INDENT + '\n')
                 break
             else:
