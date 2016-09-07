@@ -272,7 +272,7 @@ class RoomChat(BaseChat):
         print()
         self.print_last_messages(self.room_name, True)
 
-        add_patter = re.compile(r'^@add_user "([a-zA-Z_])+"$')
+        add_patter = re.compile(r'^@add_user "([a-zA-Z_]+)"$')
 
         while True:
             input()
@@ -287,6 +287,7 @@ class RoomChat(BaseChat):
                 break
             elif add_parse != None:
                 username = add_parse.group(1)
+                print(username)
                 if not self.client.user_exists(username):
                     print('[-] No such user in the chat\n')
                     continue

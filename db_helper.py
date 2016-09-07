@@ -272,6 +272,15 @@ class DBHelper:
             cur.execute('SELECT * FROM `current_user`')
             return cur.fetchone()
 
+    def get_room_creator(self, room_name):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            cur.execute('''
+                SELECT cretor_id FROM {0} WHERE room_name LIKE ?;'''
+                .format(TABLE_ROOMS), (room_name,))
+            return cur.fetchone()[0]
+
     def get_user_rooms(self, username, user_id=None):
         '''
         Yields rooms, in which certain user is located.
@@ -359,9 +368,9 @@ class DBHelper:
                 CREATE TABLE IF NOT EXISTS {0} (
                     `room_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     'room_name' VARCHAR(25) NOT NULL UNIQUE,
-                    'creator' INT(11) NOT NULL,
+                    'creator_id' INT(11) NOT NULL,
                     `users_count` INT(11) DEFAULT 0,
-                    FOREIGN KEY (creator) REFERENCES users(user_id)
+                    FOREIGN KEY (creator_id) REFERENCES users(user_id)
                 );'''.format(TABLE_ROOMS))
 
             cur.execute('''

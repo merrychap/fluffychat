@@ -162,6 +162,9 @@ class ChatClient:
         if data['message'] != '':
             cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
             if data['room'] != "":
+                if not self._db.room_exists(data['room']):
+                    self._db.try_create_room(room_name=data['room'],
+                                             creator_name=)
                 self._db.save_room_message(src=data['user_id'],
                                            message=data['message'],
                                            time=cur_time,room_name=data['room'])
