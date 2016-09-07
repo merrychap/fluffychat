@@ -213,7 +213,7 @@ class MainChat(BaseChat):
             elif username_parse != None:
                 self.change_username(username_parse.group(1))
             else:
-                pass
+                print('[-] Invalid command\n')
 
 
 class UserChat(BaseChat):
@@ -272,16 +272,28 @@ class RoomChat(BaseChat):
         print()
         self.print_last_messages(self.room_name, True)
 
+        add_patter = re.compile(r'^@add_user "([a-zA-Z_])+"$')
+
         while True:
             input()
             with lock:
                 message = input('%s:> ' % self.client.username)
+            add_parse = add_patter.match(message)
             if message == '@help':
                 self.print_help(commands=self.commands)
             elif message == '@back':
                 self.stop_printing = True
                 print('\n[*] Switched to command mode\n' + INDENT + '\n')
                 break
+            elif add_parse != None:
+                username = add_parse.group(1)
+                if not self.client.user_exists(username):
+                    print('[-] No such user in the chat\n')
+                    continue
+                self.client.add_user2room(username=username,
+                                          room_name=self.room_name)
+                print('[+] You have invited "{0}" to "{1}" room'.
+                      format(username, self.room_name))
             else:
                 self.send_room_message(self.room_name, message)
 
@@ -289,6 +301,7 @@ class RoomChat(BaseChat):
         return {
             'help': 'Shows this output',
             'back': 'Returns to message mode',
+            'add_user "username"': 'Adds passed user to the room'
         }
 
 

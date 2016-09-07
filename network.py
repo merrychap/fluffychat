@@ -303,6 +303,9 @@ class ChatClient:
     def get_users_by_room(self, room_name, room_id=None):
         return self._db.get_users_by_room(room_name, room_id)
 
+    def add_user2room(self, username, room_name):
+        self._db.add_user2room(username=username, room_name=room_name)
+
 if __name__ == '__main__':
     client = ChatClient(('192.168.0.101', PORT))
     client.start()
