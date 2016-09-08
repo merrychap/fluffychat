@@ -99,16 +99,20 @@ class ChatClient:
             self.send_msg(host=host, msg=data)
 
     def create_data(self, msg='', host='', action='', is_server=0,
-                    username='', user_id=-1, json_format=True, room=""):
+                    username='', user_id=-1, json_format=True,
+                    room_name='', room_creator = '', remove_room='No'):
         data = {
             'message': msg,
             'host': host,
             'is_server': is_server,
             'action': action,
             'username': username,
-            'user_id': user_id,
-            'room': room
+            'user_id': user_id
         }
+        if room_name != '':
+            data['room'] = room_name
+            data['room_creator'] = room_creator
+            data['remove_room'] = remove_room
         if json_format:
             return json.dumps(data)
         return data
@@ -161,10 +165,17 @@ class ChatClient:
         # TODO save messages in database or file
         if data['message'] != '':
             cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-            if data['room'] != "":
+            # If action connected with room
+            if 'room' in data:
+                # User has deleted the room
+                if data['remove_room'] != 'No':
+                    self._db.remove_room(data['room'])
+                    return
+                # Else message sended in the room
+                # then room must be created if not exists
                 if not self._db.room_exists(data['room']):
                     self._db.try_create_room(room_name=data['room'],
-                                             creator_name=)
+                                             creator_name=data['room_creator'])
                 self._db.save_room_message(src=data['user_id'],
                                            message=data['message'],
                                            time=cur_time,room_name=data['room'])
@@ -305,6 +316,12 @@ class ChatClient:
 
     def get_users_by_room(self, room_name, room_id=None):
         return self._db.get_users_by_room(room_name, room_id)
+
+    def remove_room(self, room_name):
+        self._db.remove_room(room_name)
+
+    def get_room_creator(self, room_name):
+        return self._db.get_room_creator(room_name)
 
     def add_user2room(self, username, room_name):
         self._db.add_user2room(username=username, room_name=room_name)

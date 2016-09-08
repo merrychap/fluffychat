@@ -43,7 +43,7 @@ class BaseChat():
         username = input('[*] Please, specify your username(a-zA-Z_.):> ')
         self.client.specify_username(username)
 
-    def send_room_message(self, room_name, text):
+    def send_room_message(self, room_name, text, remove_room='No'):
         '''
         Sends message to the certain room
 
@@ -56,8 +56,8 @@ class BaseChat():
             self.send_message(user_id=user, room=room_name, text=text)
 
 
-    def send_message(self, room="", user_id=None,
-                     username=None, text=None):
+    def send_message(self, room="", user_id=None, username=None,
+                     text=None, remove_room='No', room_creator=''):
         '''
         Sends message to destination host
 
@@ -73,10 +73,13 @@ class BaseChat():
         # Destination user id
         if user_id is None:
             user_id = self.client.get_user_id(username)
+        if room != '':
+            room_creator = self.client.get_room_creator(room)
         message = self.client.create_data(msg=text,
                                           username=self.client.username,
                                           user_id=self.client.user_id,
-                                          room=room)
+                                          room_name=room, remove_room=remove_room,
+                                          room_creator=room_creator)
         # Destination host
         host = self.client.user_id2host[user_id]
         if user_id != self.client.user_id:
@@ -109,6 +112,7 @@ class BaseChat():
             print('{0} : {1}:> {2}'.format(message[3],
                                     self.client.get_username(message[2]),
                                     message[0]))
+
     def print_recv_room_message(self, room_id):
         pass
 
@@ -158,7 +162,7 @@ class MainChat(BaseChat):
             'rooms': 'Shows available rooms.',
             'users': 'Shows online users.',
             'user "username"': 'Switches to user message mode. ',
-            'room "roomname"': 'Switches to room message mode. ',
+            'room "room_name"': 'Switches to room message mode. ',
             'remove_room "roomname"': 'Removes created room.',
             'create_room "roomname"': 'Creates new room. ',
             'exit': 'Closes chat.'
@@ -169,6 +173,7 @@ class MainChat(BaseChat):
         username_pattern = re.compile(r'@username "([a-zA-Z_.]+)"$')
         room_pattern = re.compile(r'^@room "([a-zA-Z_.]+)"$')
         create_room_pattern = re.compile(r'^@create_room "([a-zA-Z_.]+)"$')
+        remove_room_pattern = re.compile(r'^@remove_room "([a-zA-Z_]+)"$')
 
         print('\nType "@help" for list of commands with description')
 
@@ -179,6 +184,7 @@ class MainChat(BaseChat):
             room_parse = room_pattern.match(command)
             username_parse = username_pattern.match(command)
             create_room_parse = create_room_pattern.match(command)
+            remove_room_parse = remove_room_pattern.match(command)
 
             if command == '@help':
                 self.print_help(commands=self.commands)
@@ -212,6 +218,11 @@ class MainChat(BaseChat):
                 print('\n[+] You\'ve created room "{0}"\n'.format(room_name) )
             elif username_parse != None:
                 self.change_username(username_parse.group(1))
+            elif remove_room_parse != None:
+                room_name = remove_room_parse.group(1)
+                self.send_room_message(room_name, "Chat was deleted",
+                                       'Yes')
+                self.client.remove_room(room_name)
             else:
                 print('[-] Invalid command\n')
 
@@ -273,12 +284,16 @@ class RoomChat(BaseChat):
         self.print_last_messages(self.room_name, True)
 
         add_patter = re.compile(r'^@add_user "([a-zA-Z_]+)"$')
+        # remove_patter = re.compile(r'^@remove_room "([a-zA-Z_]+)"$')
 
         while True:
             input()
             with lock:
                 message = input('%s:> ' % self.client.username)
+
             add_parse = add_patter.match(message)
+            # remove_parse = remove_patter.match(message)
+
             if message == '@help':
                 self.print_help(commands=self.commands)
             elif message == '@back':
@@ -293,8 +308,16 @@ class RoomChat(BaseChat):
                     continue
                 self.client.add_user2room(username=username,
                                           room_name=self.room_name)
+                # Invites user to the room by sending
+                # empty vmessage
+                self.send_room_message(self.room_name, '')
                 print('[+] You have invited "{0}" to "{1}" room'.
                       format(username, self.room_name))
+            elif message == '@remove_room':
+                self.send_room_message(self.room_name, "Chat was deleted",
+                                       'Yes')
+                self.client.remove_room(room_name)
+                break
             else:
                 self.send_room_message(self.room_name, message)
 
@@ -302,7 +325,8 @@ class RoomChat(BaseChat):
         return {
             'help': 'Shows this output',
             'back': 'Returns to message mode',
-            'add_user "username"': 'Adds passed user to the room'
+            'add_user "username"': 'Adds passed user to the room',
+            'remove_room "room_name"': 'Removes room from chat'
         }
 
 

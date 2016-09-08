@@ -277,7 +277,7 @@ class DBHelper:
         with con:
             cur = con.cursor()
             cur.execute('''
-                SELECT cretor_id FROM {0} WHERE room_name LIKE ?;'''
+                SELECT creator_id FROM {0} WHERE room_name LIKE ?;'''
                 .format(TABLE_ROOMS), (room_name,))
             return cur.fetchone()[0]
 
@@ -330,7 +330,7 @@ class DBHelper:
                 creator_id = self.get_user_id(creator_name)
             if not self._room_exists(cur, room_name):
                 cur.execute('''
-                    INSERT INTO rooms (room_name, creator)
+                    INSERT INTO rooms (room_name, creator_id)
                     VALUES (?, ?);''', (room_name, creator_id))
                 logger.info('[+] Room "{0}" was created by "{1}"'
                             .format(room_name, creator_name))
@@ -716,8 +716,9 @@ if __name__ == '__main__':
     db.add_user2room(username='Mike', room_name='Wolf and Spice')
 
     db.try_create_room(room_name='Hyouka', creator_name='Mike')
-
-    db.get_user_rooms(username='Mike')
+    db.remove_room(room_name='Hyouka')
+    for room in db.get_user_rooms(username='Mike'):
+        logger.info(room)
 
     db.save_room_message(src=1, message='hi all', time=1, room_name='Wolf and Spice')
 
