@@ -302,7 +302,6 @@ class RoomChat(BaseChat):
                 break
             elif add_parse != None:
                 username = add_parse.group(1)
-                print(username)
                 if not self.client.user_exists(username):
                     print('[-] No such user in the chat\n')
                     continue
@@ -310,7 +309,7 @@ class RoomChat(BaseChat):
                                           room_name=self.room_name)
                 # Invites user to the room by sending
                 # empty vmessage
-                self.send_room_message(self.room_name, '')
+                self.send_room_message(self.room_name, ' ')
                 print('[+] You have invited "{0}" to "{1}" room'.
                       format(username, self.room_name))
             elif message == '@remove_room':

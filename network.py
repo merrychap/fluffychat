@@ -176,6 +176,8 @@ class ChatClient:
                 if not self._db.room_exists(data['room']):
                     self._db.try_create_room(room_name=data['room'],
                                              creator_name=data['room_creator'])
+                    self._db.add_user2room(username=self.username,
+                                           room_name=data['room'])
                 self._db.save_room_message(src=data['user_id'],
                                            message=data['message'],
                                            time=cur_time,room_name=data['room'])

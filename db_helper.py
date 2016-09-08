@@ -254,9 +254,12 @@ class DBHelper:
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
-            cur.execute(('SELECT username FROM users WHERE '
-                         'user_id LIKE ?'), (user_id,))
-            return cur.fetchone()[0]
+            return self._get_username(cur, user_id)
+
+    def _get_username(self, cur, user_id):
+        cur.execute(('SELECT username FROM users WHERE '
+                     'user_id LIKE ?'), (user_id,))
+        return cur.fetchone()[0]
 
     def get_current_user(self):
         '''
@@ -279,7 +282,7 @@ class DBHelper:
             cur.execute('''
                 SELECT creator_id FROM {0} WHERE room_name LIKE ?;'''
                 .format(TABLE_ROOMS), (room_name,))
-            return cur.fetchone()[0]
+            return self._get_username(cur, cur.fetchone()[0])
 
     def get_user_rooms(self, username, user_id=None):
         '''
