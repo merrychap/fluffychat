@@ -14,6 +14,7 @@ from network import PORT
 
 
 LOG_FILE = 'logging_config.ini'
+EMPTY = ' '
 INF = 1000
 lock = threading.Lock()
 
@@ -309,7 +310,7 @@ class RoomChat(BaseChat):
                                           room_name=self.room_name)
                 # Invites user to the room by sending
                 # empty vmessage
-                self.send_room_message(self.room_name, ' ')
+                self.send_room_message(self.room_name, EMPTY)
                 print('[+] You have invited "{0}" to "{1}" room'.
                       format(username, self.room_name))
             elif message == '@remove_room':

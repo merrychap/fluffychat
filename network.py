@@ -14,6 +14,7 @@ from copy import deepcopy
 
 
 PORT = 9090
+EMPTY = ' '
 logger = logging.getLogger(__name__)
 
 
@@ -178,6 +179,8 @@ class ChatClient:
                                              creator_name=data['room_creator'])
                     self._db.add_user2room(username=self.username,
                                            room_name=data['room'])
+                    if data['message'] == EMPTY:
+                        return
                 self._db.save_room_message(src=data['user_id'],
                                            message=data['message'],
                                            time=cur_time,room_name=data['room'])
