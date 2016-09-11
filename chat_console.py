@@ -54,9 +54,10 @@ class BaseChat():
 
         room_id = self.client.get_room_id(room_name)
         for user in self.client.get_users_by_room(room_name, room_id):
+            if remove_room == 'Yes' and user == self.client.user_id:
+                continue
             self.send_message(user_id=user, room=room_name, text=text,
                               remove_room=remove_room)
-
 
     def send_message(self, room="", user_id=None, username=None,
                      text=None, remove_room='No', room_creator=''):
@@ -117,7 +118,6 @@ class BaseChat():
 
     def print_recv_message(self, user_id=None, room_name=''):
         dst = user_id if user_id is not None else room_name
-
 
         last_msg = self.get_last_message(user_id=user_id, room_name=room_name)
         while not self.stop_printing:
@@ -213,15 +213,20 @@ class MainChat(BaseChat):
                     print('[-] No such room in the chat\n')
             elif create_room_parse != None:
                 room_name = create_room_parse.group(1)
-                self.client.create_room(room_name)
-                print('\n[+] You\'ve created room "{0}"\n'.format(room_name) )
+                if self.client.create_room(room_name):
+                    print('\n[+] You\'ve created room "{0}"\n'
+                          .format(room_name))
+                else:
+                    print('\n[-] Room with this name already exists\n')
             elif username_parse != None:
                 self.change_username(username_parse.group(1))
             elif remove_room_parse != None:
                 room_name = remove_room_parse.group(1)
-                self.send_room_message(room_name, "Chat was deleted",
+                self.stop_printing = True
+                self.send_room_message(room_name, "Room was deleted",
                                        'Yes')
                 self.client.remove_room(room_name)
+                print('\nRoom "{0}" was deleted\n'.format(room_name))
             else:
                 print('[-] Invalid command\n')
 
@@ -309,12 +314,14 @@ class RoomChat(BaseChat):
                 # Invites user to the room by sending
                 # empty vmessage
                 self.send_room_message(self.room_name, EMPTY)
-                print('[+] You have invited "{0}" to "{1}" room'.
+                print('\n[+] You have invited "{0}" to "{1}" room'.
                       format(username, self.room_name))
             elif message == '@remove_room':
-                self.send_room_message(self.room_name, "Chat was deleted",
+                self.stop_printing = True
+                self.send_room_message(self.room_name, "Room was deleted",
                                        'Yes')
-                self.client.remove_room(room_name)
+                self.client.remove_room(self.room_name)
+                print('\nRoom "{0}" was deleted\n'.format(self.room_name))
                 break
             else:
                 self.send_room_message(self.room_name, message)

@@ -169,9 +169,10 @@ class ChatClient:
             # If action connected with room
             if 'room' in data:
                 # User has deleted the room
-                if data['remove_room'] != 'No':
-                    self._db.remove_room(data['room'])
-                    return
+                # if data['remove_room'] != 'No':
+                #     self._db.remove_room(data['room'])
+                #     return
+
                 # Else message sended in the room
                 # then room must be created if not exists
                 if not self._db.room_exists(data['room']):
@@ -291,8 +292,8 @@ class ChatClient:
         self._db.save_message(self.user_id, user_id, message, cur_time)
 
     def create_room(self, room_name):
-        self._db.try_create_room(room_name=room_name,
-                                 creator_name=self.username)
+        return self._db.try_create_room(room_name=room_name,
+                                        creator_name=self.username)
 
     def change_username(self, new_username):
         data = self.create_data(username=self.username, user_id=self.user_id,
