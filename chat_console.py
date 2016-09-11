@@ -54,7 +54,8 @@ class BaseChat():
 
         room_id = self.client.get_room_id(room_name)
         for user in self.client.get_users_by_room(room_name, room_id):
-            self.send_message(user_id=user, room=room_name, text=text)
+            self.send_message(user_id=user, room=room_name, text=text,
+                              remove_room=remove_room)
 
 
     def send_message(self, room="", user_id=None, username=None,
@@ -113,9 +114,6 @@ class BaseChat():
             print('{0} : {1}:> {2}'.format(message[3],
                                     self.client.get_username(message[2]),
                                     message[0]))
-
-    def print_recv_room_message(self, room_id):
-        pass
 
     def print_recv_message(self, user_id=None, room_name=''):
         dst = user_id if user_id is not None else room_name
