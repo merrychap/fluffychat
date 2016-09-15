@@ -316,7 +316,8 @@ class RoomChat(BaseChat):
                                           room_name=self.room_name)
                 # Invites user to the room by sending
                 # empty vmessage
-                self.send_room_message(self.room_name, EMPTY, )
+                self.send_room_message(self.room_name, EMPTY,
+                                       room_user=username)
                 print('\n[+] You have invited "{0}" to the "{1}" room'.
                       format(username, self.room_name))
             elif message == '@remove_room':
