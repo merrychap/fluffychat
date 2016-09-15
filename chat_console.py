@@ -58,7 +58,7 @@ class BaseChat():
             if remove_room == 'Yes' and user == self.client.user_id:
                 continue
             self.send_message(user_id=user, room=room_name, text=text,
-                              remove_room=remove_room)
+                              remove_room=remove_room, room_user=room_user)
 
     def send_message(self, room="", user_id=None, username=None,
                      text=None, remove_room='No', room_user = '',
