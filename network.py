@@ -234,14 +234,21 @@ class ChatClient:
         if host[0] == self._host[0]:
             return
         host = tuple(host)
+
+        if action_type == 'disconnect':
+            self._connected.remove(host)
+            self.host2user_id.pop(host, None)
+            self.user_id2host.pop(user_id, None)
+            return
+            
         logger.info('[+] Updating tables of connected hosts')
         # Updating table of connected hosts for each host in network
+        print(data)
         if data['is_server'] == 0:
             data['is_server'] = 1
             # Update table for existent hosts
             for conn in self._connected:
-                print(conn)
-                self.send_msg(host=conn, msg=data)
+                self.send_msg(host=conn, msg=json.dumps(data))
 
         if host not in self._connected:
             logger.info(message + str(host) + 'user id: %s' % user_id)
@@ -250,12 +257,6 @@ class ChatClient:
                 self.host2user_id[host] = user_id
                 self._connected.add(host)
                 self._db.save_user(username=username, user_id=user_id)
-
-        if action_type == 'disconnect':
-            self._connected.remove(host)
-            self.host2user_id.pop(host, None)
-            self.user_id2host.pop(user_id, None)
-            return
 
     def _send_connected(self, host):
         host = tuple(host)
