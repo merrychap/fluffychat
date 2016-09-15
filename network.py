@@ -240,10 +240,9 @@ class ChatClient:
             self.host2user_id.pop(host, None)
             self.user_id2host.pop(user_id, None)
             return
-            
+
         logger.info('[+] Updating tables of connected hosts')
         # Updating table of connected hosts for each host in network
-        print(data)
         if data['is_server'] == 0:
             data['is_server'] = 1
             # Update table for existent hosts
