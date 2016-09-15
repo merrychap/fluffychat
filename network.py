@@ -184,11 +184,12 @@ class ChatClient:
                                              creator_name=data['room_creator'])
                     self._db.add_user2room(username=self.username,
                                            room_name=data['room'])
-                    if 'room_user' in data:
-                        self._db.add_user2room(username=data['room_user'],
-                                               room_name=data['room'])
                     if data['message'] == EMPTY:
                         return
+                        
+                if 'room_user' in data:
+                    self._db.add_user2room(username=data['room_user'],
+                                           room_name=data['room'])
                 self._db.save_room_message(src=data['user_id'],
                                            message=data['message'],
                                            time=cur_time,room_name=data['room'])
@@ -246,7 +247,7 @@ class ChatClient:
             self.host2user_id.pop(host, None)
             self.user_id2host.pop(user_id, None)
             return
-            
+
         logger.info('[+] Updating tables of connected hosts')
         # Updating table of connected hosts for each host in network
         if data['is_server'] == 0:
