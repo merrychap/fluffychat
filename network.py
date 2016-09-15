@@ -101,7 +101,8 @@ class ChatClient:
 
     def create_data(self, msg='', host='', action='', is_server=0,
                     username='', user_id=-1, json_format=True,
-                    room_name='', room_creator = '', remove_room='No'):
+                    room_name='', room_creator = '', new_room_user = '',
+                    remove_room='No'):
         data = {
             'message': msg,
             'host': host,
@@ -114,6 +115,8 @@ class ChatClient:
             data['room'] = room_name
             data['room_creator'] = room_creator
             data['remove_room'] = remove_room
+            if new_room_user != '':
+                data['room_user'] = new_room_user
         if json_format:
             return json.dumps(data)
         return data
@@ -181,6 +184,9 @@ class ChatClient:
                                              creator_name=data['room_creator'])
                     self._db.add_user2room(username=self.username,
                                            room_name=data['room'])
+                    if 'room_user' in data:
+                        self._db.add_user2room(username=data['room_user'],
+                                               room_name=data['room'])
                     if data['message'] == EMPTY:
                         return
                 self._db.save_room_message(src=data['user_id'],
@@ -234,20 +240,13 @@ class ChatClient:
         if host[0] == self._host[0]:
             return
         host = tuple(host)
-
-        if action_type == 'disconnect':
-            self._connected.remove(host)
-            self.host2user_id.pop(host, None)
-            self.user_id2host.pop(user_id, None)
-            return
-
         logger.info('[+] Updating tables of connected hosts')
         # Updating table of connected hosts for each host in network
-        if data['is_server'] == 0:
-            data['is_server'] = 1
+        if data['is_server'] == '0':
+            data['is_server'] = '1'
             # Update table for existent hosts
             for conn in self._connected:
-                self.send_msg(host=conn, msg=json.dumps(data))
+                self.send_msg(host=conn, msg=data)
 
         if host not in self._connected:
             logger.info(message + str(host) + 'user id: %s' % user_id)
@@ -256,6 +255,12 @@ class ChatClient:
                 self.host2user_id[host] = user_id
                 self._connected.add(host)
                 self._db.save_user(username=username, user_id=user_id)
+
+        if action_type == 'disconnect':
+            self._connected.remove(host)
+            self.host2user_id.pop(host, None)
+            self.user_id2host.pop(user_id, None)
+            return
 
     def _send_connected(self, host):
         host = tuple(host)

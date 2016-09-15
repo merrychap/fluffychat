@@ -44,7 +44,8 @@ class BaseChat():
         username = input('[*] Please, specify your username(a-zA-Z_.):> ')
         self.client.specify_username(username)
 
-    def send_room_message(self, room_name, text, remove_room='No'):
+    def send_room_message(self, room_name, text, room_user = '',
+                          remove_room='No'):
         '''
         Sends message to the certain room
 
@@ -60,7 +61,8 @@ class BaseChat():
                               remove_room=remove_room)
 
     def send_message(self, room="", user_id=None, username=None,
-                     text=None, remove_room='No', room_creator=''):
+                     text=None, remove_room='No', room_user = '',
+                     room_creator=''):
         '''
         Sends message to destination host
 
@@ -82,7 +84,8 @@ class BaseChat():
                                           username=self.client.username,
                                           user_id=self.client.user_id,
                                           room_name=room, remove_room=remove_room,
-                                          room_creator=room_creator)
+                                          room_creator=room_creator,
+                                          new_room_user=room_user)
         # Destination host
         host = self.client.user_id2host[user_id]
         if user_id != self.client.user_id:
@@ -313,8 +316,8 @@ class RoomChat(BaseChat):
                                           room_name=self.room_name)
                 # Invites user to the room by sending
                 # empty vmessage
-                self.send_room_message(self.room_name, EMPTY)
-                print('\n[+] You have invited "{0}" to "{1}" room'.
+                self.send_room_message(self.room_name, EMPTY, )
+                print('\n[+] You have invited "{0}" to the "{1}" room'.
                       format(username, self.room_name))
             elif message == '@remove_room':
                 self.stop_printing = True
