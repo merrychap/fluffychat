@@ -169,9 +169,10 @@ class ChatClient:
             # If action connected with room
             if 'room' in data:
                 # User has deleted the room
-                # if data['remove_room'] != 'No':
-                #     self._db.remove_room(data['room'])
-                #     return
+                if data['remove_room'] != 'No':
+                    self._db.remove_user_from_room(data['username'],
+                                                   data['room'])
+                    return
 
                 # Else message sended in the room
                 # then room must be created if not exists

@@ -223,8 +223,8 @@ class MainChat(BaseChat):
             elif remove_room_parse != None:
                 room_name = remove_room_parse.group(1)
                 self.stop_printing = True
-                self.send_room_message(room_name, "Room was deleted",
-                                       'Yes')
+                self.send_room_message(room_name, "{0} was removed from room"
+                                       .format(self.client.username), 'Yes')
                 self.client.remove_room(room_name)
                 print('\nRoom "{0}" was deleted\n'.format(room_name))
             else:

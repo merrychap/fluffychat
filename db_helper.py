@@ -615,8 +615,19 @@ class DBHelper:
             for user_id in cur.fetchall():
                 yield user_id[0]
 
-    def remove_user(self, username):
-        pass
+    def remove_user_from_room(self, username, room_name):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            room_id = self._get_room_id(cur, room_name)
+            user_id = self._get_user_id(cur, username)
+
+            cur.execute('''
+                DELETE FROM {0} WHERE {1} LIKE ? AND {2} LIKE ?'''
+                .format(TABLE_RC_USER, 'room_id', 'user_id'), (room_id,
+                                                               user_id))
+            logger.info('[+] User "{0}" sucessfully removed from the "{0}" room'
+                        .format(username, room_name))
 
     def remove_message(self, cr_id):
         pass
@@ -719,14 +730,21 @@ if __name__ == '__main__':
     db.add_user2room(username='Mike', room_name='Wolf and Spice')
 
     db.try_create_room(room_name='Hyouka', creator_name='Mike')
+
+    for user in db.get_users_by_room('Hyouka'):
+        print(user)
+
+    db.remove_user_from_room('Mike', 'Wolf and Spice')
+
     db.remove_room(room_name='Hyouka')
-    for room in db.get_user_rooms(username='Mike'):
-        logger.info(room)
+
+    for user in db.get_users_by_room('Wolf and Spice'):
+        print(user)
 
     db.save_room_message(src=1, message='hi all', time=1, room_name='Wolf and Spice')
 
-    for message in db.get_history(src=1, dst=1, count=10, src_name='user_id',
-                                  dst_name='room_id', room=True,
-                                  conv_table=TABLE_ROOM_CONVERSATION,
-                                  conv_table_reply=TABLE_ROOM_CONVERSATION_REPLY):
-        logger.info(message)
+    # for message in db.get_history(src=1, dst=1, count=10, src_name='user_id',
+    #                               dst_name='room_id', room=True,
+    #                               conv_table=TABLE_ROOM_CONVERSATION,
+    #                               conv_table_reply=TABLE_ROOM_CONVERSATION_REPLY):
+    #     logger.info(message)
