@@ -333,5 +333,6 @@ class ChatClient:
         self._db.add_user2room(username=username, room_name=room_name)
 
 if __name__ == '__main__':
-    client = ChatClient(('192.168.0.101', PORT))
-    client.start()
+    pass
+    # client = ChatClient(('192.168.0.101', PORT))
+    # client.start()
