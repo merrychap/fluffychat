@@ -236,10 +236,11 @@ class ChatClient:
         host = tuple(host)
         logger.info('[+] Updating tables of connected hosts')
         # Updating table of connected hosts for each host in network
-        if data['is_server'] == '0':
-            data['is_server'] = '1'
+        if data['is_server'] == 0:
+            data['is_server'] = 1
             # Update table for existent hosts
             for conn in self._connected:
+                print(conn)
                 self.send_msg(host=conn, msg=data)
 
         if host not in self._connected:
