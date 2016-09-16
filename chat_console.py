@@ -24,7 +24,7 @@ INDENT = 38 * '='
 
 class BaseChat():
     def __init__(self, client):
-        self.helper = ChatDBHelper(client)
+        self.db_helper = ChatDBHelper(client)
         self.client = client
         self.commands = self.create_command_descrypt()
         self.stop_printing = True
@@ -56,8 +56,8 @@ class BaseChat():
             room_name (str) Passed name of the room
         '''
 
-        room_id = self.helper.get_room_id(room_name)
-        for user in self.helper.get_users_by_room(room_name, room_id):
+        room_id = self.db_helper.get_room_id(room_name)
+        for user in self.db_helper.get_users_by_room(room_name, room_id):
             if remove_room == 'Yes' and user == self.client.user_id:
                 continue
             self.send_message(user_id=user, room=room_name, text=text,
@@ -80,9 +80,9 @@ class BaseChat():
            return
         # Destination user id
         if user_id is None:
-            user_id = self.helper.get_user_id(username)
+            user_id = self.db_helper.get_user_id(username)
         if room != '':
-            room_creator = self.helper.get_room_creator(room)
+            room_creator = self.db_helper.get_room_creator(room)
         message = self.client.create_data(msg=text,
                                           username=self.client.username,
                                           user_id=self.client.user_id,
@@ -92,7 +92,7 @@ class BaseChat():
         # Destination host
         host = self.client.user_id2host[user_id]
         if user_id != self.client.user_id:
-            self.helper.save_message(user_id, text)
+            self.db_helper.save_message(user_id, text)
         self.client.send_msg(host=host, msg=message)
 
     def get_last_message(self, user_id=None, room_name=''):
@@ -101,7 +101,7 @@ class BaseChat():
            (user_id is not None and room_name != ''):
             return
         dst = user_id if user_id is not None else room_name
-        for message in self.helper.get_history(dst, 1, room_name != ''):
+        for message in self.db_helper.get_history(dst, 1, room_name != ''):
             return message
             # if message != None and message[2] == user_id:
             #    return message
@@ -111,15 +111,15 @@ class BaseChat():
         return self.client.username != ''
 
     def change_username(self, username):
-        self.helper.change_username(username)
+        self.db_helper.change_username(username)
         print('\n[+] Username changed, %s!\n' % username)
 
     def print_last_messages(self, dst, room=False):
-        for message in list(self.helper.get_history(dst, 10, room))[::-1]:
+        for message in list(self.db_helper.get_history(dst, 10, room))[::-1]:
             if message == None or message[1] == -1:
                 continue
             print('{0} : {1}:> {2}'.format(message[3],
-                                    self.helper.get_username(message[2]),
+                                    self.db_helper.get_username(message[2]),
                                     message[0]))
 
     def print_recv_message(self, user_id=None, room_name=''):
@@ -129,14 +129,14 @@ class BaseChat():
         while not self.stop_printing:
             cur_msg = self.get_last_message(user_id=user_id, room_name=room_name)
             if last_msg[1] != cur_msg[1]:
-                messages = self.helper.get_history(dst,
-                                                   cur_msg[1] - last_msg[1],
-                                                   room_name != '')
+                messages = self.db_helper.get_history(dst,
+                                                      cur_msg[1] - last_msg[1],
+                                                      room_name != '')
                 for message in messages:
                     if message[2] != self.client.user_id:
                         print('{0} : {1}:> {2}'
                               .format(message[3],
-                                      self.helper.get_username(message[2]),
+                                      self.db_helper.get_username(message[2]),
                                       message[0]))
                 last_msg = cur_msg
 
@@ -196,30 +196,30 @@ class MainChat(BaseChat):
             elif command == '@users':
                 print('\n' + INDENT)
                 for user_id in self.client.host2user_id.values():
-                    print('+ %s' % self.helper.get_username(user_id))
+                    print('+ %s' % self.db_helper.get_username(user_id))
                 print(INDENT + '\n')
             elif command == '@rooms':
                 print('\n' + INDENT)
-                for room in self.helper.get_user_rooms():
+                for room in self.db_helper.get_user_rooms():
                     print('+ %s' % room)
                 print(INDENT + '\n')
             elif command == '@exit':
                 self.exit()
             elif user_parse != None:
                 username = user_parse.group(1)
-                if self.helper.user_exists(username):
+                if self.db_helper.user_exists(username):
                     UserChat(username=username, client=self.client).open()
                 else:
                     print('[-] No such user in the chat\n')
             elif room_parse != None:
                 room_name = room_parse.group(1)
-                if self.helper.room_exists(room_name):
+                if self.db_helper.room_exists(room_name):
                     RoomChat(room_name=room_name, client=self.client).open()
                 else:
                     print('[-] No such room in the chat\n')
             elif create_room_parse != None:
                 room_name = create_room_parse.group(1)
-                if self.helper.create_room(room_name):
+                if self.db_helper.create_room(room_name):
                     print('\n[+] You\'ve created room "{0}"\n'
                           .format(room_name))
                 else:
@@ -232,7 +232,7 @@ class MainChat(BaseChat):
                 self.send_room_message(room_name, "{0} was removed from room"
                                        .format(self.client.username),
                                        remove_room='Yes')
-                self.helper.remove_room(room_name)
+                self.db_helper.remove_room(room_name)
                 print('\nRoom "{0}" was deleted\n'.format(room_name))
             else:
                 print('[-] Invalid command\n')
@@ -266,7 +266,7 @@ class UserChat(BaseChat):
                 print('\n[*] Switched to command mode\n' + INDENT + '\n')
                 break
             elif message == '@test':
-                print(self.helper.get_history(self.username, 1))
+                print(self.db_helper.get_history(self.username, 1))
             else:
                 self.send_message(username=self.username, text=message)
 
@@ -282,7 +282,7 @@ class RoomChat(BaseChat):
         super().__init__(client)
 
         self.room_name = room_name
-        self.room_id = self.helper.get_room_id(room_name)
+        self.room_id = self.db_helper.get_room_id(room_name)
 
         self.print_mode_help('room message')
 
@@ -313,11 +313,11 @@ class RoomChat(BaseChat):
                 break
             elif add_parse != None:
                 username = add_parse.group(1)
-                if not self.helper.user_exists(username):
+                if not self.db_helper.user_exists(username):
                     print('[-] No such user in the chat\n')
                     continue
-                self.helper.add_user2room(username=username,
-                                          room_name=self.room_name)
+                self.db_helper.add_user2room(username=username,
+                                             room_name=self.room_name)
                 # Invites user to the room by sending
                 # empty vmessage
                 self.send_room_message(self.room_name, EMPTY,
@@ -328,7 +328,7 @@ class RoomChat(BaseChat):
                 self.stop_printing = True
                 self.send_room_message(self.room_name, "Room was deleted",
                                        remove_room='Yes')
-                self.helper.remove_room(self.room_name)
+                self.db_helper.remove_room(self.room_name)
                 print('\nRoom "{0}" was deleted\n'.format(self.room_name))
                 break
             else:
