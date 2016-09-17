@@ -154,13 +154,13 @@ class BaseChat():
             print('[-] No such user in the chat\n')
             return False
         self.db_helper.add_user2room(username=username,
-                                     room_name=self.room_name)
+                                     room_name=room_name)
         # Invites user to the room by sending
         # empty message
         self.send_room_message(self.room_name, EMPTY,
                                room_user=username)
         print('\n[+] You have invited "{0}" to the "{1}" room'.
-              format(username, self.room_name))
+              format(username, room_name))
         return True
 
 
@@ -194,7 +194,7 @@ class MainChat(BaseChat):
             'user "username"': 'Switches to user message mode. ',
             'room "room_name"': 'Switches to room message mode. ',
             'remove_room "roomname"': 'Removes created room.',
-            'add_user': '"username"2"room_name"',
+            'add_user': '"username" "room_name"',
             'create_room "roomname"': 'Creates new room. ',
             'exit': 'Closes chat.'
         }
