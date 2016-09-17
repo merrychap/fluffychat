@@ -24,7 +24,7 @@ lock = threading.Lock()
 
 class BaseChat():
     def __init__(self, client):
-        self.db_helper = ChatDBHelper(client)
+        self.db_helper = ChatDBHelper()
         self.client = client
         self.commands = self.create_command_descrypt()
         self.stop_printing = True
