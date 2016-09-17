@@ -25,6 +25,8 @@ lock = threading.Lock()
 class BaseChat():
     def __init__(self, client):
         self.db_helper = ChatDBHelper()
+        self.db_helper.specify_username(client)
+
         self.client = client
         self.commands = self.create_command_descrypt()
         self.stop_printing = True
@@ -46,7 +48,6 @@ class BaseChat():
     def specify_username(self):
         username = input('[*] Please, specify your username(a-zA-Z_.):> ')
         self.client.specify_username(username)
-        self.db_helper.specify_username(self.client)
 
     def send_room_message(self, room_name, text, room_user = '',
                           remove_room='No'):
@@ -174,6 +175,7 @@ class MainChat(BaseChat):
             self.specify_username()
         else:
             print('Hello again, %s!' % self.client.username)
+        self.db_helper.specify_username(self.client)
         self.client.start()
         self.command_mode()
 
