@@ -157,9 +157,9 @@ class BaseChat():
                                      room_name=room_name)
         # Invites user to the room by sending
         # empty message
-        self.send_room_message(self.room_name, EMPTY,
+        self.send_room_message(room_name, EMPTY,
                                room_user=username)
-        print('\n[+] You have invited "{0}" to the "{1}" room'.
+        print('\n[+] You have invited "{0}" to the "{1}" room\n'.
               format(username, room_name))
         return True
 
