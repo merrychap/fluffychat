@@ -364,6 +364,7 @@ class DBHelper:
                 CREATE TABLE IF NOT EXISTS {0} (
                    `user_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                    `username` VARCHAR(25) NOT NULL UNIQUE,
+                   `visible` INT(2) DEFAULT 1,
                    `password` VARCHAR(50) DEFAULT NULL
                 );'''.format(TABLE_USERS))
 

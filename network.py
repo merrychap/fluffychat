@@ -283,6 +283,7 @@ class ChatClient:
             if ip and (ip[0].startswith('192.') or ip[0].startswith('10.')):
                 return (ip[0], PORT)
 
+
 if __name__ == '__main__':
     pass
     # client = ChatClient(('192.168.0.101', PORT))

@@ -4,7 +4,7 @@ import db_helper
 
 
 class ChatDBHelper:
-    def __init_-(self, client):
+    def __init__(self, client):
         self._db = client._db
         self.username = client.username
         self.user_id = client.user_id
