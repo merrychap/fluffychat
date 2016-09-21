@@ -281,7 +281,7 @@ class ChatClient:
                   [0][1]]
         for ip in [ip_lt1, ip_lt2]:
             for begin_ip in ['192.', '10.', '172.']:
-                if ip and ip[0].startwith(begin_ip):
+                if ip and ip[0].startswith(begin_ip):
                     return (ip[0], PORT)
 
 
