@@ -152,7 +152,7 @@ class BaseChat():
         self.send_room_message(room_name, "Room was deleted",
                                remove_room='Yes')
         self.db_helper.remove_room(room_name)
-        print('\nRoom "{0}" was deleted\n'.format(self.room_name))
+        print('\nRoom "{0}" was deleted\n'.format(room_name))
 
     def add_user2room(self, username, room_name):
         if not self.db_helper.user_exists(username):
