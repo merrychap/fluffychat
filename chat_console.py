@@ -61,7 +61,7 @@ class BaseChat():
         users = []
         room_id = self.db_helper.get_room_id(room_name)
         for user in self.db_helper.get_users_by_room(room_name, room_id):
-            users.add(user)
+            users.append(user)
         for user in users:
             if remove_room == 'Yes' and user == self.client.user_id:
                 continue
