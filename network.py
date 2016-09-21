@@ -280,8 +280,9 @@ class ChatClient:
                    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]]
                   [0][1]]
         for ip in [ip_lt1, ip_lt2]:
-            if ip and (ip[0].startswith('192.') or ip[0].startswith('10.')):
-                return (ip[0], PORT)
+            for begin_ip in ['192.', '10.', '172.']:
+                if ip and ip[0].startwith(begin_ip):
+                    return (ip[0], PORT)
 
 
 if __name__ == '__main__':
