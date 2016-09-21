@@ -102,7 +102,7 @@ class ChatClient:
     def create_data(self, msg='', host='', action='', is_server=0,
                     username='', user_id=-1, json_format=True,
                     room_name='', room_creator = '', new_room_user = '',
-                    remove_room='No'):
+                    remove_room='No', users_in_room=[]):
         data = {
             'message': msg,
             'host': host,
@@ -117,6 +117,8 @@ class ChatClient:
             data['remove_room'] = remove_room
             if new_room_user != '':
                 data['room_user'] = new_room_user
+            if users_in_room != []:
+                data['users_in_room'] = users_in_room
         if json_format:
             return json.dumps(data)
         return data
@@ -184,6 +186,9 @@ class ChatClient:
                                              creator_name=data['room_creator'])
                     self._db.add_user2room(username=self.username,
                                            room_name=data['room'])
+                    for user in data['users_in_room']:
+                        self._db.add_user2room(username=self._db.get_username(user),
+                                               room_name=data['room'])
                     if data['message'] == EMPTY:
                         return
 

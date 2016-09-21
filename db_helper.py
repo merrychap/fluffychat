@@ -545,11 +545,11 @@ class DBHelper:
                 INSERT INTO rc_user (user_id, room_id)
                 VALUES (?, ?);''', (user_id, room_id))
             self._increment_users_count(cur, room_name)
-            logger.info(('[+] User "{0}" was added in the room "{1}"'
+            logger.info(('[+] User "{0}" was added to the room "{1}"'
                    ' successfully').format(username, room_name))
             return True
         else:
-            logger.info('[-] User "{0}" is already exists in the room "{1}"'
+            logger.info('[-] User "{0}" is already exists to the room "{1}"'
                   .format(username, room_name))
             return False
 

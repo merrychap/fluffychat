@@ -58,16 +58,20 @@ class BaseChat():
             room_name (str) Passed name of the room
         '''
 
+        users = []
         room_id = self.db_helper.get_room_id(room_name)
         for user in self.db_helper.get_users_by_room(room_name, room_id):
+            users.add(user)
+        for user in users:
             if remove_room == 'Yes' and user == self.client.user_id:
                 continue
             self.send_message(user_id=user, room=room_name, text=text,
-                              remove_room=remove_room, room_user=room_user)
+                              remove_room=remove_room, room_user=room_user,
+                              users_in_room=users)
 
     def send_message(self, room="", user_id=None, username=None,
                      text=None, remove_room='No', room_user = '',
-                     room_creator=''):
+                     room_creator='', users_in_room=[]):
         '''
         Sends message to destination host
 
@@ -90,7 +94,8 @@ class BaseChat():
                                           user_id=self.client.user_id,
                                           room_name=room, remove_room=remove_room,
                                           room_creator=room_creator,
-                                          new_room_user=room_user)
+                                          new_room_user=room_user,
+                                          users_in_room=users_in_room)
         # Destination host
         host = self.client.user_id2host[user_id]
         if user_id != self.client.user_id:
@@ -146,7 +151,7 @@ class BaseChat():
         self.stop_printing = True
         self.send_room_message(room_name, "Room was deleted",
                                remove_room='Yes')
-        self.db_helper.remove_room(self.room_name)
+        self.db_helper.remove_room(room_name)
         print('\nRoom "{0}" was deleted\n'.format(self.room_name))
 
     def add_user2room(self, username, room_name):
