@@ -130,7 +130,6 @@ class ChatClient:
             send_sock.sendall(bytes(msg, 'utf-8'))
         except (Exception, socket.error) as e:
             logger.error('[-] Connection failed: %s' % str(host))
-            traceback.print_exc()
         finally:
             send_sock.close()
 

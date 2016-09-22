@@ -8,6 +8,7 @@ import logging
 import threading
 import optparse
 import logging.config
+import signal
 
 from network import ChatClient
 from network import PORT
@@ -20,6 +21,15 @@ EMPTY = ' '
 INDENT = 38 * '='
 INF = 1000
 lock = threading.Lock()
+
+
+user_pattern = re.compile(r'^@user "([a-zA-Z_.]+)"$')
+username_pattern = re.compile(r'@username "([a-zA-Z_.]+)"$')
+room_pattern = re.compile(r'^@room "([a-zA-Z_.]+)"$')
+create_room_pattern = re.compile(r'^@create_room "([a-zA-Z_.]+)"$')
+remove_room_pattern = re.compile(r'^@remove_room "([a-zA-Z_]+)"$')
+add_user_patter = re.compile(r'^@add_user "([a-zA-Z_]+)" "([a-zA-Z_]+)"$')
+add_patter = re.compile(r'^@add_user "([a-zA-Z_]+)"$')
 
 
 class BaseChat():
@@ -168,6 +178,12 @@ class BaseChat():
               format(username, room_name))
         return True
 
+    def exit(self):
+        self.client.disconnect()
+        print ('\nBye!')
+        time.sleep(1)
+        os._exit(1)
+
 
 class MainChat(BaseChat):
     def __init__(self, client):
@@ -184,12 +200,6 @@ class MainChat(BaseChat):
         self.client.start()
         self.command_mode()
 
-    def exit(self):
-        self.client.disconnect()
-        print ('\nBye!')
-        time.sleep(1)
-        os._exit(1)
-
     def create_command_descrypt(self):
         return {
             'help': 'Shows this output',
@@ -204,72 +214,72 @@ class MainChat(BaseChat):
             'exit': 'Closes chat.'
         }
 
-    def command_mode(self):
-        user_pattern = re.compile(r'^@user "([a-zA-Z_.]+)"$')
-        username_pattern = re.compile(r'@username "([a-zA-Z_.]+)"$')
-        room_pattern = re.compile(r'^@room "([a-zA-Z_.]+)"$')
-        create_room_pattern = re.compile(r'^@create_room "([a-zA-Z_.]+)"$')
-        remove_room_pattern = re.compile(r'^@remove_room "([a-zA-Z_]+)"$')
-        add_user_patter = re.compile(r'^@add_user "([a-zA-Z_]+)" "([a-zA-Z_]+)"$')
+    def handle_command(self, command):
+        user_parse = user_pattern.match(command)
+        room_parse = room_pattern.match(command)
+        username_parse = username_pattern.match(command)
+        create_room_parse = create_room_pattern.match(command)
+        remove_room_parse = remove_room_pattern.match(command)
+        add_user_parse = add_user_patter.match(command)
 
+        if command == '@help':
+            self.print_help(commands=self.commands)
+        elif command == '@users':
+            print('\n' + INDENT)
+            for user_id in self.client.host2user_id.values():
+                print('+ %s' % self.db_helper.get_username(user_id))
+            print(INDENT + '\n')
+        elif command == '@rooms':
+            print('\n' + INDENT)
+            for room in self.db_helper.get_user_rooms():
+                print('+ %s' % room)
+            print(INDENT + '\n')
+        elif command == '@exit':
+            self.exit()
+        elif user_parse != None:
+            username = user_parse.group(1)
+            if self.db_helper.user_exists(username):
+                UserChat(username=username, client=self.client).open()
+            else:
+                print('[-] No such user in the chat\n')
+        elif room_parse != None:
+            room_name = room_parse.group(1)
+            if self.db_helper.room_exists(room_name):
+                RoomChat(room_name=room_name, client=self.client).open()
+            else:
+                print('[-] No such room in the chat\n')
+        elif create_room_parse != None:
+            room_name = create_room_parse.group(1)
+            if self.db_helper.create_room(room_name):
+                print('\n[+] You\'ve created room "{0}"\n'
+                      .format(room_name))
+            else:
+                print('\n[-] Room with this name already exists\n')
+        elif username_parse != None:
+            self.change_username(username_parse.group(1))
+        elif remove_room_parse != None:
+            room_name = remove_room_parse.group(1)
+            self.remove_room(room_name)
+        elif add_user_parse != None:
+            username = add_user_parse.group(1)
+            room_name = add_user_parse.group(2)
+            if not self.add_user2room(username, room_name):
+                return
+        else:
+            print('[-] Invalid command\n')
+
+    def handle_signal(signal, frame):
+        self.exit()
+
+    def command_mode(self):
         print('\nType "@help" for list of commands with description')
 
         while True:
-            command = input('[*] Enter command:> ')
-
-            user_parse = user_pattern.match(command)
-            room_parse = room_pattern.match(command)
-            username_parse = username_pattern.match(command)
-            create_room_parse = create_room_pattern.match(command)
-            remove_room_parse = remove_room_pattern.match(command)
-            add_user_parse = add_user_patter.match(command)
-
-            if command == '@help':
-                self.print_help(commands=self.commands)
-            elif command == '@users':
-                print('\n' + INDENT)
-                for user_id in self.client.host2user_id.values():
-                    print('+ %s' % self.db_helper.get_username(user_id))
-                print(INDENT + '\n')
-            elif command == '@rooms':
-                print('\n' + INDENT)
-                for room in self.db_helper.get_user_rooms():
-                    print('+ %s' % room)
-                print(INDENT + '\n')
-            elif command == '@exit':
+            try:
+                command = input('[*] Enter command:> ')
+                self.handle_command(command)
+            except KeyboardInterrupt as e:
                 self.exit()
-            elif user_parse != None:
-                username = user_parse.group(1)
-                if self.db_helper.user_exists(username):
-                    UserChat(username=username, client=self.client).open()
-                else:
-                    print('[-] No such user in the chat\n')
-            elif room_parse != None:
-                room_name = room_parse.group(1)
-                if self.db_helper.room_exists(room_name):
-                    RoomChat(room_name=room_name, client=self.client).open()
-                else:
-                    print('[-] No such room in the chat\n')
-            elif create_room_parse != None:
-                room_name = create_room_parse.group(1)
-                if self.db_helper.create_room(room_name):
-                    print('\n[+] You\'ve created room "{0}"\n'
-                          .format(room_name))
-                else:
-                    print('\n[-] Room with this name already exists\n')
-            elif username_parse != None:
-                self.change_username(username_parse.group(1))
-            elif remove_room_parse != None:
-                room_name = remove_room_parse.group(1)
-                self.remove_room(room_name)
-            elif add_user_parse != None:
-                username = add_user_parse.group(1)
-                room_name = add_user_parse.group(2)
-                if not self.add_user2room(username, room_name):
-                    continue
-            else:
-                print('[-] Invalid command\n')
-
 
 class UserChat(BaseChat):
     def __init__(self, username, client):
@@ -284,6 +294,18 @@ class UserChat(BaseChat):
         threading.Thread(target=self.print_recv_message,
                          args=(self.user_id,)).start()
 
+    def handle_command(command):
+        if command == '@help':
+            self.print_help(commands=self.commands)
+        elif command == '@back':
+            self.stop_printing = True
+            print('\n[*] Switched to command mode\n' + INDENT + '\n')
+            break
+        elif command == '@test':
+            print(self.db_helper.get_history(self.username, 1))
+        else:
+            self.send_message(username=self.username, text=command)
+
     def open(self):
         print()
         self.print_last_messages(self.user_id)
@@ -292,16 +314,7 @@ class UserChat(BaseChat):
             input()
             with lock:
                 message = input('%s:> ' % self.client.username)
-            if message == '@help':
-                self.print_help(commands=self.commands)
-            elif message == '@back':
-                self.stop_printing = True
-                print('\n[*] Switched to command mode\n' + INDENT + '\n')
-                break
-            elif message == '@test':
-                print(self.db_helper.get_history(self.username, 1))
-            else:
-                self.send_message(username=self.username, text=message)
+            self.handle_command(message)
 
     def create_command_descrypt(self):
         return {
@@ -323,36 +336,38 @@ class RoomChat(BaseChat):
         threading.Thread(target=self.print_recv_message,
                          args=(None,self.room_name,)).start()
 
+    def handle_command(self, command):
+        add_parse = add_patter.match(command)
+
+        if command == '@help':
+            self.print_help(commands=self.commands)
+        elif command == '@back':
+            self.stop_printing = True
+            print('\n[*] Switched to command mode\n' + INDENT + '\n')
+            break
+        elif add_parse != None:
+            username = add_parse.group(1)
+            if not self.add_user2room(username, self.room_name):
+                return
+        elif command == '@remove_room':
+            self.remove_room(self.room_name)
+            break
+        else:
+            self.send_room_message(self.room_name, command)
+
+
     def open(self):
         print()
         self.print_last_messages(self.room_name, True)
 
-        add_patter = re.compile(r'^@add_user "([a-zA-Z_]+)"$')
-        # remove_patter = re.compile(r'^@remove_room "([a-zA-Z_]+)"$')
-
         while True:
             input()
-            with lock:
-                message = input('%s:> ' % self.client.username)
-
-            add_parse = add_patter.match(message)
-            # remove_parse = remove_patter.match(message)
-
-            if message == '@help':
-                self.print_help(commands=self.commands)
-            elif message == '@back':
-                self.stop_printing = True
-                print('\n[*] Switched to command mode\n' + INDENT + '\n')
+            try:
+                with lock:
+                    message = input('%s:> ' % self.client.username)
+                self.handle_command(message)
+            except KeyboardInterrupt as e:
                 break
-            elif add_parse != None:
-                username = add_parse.group(1)
-                if not self.add_user2room(username, self.room_name):
-                    continue
-            elif message == '@remove_room':
-                self.remove_room(self.room_name)
-                break
-            else:
-                self.send_room_message(self.room_name, message)
 
     def create_command_descrypt(self):
         return {
