@@ -297,7 +297,7 @@ class UserChat(BaseChat):
         threading.Thread(target=self.print_recv_message,
                          args=(self.user_id,)).start()
 
-    def handle_command(command):
+    def handle_command(self, command):
         if command == '@help':
             self.print_help(commands=self.commands)
         elif command == '@back':
