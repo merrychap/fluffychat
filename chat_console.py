@@ -32,6 +32,9 @@ add_user_patter = re.compile(r'^@add_user "([a-zA-Z_]+)" "([a-zA-Z_]+)"$')
 add_patter = re.compile(r'^@add_user "([a-zA-Z_]+)"$')
 
 
+class BreakLoopException(Exception):
+    pass
+
 class BaseChat():
     def __init__(self, client):
         self.db_helper = ChatDBHelper()
@@ -300,7 +303,7 @@ class UserChat(BaseChat):
         elif command == '@back':
             self.stop_printing = True
             print('\n[*] Switched to command mode\n' + INDENT + '\n')
-            break
+            raise BreakLoopException
         elif command == '@test':
             print(self.db_helper.get_history(self.username, 1))
         else:
@@ -312,9 +315,12 @@ class UserChat(BaseChat):
 
         while True:
             input()
-            with lock:
-                message = input('%s:> ' % self.client.username)
-            self.handle_command(message)
+            try:
+                with lock:
+                    message = input('%s:> ' % self.client.username)
+                self.handle_command(message)
+            except BreakLoopException:
+                break
 
     def create_command_descrypt(self):
         return {
@@ -344,14 +350,14 @@ class RoomChat(BaseChat):
         elif command == '@back':
             self.stop_printing = True
             print('\n[*] Switched to command mode\n' + INDENT + '\n')
-            break
+            raise BreakLoopException
         elif add_parse != None:
             username = add_parse.group(1)
             if not self.add_user2room(username, self.room_name):
                 return
         elif command == '@remove_room':
             self.remove_room(self.room_name)
-            break
+            raise BreakLoopException
         else:
             self.send_room_message(self.room_name, command)
 
@@ -366,7 +372,7 @@ class RoomChat(BaseChat):
                 with lock:
                     message = input('%s:> ' % self.client.username)
                 self.handle_command(message)
-            except KeyboardInterrupt as e:
+            except (KeyboardInterrupt, BreakLoopException) as e:
                 break
 
     def create_command_descrypt(self):
