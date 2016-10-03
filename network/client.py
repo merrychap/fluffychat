@@ -1,14 +1,17 @@
 '''Module for network clients'''
 # !/usr/bin/env python3
 
+import select
 import socket
+import urllib
 import json
 import time
 import datetime
 import traceback
 import threading
 import logging
-import db_helper
+
+import database.db_helper as db_helper
 
 from copy import deepcopy
 
@@ -16,6 +19,22 @@ from copy import deepcopy
 PORT = 9090
 EMPTY = ' '
 logger = logging.getLogger(__name__)
+
+
+class NetworkConnectionChecker(threading.Thread):
+    def __init__(self, client):
+        self.client = client
+
+    def run(self):
+        was_connected = True
+        while True:
+            try:
+                response = urllib.urlopen('google.com', timeout=1)
+                if not was_connected:
+                    self.client._connect()
+                    was_connected = True
+            except urllib.URLError as e:
+                pass
 
 
 class ChatClient:
@@ -26,7 +45,10 @@ class ChatClient:
         self._connected = set()
         self._db = db_helper.DBHelper()
 
+        self.inner_threads = []
+
         self.user_id_assigned = False
+        self._handle_recv_data = True
 
         self._db.try_create_database()
         self._init_user_data()
@@ -36,8 +58,15 @@ class ChatClient:
 
         self._connected.add(self._host)
 
+    def initialize(self):
+        pass
+
     def start(self):
-        threading.Thread(target=self._handle_recv).start()
+        self.create_epoll()
+        handler = threading.Thread(target=self.__handle_recv)
+        self.inner_threads.append(handler)
+        handler.start()
+
         if self._server_host is not None:
             self._get_connected()
             while not self.user_id_assigned:
@@ -48,6 +77,9 @@ class ChatClient:
             self._handle_username()
             self.host2user_id[self._host] = self.user_id
             self.user_id2host[self.user_id] = self._host
+
+    def clear_info(self):
+        pass
 
     def _init_user_data(self):
         user = self._db.get_current_user()
@@ -79,6 +111,7 @@ class ChatClient:
         recv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         recv.bind(('', PORT))
         recv.listen(10)
+        recv.setblocking(0)
         return recv
 
     def _get_connected(self):
@@ -86,7 +119,7 @@ class ChatClient:
         data = self.create_data(host=self._host, action='_get_connected')
         self.send_msg(host=self._server_host, msg=data)
 
-    def _connect(self):
+    def _connect(self, serv_host=None):
         logger.info('[*] Connecting to: %s' % str(self._server_host))
         data = self.create_data(host=self._host, action='connect',
                                 username=self.username, user_id=self.user_id)
@@ -98,6 +131,10 @@ class ChatClient:
                                 username=self.username)
         for host in self._connected:
             self.send_msg(host=host, msg=data)
+
+        self._handle_recv_data = False
+        for thread in self.inner_threads:
+            thread.join()
 
     def create_data(self, msg='', host='', action='', is_server=0,
                     username='', user_id=-1, json_format=True,
@@ -133,8 +170,48 @@ class ChatClient:
         finally:
             send_sock.close()
 
+    def create_epoll(self):
+        self._epoll = select.epoll()
+        # Registers epoll on recieving connection for recv socket
+        self._epoll.register(self._recv_sock.fileno(), select.EPOLLIN)
+
+    def __handle_recv(self):
+        try:
+            connections = {}; responses = {}
+            while self._handle_recv_data:
+                # If events on the epoll file descriptor happened
+                events = self._epoll.poll(1)
+                for fileno, event in events:
+                    # On recv socket happened reading action
+                    if fileno == self._recv_sock.fileno():
+                        # Then creates client socket
+                        conn, addr = self._recv_sock.accept()
+                        conn.setblocking(0)
+                        self._epoll.register(conn.fileno(), select.EPOLLIN)
+                        connections[conn.fileno()] = conn
+                        responses[conn.fileno()] = b''
+                        logger.info('[+] Connection from: %s' % str(addr))
+                    # If recieving action have happened on client socket
+                    elif event & select.EPOLLIN:
+                        recieved_data = connections[fileno].recv(1024)
+                        if not recieved_data:
+                            self._epoll.modify(fileno, 0)
+                            logger.info('[+] Recieved: %s' % responses[fileno])
+                            logger.info('[-] No more data from: %s' % str(addr))
+                        else:
+                            responses[fileno] += recieved_data
+                    # If client socket have closed then we close it
+                    elif event & select.EPOLLHUP:
+                        self._epoll.unregister(fileno)
+                        connections[fileno].close()
+                        del connections[fileno]
+        finally:
+            self._epoll.unregister(self._recv_sock.fileno())
+            self._epoll.close()
+            self._recv_sock.close()
+
     def _handle_recv(self):
-        while True:
+        while self._handle_recv_data:
             logger.info('[*] Waiting for connection')
             conn, addr = self._recv_sock.accept()
             try:
