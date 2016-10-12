@@ -199,7 +199,9 @@ class ChatClient:
                             outputs.remove(sock)
                         inputs.remove(sock)
                         sock.close()
-                        self._parse_data(str(message_queues[sock]))
+                        logger.info('[+] Recieved: %s' % str(message_queues[sock]))
+                        self._parse_data(str(message_queues[sock])
+                                         .decode('utf-8'))
                         del message_queues[sock]
 
     def _handle_recv(self):
