@@ -1,6 +1,9 @@
 '''Module for network clients'''
 # !/usr/bin/env python3
 
+from copy import deepcopy
+from multiprocessing import Queue
+
 import select
 import socket
 import urllib
@@ -12,8 +15,6 @@ import threading
 import logging
 
 import database.db_helper as db_helper
-
-from copy import deepcopy
 
 
 PORT = 9090
@@ -62,15 +63,12 @@ class ChatClient:
         pass
 
     def start(self):
-        self.create_epoll()
         handler = threading.Thread(target=self.__handle_recv)
         self.inner_threads.append(handler)
         handler.start()
 
         if self._server_host is not None:
             self._get_connected()
-            while not self.user_id_assigned:
-                pass
             self._handle_username()
             self._connect()
         else:
@@ -170,45 +168,39 @@ class ChatClient:
         finally:
             send_sock.close()
 
-    def create_epoll(self):
-        self._epoll = select.epoll()
-        # Registers epoll on recieving connection for recv socket
-        self._epoll.register(self._recv_sock.fileno(), select.EPOLLIN)
-
     def __handle_recv(self):
-        try:
-            connections = {}; responses = {}
-            while self._handle_recv_data:
-                # If events on the epoll file descriptor happened
-                events = self._epoll.poll(1)
-                for fileno, event in events:
-                    # On recv socket happened reading action
-                    if fileno == self._recv_sock.fileno():
-                        # Then creates client socket
-                        conn, addr = self._recv_sock.accept()
-                        conn.setblocking(0)
-                        self._epoll.register(conn.fileno(), select.EPOLLIN)
-                        connections[conn.fileno()] = conn
-                        responses[conn.fileno()] = b''
-                        logger.info('[+] Connection from: %s' % str(addr))
-                    # If recieving action have happened on client socket
-                    elif event & select.EPOLLIN:
-                        recieved_data = connections[fileno].recv(1024)
-                        if not recieved_data:
-                            self._epoll.modify(fileno, 0)
-                            logger.info('[+] Recieved: %s' % responses[fileno])
-                            logger.info('[-] No more data from: %s' % str(addr))
-                        else:
-                            responses[fileno] += recieved_data
-                    # If client socket have closed then we close it
-                    elif event & select.EPOLLHUP:
-                        self._epoll.unregister(fileno)
-                        connections[fileno].close()
-                        del connections[fileno]
-        finally:
-            self._epoll.unregister(self._recv_sock.fileno())
-            self._epoll.close()
-            self._recv_sock.close()
+        inputs = [self._recv_sock]
+        outputs = []
+        message_queues = {}
+
+        while self._handle_recv_data:
+            readable, writable, exceptional = select.select(inputs, outputs,
+                                                            inputs)
+            for sock in readable:
+                if sock is self._recv_sock:
+                    # A "readable" server socket is ready to accept a connection
+                    conn, addr = self._recv_sock.accept()
+                    conn.setblocking(0)
+                    inputs.append(conn)
+                    # Give the connection a queue for data we want to send
+                    message_queues[conn] = b''
+                    logger.info('[+] Connection from: %s' % str(addr))
+                else:
+                    data = sock.recv(1024)
+                    if data:
+                        # A readable client socket has data
+                        message_queues[sock] += data
+                        # Add output channel for response
+                        if sock not in outputs:
+                            outputs.append(sock)
+                    else:
+                        # Interpret empty result as closed connection
+                        if sock in outputs:
+                            outputs.remove(sock)
+                        inputs.remove(sock)
+                        sock.close()
+                        self._parse_data(message_queues[sock])
+                        del message_queues[sock]
 
     def _handle_recv(self):
         while self._handle_recv_data:
@@ -228,7 +220,7 @@ class ChatClient:
             finally:
                 conn.close()
 
-    def _parse_data(self, json_data):
+    def _parse_data(self, json_data, conn=None):
         data = json.loads(json_data)
         # We have request for connection. Then we should send this ip to all
         # host in our network
