@@ -9,6 +9,30 @@ EMPTY = ' '
 INDENT = 38 * '='
 INF = 1000
 lock = threading.Lock()
+operation_done = True
+
+
+def print_information(printer):
+    def wrapper(self):
+        global operation_done
+
+        print('\n' + INDENT)
+        printer(self)
+        print(INDENT + '\n')
+        operation_done = True
+
+    return wrapper
+
+
+def parse_function(handler):
+    def wrapper(self, parse):
+        global operation_done
+
+        if parse:
+            handler(self, parse)
+            operation_done = True
+
+    return wrapper
 
 
 class BreakLoopException(Exception):
@@ -25,6 +49,8 @@ class BaseChat:
     ADD_PATTERN = re.compile(r'^@add_user "([a-zA-Z_]+)"$')
 
     def __init__(self, client):
+        operation_done = True
+
         self.db_helper = ChatDBHelper()
         self.db_helper.specify_username(client)
 
@@ -33,14 +59,22 @@ class BaseChat:
         self.stop_printing = True
 
         self.inner_threads = []
+        self.init_command_handlers()
 
-    def print_help(self, commands, message=None):
-        print('\n' + INDENT)
+    def init_command_handlers():
+        pass
+
+    def back2main(self):
+        self.stop_printing = True
+        print('\n[*] Switched to command mode\n' + INDENT + '\n')
+        raise BreakLoopException
+
+    @print_information
+    def print_help(self, message=None):
         print(('Type commands with @ on the left side of command.'
                '\nList of commands:\n'))
-        for command, descr in commands.items():
+        for command, descr in self.commands.items():
             print('+ %s : %s' % (command, descr))
-        print(INDENT + '\n')
 
     def print_mode_help(self, mode):
         print(('\n[*] Switched to %s mode\n'
@@ -180,6 +214,9 @@ class BaseChat:
         return True
 
     def exit(self):
+        global operation_done
+        operation_done = True
+        
         self.client.disconnect()
         self.stop_printing = True
         for thread in self.inner_threads:

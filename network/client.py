@@ -63,7 +63,7 @@ class ChatClient:
         pass
 
     def start(self):
-        handler = threading.Thread(target=self.__handle_recv)
+        handler = threading.Thread(target=self._handle_recv)
         self.inner_threads.append(handler)
         handler.start()
 
@@ -109,7 +109,7 @@ class ChatClient:
         recv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         recv.bind(('', PORT))
         recv.listen(10)
-        recv.setblocking(0)
+        # recv.setblocking(0)
         return recv
 
     def _get_connected(self):
