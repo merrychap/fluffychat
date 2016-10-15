@@ -59,9 +59,6 @@ class ChatClient:
 
         self._connected.add(self._host)
 
-    def initialize(self):
-        pass
-
     def start(self):
         handler = threading.Thread(target=self._handle_recv)
         self.inner_threads.append(handler)
@@ -69,15 +66,14 @@ class ChatClient:
 
         if self._server_host is not None:
             self._get_connected()
+            while not self.user_id_assigned:
+                pass
             self._handle_username()
             self._connect()
         else:
             self._handle_username()
             self.host2user_id[self._host] = self.user_id
             self.user_id2host[self.user_id] = self._host
-
-    def clear_info(self):
-        pass
 
     def _init_user_data(self):
         user = self._db.get_current_user()
