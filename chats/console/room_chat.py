@@ -42,7 +42,9 @@ class RoomChat(BaseChat):
             bc.operation_done = True
         except KeyError:
             self.parse_add_user(add_parse)
-        finally:
+        except BreakLoopException:
+            raise BreakLoopException
+        else:
             if not bc.operation_done:
                 self.send_room_message(self.room_name, command)
 
@@ -53,12 +55,14 @@ class RoomChat(BaseChat):
         while True:
             try:
                 try:
-                    input('')
+                    input()
                     with lock:
                         message = input('%s:> ' % self.client.username)
                     self.handle_command(message)
                 except KeyboardInterrupt:
                     self.back2main()
+                except BreakLoopException:
+                    raise BreakLoopException
             except BreakLoopException:
                 break
 

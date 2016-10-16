@@ -34,7 +34,7 @@ class UserChat(BaseChat):
         while True:
             try:
                 try:
-                    input('')
+                    input()
                     with lock:
                         message = input('%s:> ' % self.client.username)
                     self.handle_command(message)

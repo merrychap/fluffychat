@@ -114,7 +114,7 @@ class MainChat(BaseChat):
             self.parse_create_room(create_room_parse)
             self.parse_remove_room(remove_room_parse)
             self.parse_add_user(add_user_parse)
-        finally:
+        else:
             if not bc.operation_done:
                 print('[-] Invalid command\n')
 
