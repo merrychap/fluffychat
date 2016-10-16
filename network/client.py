@@ -14,12 +14,14 @@ import traceback
 import threading
 import logging
 
+import netifaces as nf
 import database.db_helper as db_helper
 
 
 PORT = 9090
 EMPTY = ' '
 logger = logging.getLogger(__name__)
+interfaces = ['eth', 'wlan', 'en', 'wl']
 
 
 class NetworkConnectionChecker(threading.Thread):
@@ -60,6 +62,9 @@ class ChatClient:
         self._connected.add(self._host)
 
     def start(self):
+        if self._host is None:
+            return False
+        print(self._host)
         handler = threading.Thread(target=self.__handle_recv)
         self.inner_threads.append(handler)
         handler.start()
@@ -74,6 +79,7 @@ class ChatClient:
             self._handle_username()
             self.host2user_id[self._host] = self.user_id
             self.user_id2host[self.user_id] = self._host
+        return True
 
     def _init_user_data(self):
         user = self._db.get_current_user()
@@ -348,16 +354,13 @@ class ChatClient:
         self.send_msg(host=host, msg=json.dumps(tun_data))
 
     def _get_ip_addr(self):
-        global PORT
-        ip_lt1 = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-                  if not ip.startswith("127.")][:1]
-        ip_lt2 = [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close())
-                   for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]]
-                  [0][1]]
-        for ip in [ip_lt1, ip_lt2]:
-            for begin_ip in ['192.', '10.', '172.']:
-                if ip and ip[0].startswith(begin_ip):
-                    return (ip[0], PORT)
+        for gl_if in nf.interfaces():
+            for lc_if in interfaces:
+                if gl_if.startswith(lc_if):
+                    try:
+                        return (nf.ifaddresses(gl_if)[2][0]['addr'], PORT)
+                    except KeyError:
+                        pass
 
 
 if __name__ == '__main__':

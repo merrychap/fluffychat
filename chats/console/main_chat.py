@@ -78,7 +78,9 @@ class MainChat(BaseChat):
         else:
             print('Hello again, %s!' % self.client.username)
         self.db_helper.specify_username(self.client)
-        self.client.start()
+        if not self.client.start():
+            print('[-] Sorry. But it seems there isn\'t Internet connection')
+            self.exit()
         self.command_mode()
 
     def create_command_descrypt(self):
