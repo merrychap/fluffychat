@@ -2,6 +2,7 @@
 
 import database.db_helper
 import datetime
+import json
 
 
 class ChatDBHelper:
@@ -45,8 +46,8 @@ class ChatDBHelper:
                                 json_format=False)
         data['new_username'] = new_username
         data_dump = json.dumps(data)
-        for host in self._connected:
-            if host != self._host:
+        for host in self._client._connected:
+            if host != self._client._host:
                 self.send_msg(host=host, msg=data_dump)
         self.username = new_username
         self._db.change_username(user_id=self.user_id,

@@ -139,13 +139,8 @@ class BaseChat:
             self.db_helper.save_message(user_id, text)
         self.client.send_msg(host=host, msg=message)
 
-    def get_last_message(self, user_id=None, room_name=''):
-        # Invalid arguments
-        if (user_id is None and room_name == '') or \
-           (user_id is not None and room_name != ''):
-            return
-        dst = user_id if user_id is not None else room_name
-        for message in self.db_helper.get_history(dst, 1, room_name != ''):
+    def get_last_message(self, dst, room=False):
+        for message in self.db_helper.get_history(dst, 1, room):
             return message
             # if message != None and message[2] == user_id:
             #    return message
@@ -166,26 +161,26 @@ class BaseChat:
                                     self.db_helper.get_username(message[2]),
                                     message[0]))
 
-    def init_print_messages(self):
+    def init_print_messages(self, room=False):
         self.stop_printing = False
         if hasattr(self, 'user_id'):
             dst = self.user_id
         elif hasattr(self, 'room_name'):
             dst = self.room_name
         printer = threading.Thread(target=self.print_recv_message,
-                                   args=(dst, ),
+                                   args=(dst, room),
                                    daemon=True)
         self.inner_threads.append(printer)
         printer.start()
 
-    def print_recv_message(self, dst):
-        last_msg = self.get_last_message(user_id=user_id, room_name=room_name)
+    def print_recv_message(self, dst, room=False):
+        last_msg = self.get_last_message(dst, room)
         while not self.stop_printing:
-            cur_msg = self.get_last_message(user_id=user_id, room_name=room_name)
+            cur_msg = self.get_last_message(dst, room)
             if last_msg[1] != cur_msg[1]:
                 messages = self.db_helper.get_history(dst,
                                                       cur_msg[1] - last_msg[1],
-                                                      room_name != '')
+                                                      room)
                 for message in messages:
                     if message[2] != self.client.user_id:
                         print('{0} : {1}:> {2}'

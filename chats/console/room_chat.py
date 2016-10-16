@@ -14,7 +14,7 @@ class RoomChat(BaseChat):
         self.room_id = self.db_helper.get_room_id(room_name)
 
         self.print_mode_help('room message')
-        self.init_print_messages(room_name)
+        self.init_print_messages(True)
 
     def init_command_handlers(self):
         self.command_handlers = {
