@@ -14,6 +14,7 @@ class RoomChat(BaseChat):
         self.room_id = self.db_helper.get_room_id(room_name)
 
         self.print_mode_help('room message')
+        self.init_print_messages(room_name)
 
     def init_command_handlers(self):
         self.command_handlers = {
@@ -57,7 +58,7 @@ class RoomChat(BaseChat):
                         message = input('%s:> ' % self.client.username)
                     self.handle_command(message)
                 except KeyboardInterrupt:
-                    self.back2main
+                    self.back2main()
             except BreakLoopException:
                 break
 

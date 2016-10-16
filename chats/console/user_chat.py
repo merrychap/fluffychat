@@ -7,7 +7,6 @@ from chats.console.base_chat import print_information, parse_function, operation
 class UserChat(BaseChat):
     def __init__(self, username, client):
         super().__init__(client)
-        print('LAL')
         self.init_command_handlers()
 
         self.username = username

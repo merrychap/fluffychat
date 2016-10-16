@@ -166,16 +166,16 @@ class BaseChat:
                                     self.db_helper.get_username(message[2]),
                                     message[0]))
 
-    def init_print_messages(self):
+    def init_print_messages(self, room_name=''):
         self.stop_printing = False
         printer = threading.Thread(target=self.print_recv_message,
-                                   args=(self.user_id,),
+                                   args=(self.user_id, room_name),
                                    daemon=True)
         self.inner_threads.append(printer)
         printer.start()
 
     def print_recv_message(self, user_id=None, room_name=''):
-        dst = user_id if user_id is not None else room_name
+        dst = user_id if room_name != '' else room_name
 
         last_msg = self.get_last_message(user_id=user_id, room_name=room_name)
         while not self.stop_printing:
@@ -216,7 +216,7 @@ class BaseChat:
     def exit(self):
         global operation_done
         operation_done = True
-        
+
         self.client.disconnect()
         self.stop_printing = True
         for thread in self.inner_threads:
