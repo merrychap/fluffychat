@@ -166,17 +166,19 @@ class BaseChat:
                                     self.db_helper.get_username(message[2]),
                                     message[0]))
 
-    def init_print_messages(self, room_name=''):
+    def init_print_messages(self):
         self.stop_printing = False
+        if hasattr(self, 'user_id'):
+            dst = self.user_id
+        elif hasattr(self, 'room_name'):
+            dst = self.room_name
         printer = threading.Thread(target=self.print_recv_message,
-                                   args=(self.user_id, room_name),
+                                   args=(dst, ),
                                    daemon=True)
         self.inner_threads.append(printer)
         printer.start()
 
-    def print_recv_message(self, user_id=None, room_name=''):
-        dst = user_id if room_name != '' else room_name
-
+    def print_recv_message(self, dst):
         last_msg = self.get_last_message(user_id=user_id, room_name=room_name)
         while not self.stop_printing:
             cur_msg = self.get_last_message(user_id=user_id, room_name=room_name)
