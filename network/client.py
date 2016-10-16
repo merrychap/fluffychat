@@ -60,7 +60,7 @@ class ChatClient:
         self._connected.add(self._host)
 
     def start(self):
-        handler = threading.Thread(target=self._handle_recv)
+        handler = threading.Thread(target=self.__handle_recv)
         self.inner_threads.append(handler)
         handler.start()
 
@@ -314,10 +314,14 @@ class ChatClient:
         host = tuple(host)
 
         if action_type == 'disconnect':
-            self._connected.remove(host)
-            self.host2user_id.pop(host, None)
-            self.user_id2host.pop(user_id, None)
-            return
+            try:
+                self._connected.remove(host)
+                self.host2user_id.pop(host, None)
+                self.user_id2host.pop(user_id, None)
+            except KeyError:
+                pass
+            finally:
+                return
 
         logger.info('[+] Updating tables of connected hosts')
         # Updating table of connected hosts for each host in network
