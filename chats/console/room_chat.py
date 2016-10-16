@@ -19,7 +19,7 @@ class RoomChat(BaseChat):
         self.command_handlers = {
             '@help': self.print_help,
             '@back': self.back2main,
-            '@remove_room': _remove_room
+            '@remove_room': self._remove_room
         }
 
     @parse_function
