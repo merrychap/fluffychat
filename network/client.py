@@ -128,7 +128,7 @@ class ChatClient:
     def disconnect(self):
         logger.info('[*] Disconnecting: %s' % str(self._host))
         data = self.create_data(host=self._host, action='disconnect',
-                                username=self.username)
+                                username=self.username, user_id=self.user_id)
         for host in self._connected:
             self.send_msg(host=host, msg=data)
 
@@ -146,7 +146,8 @@ class ChatClient:
             'is_server': is_server,
             'action': action,
             'username': username,
-            'user_id': user_id
+            'user_id': user_id,
+            'visible': self._db.get_visibility(user_id)
         }
         if room_name != '':
             data['room'] = room_name
@@ -224,8 +225,15 @@ class ChatClient:
             finally:
                 conn.close()
 
+    def update_visibility(self, data):
+        self._db.set_visibility(data['user_id'], data['visible'])
+
     def _parse_data(self, json_data, conn=None):
         data = json.loads(json_data)
+
+        # Updates visibility of connected user
+        self.update_visibility(data)
+
         # We have request for connection. Then we should send this ip to all
         # host in our network
         if data['action'] == 'connect':

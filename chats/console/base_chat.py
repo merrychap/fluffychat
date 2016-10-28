@@ -124,6 +124,10 @@ class BaseChat:
         # Destination user id
         if user_id is None:
             user_id = self.db_helper.get_user_id(username)
+
+        if not self.db_helper.get_visible(user_id=user_id):
+            return
+
         if room != '':
             room_creator = self.db_helper.get_room_creator(room)
         message = self.client.create_data(msg=text,

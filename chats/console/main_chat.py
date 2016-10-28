@@ -18,12 +18,21 @@ class MainChat(BaseChat):
             '@users': self.print_users,
             '@rooms': self.print_rooms,
             '@exit': self.exit,
+            '@change_visibility': self.change_visibility
         }
+
+    @print_information
+    def change_visibility(self):
+        self.db_helper.change_visibility()
+        print('[+] You changed visibility: {0}'
+              .format(self.db_helper.get_visibility(user_id=self.db_helper.user_id)))
 
     @print_information
     def print_users(self):
         for user_id in self.client.host2user_id.values():
-            print('+ %s' % self.db_helper.get_username(user_id))
+            if self.db_helper.get_visibility(user_id=user_id) or \
+               user_id == self.db_helper.user_id:
+                print('+ %s' % self.db_helper.get_username(user_id))
 
     @print_information
     def print_rooms(self):
@@ -33,7 +42,8 @@ class MainChat(BaseChat):
     @parse_function
     def parse_user(self, parse):
         username = parse.group(1)
-        if self.db_helper.user_exists(username):
+        if self.db_helper.user_exists(username) and \
+           self.db_helper.get_visible(username):
             UserChat(username=username, client=self.client).open()
         else:
             print('[-] No such user in the chat\n')
@@ -58,7 +68,6 @@ class MainChat(BaseChat):
     @parse_function
     def parse_username(self, parse):
         self.change_username(parse.group(1))
-
 
     @parse_function
     def parse_remove_room(self, parse):

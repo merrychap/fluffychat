@@ -316,6 +316,30 @@ class DBHelper:
             logger.error(error_message)
             traceback.logger.info_exc()
 
+    def get_visibility(self, user_id):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            return self._get_visibility(cur, user_id)
+
+    def _get_visibility(self, cur, user_id):
+        cur.execute('''
+            SELECT visible FROM {0} WHERE user_id LIKE ?;'''
+            .format(TABLE_USERS), (user_id,))
+        return cur.fetchone()[0] == 1
+
+    def set_visibility(self, user_id, visible):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            self._set_visibility(cur, user_id, visible)
+
+    def _set_visibility(self, cur, user_id, visible):
+        # new_visible = not self._get_visible(cur, user_id)
+        cur.execute('''
+            UPDATE {0} SET visible=? WHERE user_id LIKE ?'''
+            .format(TABLE_USERS), (1 if visible else 0, user_id))
+
     def try_create_room(self, room_name, creator_name, creator_id=None):
         '''
         Creates room in the local database. If room already

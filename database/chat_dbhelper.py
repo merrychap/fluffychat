@@ -75,5 +75,14 @@ class ChatDBHelper:
     def get_room_creator(self, room_name):
         return self._db.get_room_creator(room_name)
 
+    def change_visibility(self):
+        self._db.set_visibility(self.user_id,
+                                not self._db.get_visibility(self.user_id))
+
+    def get_visibility(self, username=None, user_id=None):
+        if user_id is None:
+            user_id = self._db.get_user_id(username)
+        return self._db.get_visibility(user_id)
+
     def add_user2room(self, username, room_name):
         self._db.add_user2room(username=username, room_name=room_name)
