@@ -339,8 +339,6 @@ class ChatClient:
             username = host_data[2]
             visibility = host_data[3]
 
-            print(host, user_id, username, visibility)
-
             logger.info('[+] Connected host: {0}, username: {1}, user_id: {2}'
                         .format(host, username, user_id))
 

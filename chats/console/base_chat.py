@@ -65,6 +65,7 @@ class BaseChat:
         self.init_command_handlers()
 
         self.file_received = set()
+        self.self_chat = False
 
     def init_command_handlers():
         pass
@@ -225,11 +226,12 @@ class BaseChat:
                                                       cur_msg[1] - last_msg[1],
                                                       room)
                 for message in messages:
-                    # if message[2] != self.client.user_id:
-                    print('{0} : {1}:> {2}'
-                          .format(message[3],
-                                  self.db_helper.get_username(message[2]),
-                                  message[0]))
+                    if self.self_chat or message[2] != self.client.user_id:
+                    # if
+                        print('{0} : {1}:> {2}'
+                              .format(message[3],
+                                      self.db_helper.get_username(message[2]),
+                                      message[0]))
                 last_msg = cur_msg
 
     def remove_room(self, room_name):

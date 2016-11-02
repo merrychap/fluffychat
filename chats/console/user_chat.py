@@ -14,6 +14,9 @@ class UserChat(BaseChat):
         self.username = username
         self.user_id = self.db_helper.get_user_id(username)
 
+        if self.user_id == self.client.user_id:
+            self.self_chat = True
+
         self.print_mode_help('message')
         self.init_print_messages()
 
@@ -55,6 +58,7 @@ class UserChat(BaseChat):
                 except KeyboardInterrupt:
                     self.back2main()
             except BreakLoopException:
+                self.self_chat = False
                 break
 
 
