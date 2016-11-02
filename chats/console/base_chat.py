@@ -126,7 +126,7 @@ class BaseChat:
         user_id = self.db_helper.get_user_id(username)
         filename = file_location.replace('/', ' ').replace('\\', ' ').split()[-1]
         message = self.client.create_file_data(file_location, filename,
-                                               user_id=user_id)
+                                               user_id=self.user_id)
         if message is None:
             print('[-] Maybe that file doesn\'t exist')
             return
@@ -227,7 +227,6 @@ class BaseChat:
                                                       room)
                 for message in messages:
                     if self.self_chat or message[2] != self.client.user_id:
-                    # if
                         print('{0} : {1}:> {2}'
                               .format(message[3],
                                       self.db_helper.get_username(message[2]),
