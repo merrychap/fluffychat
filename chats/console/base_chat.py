@@ -1,6 +1,7 @@
 import threading
 import sys
 import re
+import network.client as nc
 
 from database.chat_dbhelper import ChatDBHelper
 
@@ -47,6 +48,8 @@ class BaseChat:
     REMOVE_ROOM_PATTERN = re.compile(r'^@remove_room "([a-zA-Z_]+)"$')
     ADD_USER_PATTERN = re.compile(r'^@add_user "([a-zA-Z_]+)" "([a-zA-Z_]+)"$')
     ADD_PATTERN = re.compile(r'^@add_user "([a-zA-Z_]+)"$')
+    ROOT_PATH_PATTERN = re.compile(r'^@change_root_path "([a-zA-Z0-9/\\_.]+)"$')
+    SEND_FILE_PATTERN = re.compile(r'^@send_file "([a-zA-Z0-0/\\_.]+)"$')
 
     def __init__(self, client):
         operation_done = True
@@ -60,6 +63,8 @@ class BaseChat:
 
         self.inner_threads = []
         self.init_command_handlers()
+
+        self.file_received = set()
 
     def init_command_handlers():
         pass
@@ -86,6 +91,10 @@ class BaseChat:
         username = input('[*] Please, specify your username(a-zA-Z_.):> ')
         self.client.specify_username(username)
 
+    def specify_root_path(self):
+        root_path = input('[*] Specify your root path for storing files:> ')
+        self.client.specify_root_path(root_path)
+
     def send_room_message(self, room_name, text, room_user = '',
                           remove_room='No'):
         '''
@@ -106,6 +115,21 @@ class BaseChat:
                               remove_room=remove_room, room_user=room_user,
                               users_in_room=users)
 
+    def handle_received_file(self, user_id, msg):
+        if msg != 'Yes':
+            self.client.remove_file(user_id)
+
+    def send_file(self, file_location, username):
+        user_id = self.db_helper.get_user_id(username)
+        filename = file_location.replace('/', ' ').replace('\\', ' ').split()[-1]
+        message = self.client.create_file_data(file_location, filename,
+                                               user_id=user_id)
+        if message is None:
+            print('[-] Maybe that file doesn\'t exist')
+            return
+
+        self._send_message(user_id, message)
+
     def send_message(self, room="", user_id=None, username=None,
                      text=None, remove_room='No', room_user = '',
                      room_creator='', users_in_room=[]):
@@ -125,7 +149,13 @@ class BaseChat:
         if user_id is None:
             user_id = self.db_helper.get_user_id(username)
 
-        if not self.db_helper.get_visible(user_id=user_id):
+        # if user sended to us a file and now we wanted to save it or not
+        if user_id in self.file_received:
+            self.handle_received_file(user_id, text)
+            self.file_received.remove(user_id)
+            return
+
+        if not self.db_helper.get_visibility(user_id=user_id):
             return
 
         if room != '':
@@ -137,6 +167,9 @@ class BaseChat:
                                           room_creator=room_creator,
                                           new_room_user=room_user,
                                           users_in_room=users_in_room)
+        self._send_message(user_id, message, text)
+
+    def _send_message(self, user_id, message, text=''):
         # Destination host
         host = self.client.user_id2host[user_id]
         if user_id != self.client.user_id:
@@ -182,15 +215,19 @@ class BaseChat:
         while not self.stop_printing:
             cur_msg = self.get_last_message(dst, room)
             if last_msg[1] != cur_msg[1]:
+                # TODO This is haven't checked already for rooms
+                if dst in self.client.user_id2filename and \
+                   cur_msg[0] == nc.received_file_message:
+                    self.file_received.add(dst)
                 messages = self.db_helper.get_history(dst,
                                                       cur_msg[1] - last_msg[1],
                                                       room)
                 for message in messages:
-                    if message[2] != self.client.user_id:
-                        print('{0} : {1}:> {2}'
-                              .format(message[3],
-                                      self.db_helper.get_username(message[2]),
-                                      message[0]))
+                    # if message[2] != self.client.user_id:
+                    print('{0} : {1}:> {2}'
+                          .format(message[3],
+                                  self.db_helper.get_username(message[2]),
+                                  message[0]))
                 last_msg = cur_msg
 
     def remove_room(self, room_name):

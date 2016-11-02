@@ -1,7 +1,9 @@
 import threading
 
 from chats.console.base_chat import BaseChat, INDENT, BreakLoopException, lock
-from chats.console.base_chat import print_information, parse_function, operation_done
+from chats.console.base_chat import print_information, parse_function
+
+import chats.console.base_chat as bc
 
 
 class UserChat(BaseChat):
@@ -21,11 +23,23 @@ class UserChat(BaseChat):
             '@back': self.back2main,
         }
 
+    @parse_function
+    def parse_sending_file(self, parse):
+        file_location = parse.group(1)
+        self.send_file(file_location, self.username)
+
     def handle_command(self, command):
+        bc.operation_done = False
+        send_file_parse = self.SEND_FILE_PATTERN.match(command)
+
         try:
             self.command_handlers[command]()
+            bc.operation_done = True
         except KeyError:
-            self.send_message(username=self.username, text=command)
+            if send_file_parse:
+                self.parse_sending_file(send_file_parse)
+            else:
+                self.send_message(username=self.username, text=command)
 
     def open(self):
         print()
@@ -48,4 +62,5 @@ class UserChat(BaseChat):
         return {
             'help': 'Shows this output',
             'back': 'Returns to message mode',
+            'send_file "file location"': 'Sends file to the user'
         }

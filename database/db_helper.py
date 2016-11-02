@@ -55,7 +55,7 @@ class DBHelper:
         '''
         Returns conversation id and total message in conversation.
         It provides both getting message data from user to user and
-        getting data from user to room. For last purpose here is
+        getting data from user to room. For the last purpose here is
         rc_user flag.
 
         Args:
@@ -337,8 +337,30 @@ class DBHelper:
     def _set_visibility(self, cur, user_id, visible):
         # new_visible = not self._get_visible(cur, user_id)
         cur.execute('''
-            UPDATE {0} SET visible=? WHERE user_id LIKE ?'''
+            UPDATE {0} SET visible=? WHERE user_id LIKE ?;'''
             .format(TABLE_USERS), (1 if visible else 0, user_id))
+
+    def set_root_path(self, root_path, user_id):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            self._set_root_path(cur, root_path, user_id)
+
+    def _set_root_path(self, cur, root_path, user_id):
+        cur.execute('''
+            UPDATE {0} SET root_path=? WHERE user_id=?;'''.format(TABLE_CURRENT_USER),
+            (root_path, user_id))
+
+    def get_root_path(self):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            return self._get_root_path(cur)
+
+    def _get_root_path(self, cur):
+        cur.execute('''
+            SELECT root_path FROM {0};'''.format(TABLE_CURRENT_USER))
+        return cur.fetchone()[0]
 
     def try_create_room(self, room_name, creator_name, creator_id=None):
         '''
@@ -381,7 +403,8 @@ class DBHelper:
             cur.execute('''
                 CREATE TABLE IF NOT EXISTS {0} (
                     `user_id` INTEGER NOT NULL UNIQUE,
-                    `username` VARCHAR(25) NOT NULL UNIQUE
+                    `username` VARCHAR(25) NOT NULL UNIQUE,
+                    'root_path' VARCHAR(200) NOT NULL UNIQUE
                 );'''.format(TABLE_CURRENT_USER))
 
             cur.execute('''
@@ -577,21 +600,21 @@ class DBHelper:
                   .format(username, room_name))
             return False
 
-    def save_current_user(self, username, user_id, cur=None):
+    def save_current_user(self, username, user_id, cur=None, root_path=''):
         if cur is None:
             con = sql.connect(DATABASE)
             with con:
                 cur = con.cursor()
-                self.handle_saving_cur_user(username, user_id, cur)
+                self.handle_saving_cur_user(username, user_id, cur, root_path)
         else:
-            self.handle_saving_cur_user(username, user_id, cur)
+            self.handle_saving_cur_user(username, user_id, cur, root_path)
 
-    def handle_saving_cur_user(self, username, user_id, cur):
+    def handle_saving_cur_user(self, username, user_id, cur, root_path=''):
         user = self.get_current_user()
         if user is None:
             cur.execute('''
                 INSERT OR IGNORE INTO `current_user`
-                VALUES (?, ?);''', (user_id, username))
+                VALUES (?, ?, ?);''', (user_id, username, root_path))
             logger.info('[+] Current user saved')
         else:
             cur.execute('''
@@ -679,7 +702,7 @@ class DBHelper:
                     conv_table_reply=TABLE_CONVERATION_REPLY, room=None):
         '''
         Returns message history of users conversation
-        or conversation user in room. For this purpose here is
+        or conversation user in room. For the last purpose here is
         room flag.
 
         Args:

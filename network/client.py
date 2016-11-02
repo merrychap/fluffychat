@@ -4,6 +4,7 @@
 from copy import deepcopy
 from multiprocessing import Queue
 
+import os
 import select
 import socket
 import urllib
@@ -22,6 +23,8 @@ PORT = 9090
 EMPTY = ' '
 logger = logging.getLogger(__name__)
 interfaces = ['eth', 'wlan', 'en', 'wl']
+received_file_message = ('User sended you a file. Do you want to save it?'
+                         '(Yes\\No)')
 
 
 class NetworkConnectionChecker(threading.Thread):
@@ -42,6 +45,8 @@ class NetworkConnectionChecker(threading.Thread):
 
 class ChatClient:
     def __init__(self, server_host=None):
+        self.user_id2filename = dict()
+
         self._server_host = server_host
         self._recv_sock = self._create_recv_socket()
         self._host = self._get_ip_addr()
@@ -65,7 +70,7 @@ class ChatClient:
         if self._host is None:
             return False
         print(self._host)
-        handler = threading.Thread(target=self.__handle_recv)
+        handler = threading.Thread(target=self._handle_recv)
         self.inner_threads.append(handler)
         handler.start()
 
@@ -86,18 +91,27 @@ class ChatClient:
         if user is not None:
             self.user_id = user[0]
             self.username = user[1]
+            self.root_path = user[2]
         else:
             self.username = ''
             self.user_id = 1
+            self.root_path = ''
 
     def specify_username(self, username):
         self.username = username
+
+    def specify_root_path(self, root_path):
+        self.root_path = root_path
+
+    def _handle_root_path(self):
+        self.root_path = self._db.get_root_path()
 
     def _handle_username(self):
         self._db.change_username(user_id=self.user_id,
                                  new_username=self.username)
         self._db.save_user(username=self.username, user_id=self.user_id)
-        self._db.save_current_user(username=self.username, user_id=self.user_id)
+        self._db.save_current_user(username=self.username, user_id=self.user_id,
+                                   root_path=self.root_path)
 
         self.host2user_id[self._host] = self.user_id
         self.user_id2host[self.user_id] = self._host
@@ -136,6 +150,25 @@ class ChatClient:
         for thread in self.inner_threads:
             thread.join()
 
+    def create_file_data(self, file_location, filename, username='', user_id=-1,
+                         json_format=True):
+        if user_id == -1:
+            user_id = self._db.get_user_id(username)
+        try:
+            with open(file_location, 'rb') as _file:
+                file_data = _file.read().decode('utf-8')
+                data = {
+                    'file': True,
+                    'filename': filename,
+                    'file_data': file_data,
+                    'username': username,
+                    'user_id': user_id
+                }
+                return json.dumps(data) if json_format else data
+        except FileNotFoundError as e:
+            return None
+
+
     def create_data(self, msg='', host='', action='', is_server=0,
                     username='', user_id=-1, json_format=True,
                     room_name='', room_creator = '', new_room_user = '',
@@ -149,6 +182,7 @@ class ChatClient:
             'user_id': user_id,
             'visible': self._db.get_visibility(user_id)
         }
+
         if room_name != '':
             data['room'] = room_name
             data['room_creator'] = room_creator
@@ -157,9 +191,7 @@ class ChatClient:
                 data['room_user'] = new_room_user
             if users_in_room != []:
                 data['users_in_room'] = users_in_room
-        if json_format:
-            return json.dumps(data)
-        return data
+        return json.dumps(data) if json_format else data
 
     def send_msg(self, host, msg):
         try:
@@ -171,7 +203,7 @@ class ChatClient:
         finally:
             send_sock.close()
 
-    def __handle_recv(self):
+    def _handle_recv(self):
         inputs = [self._recv_sock]
         outputs = []
         message_queues = {}
@@ -207,32 +239,37 @@ class ChatClient:
                         self._parse_data(message_queues[sock])
                         del message_queues[sock]
 
-    def _handle_recv(self):
-        while self._handle_recv_data:
-            logger.info('[*] Waiting for connection')
-            conn, addr = self._recv_sock.accept()
-            try:
-                logger.info('[+] Connection from: %s' % str(addr))
-                data = bytes()
-                while True:
-                    recieved_data = conn.recv(1024)
-                    if not recieved_data:
-                        logger.info('[-] No more data from: %s' % str(addr))
-                        break
-                    data += recieved_data
-                logger.info('[+] Recieved: %s' % data)
-                self._parse_data(data.decode('utf-8'))
-            finally:
-                conn.close()
-
-    def update_visibility(self, data):
+    def _update_visibility(self, data):
         self._db.set_visibility(data['user_id'], data['visible'])
+
+    def _save_file(self, filename, _file):
+        with open(self.root_path + filename, 'wb') as new_file:
+            new_file.write(_file.encode('utf-8'))
+
+    def remove_file(self, user_id):
+        os.remove(self.root_path + self.user_id2filename[user_id])
+        del self.user_id2filename[user_id]
+
+    def _handle_file_receiving(self, data, cur_time):
+        global received_file_message
+
+        self._save_file(data['filename'], data['file_data'])
+        self._db.save_message(src=data['user_id'], dst=self.user_id,
+                              message=received_file_message, time=cur_time)
+        self.user_id2filename[data['user_id']] = data['filename']
 
     def _parse_data(self, json_data, conn=None):
         data = json.loads(json_data)
+        cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+
+        # If this data is associated with file then handle only
+        # in this case
+        if 'file' in data:
+            self._handle_file_receiving(data, cur_time)
+            return
 
         # Updates visibility of connected user
-        self.update_visibility(data)
+        self._update_visibility(data)
 
         # We have request for connection. Then we should send this ip to all
         # host in our network
@@ -250,7 +287,6 @@ class ChatClient:
 
         # TODO save messages in database or file
         if data['message'] != '':
-            cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
             # If action connected with room
             if 'room' in data:
                 # User has deleted the room

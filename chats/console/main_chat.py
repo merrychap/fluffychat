@@ -40,13 +40,21 @@ class MainChat(BaseChat):
             print('+ %s' % room)
 
     @parse_function
+    def parse_root_path(self, parse):
+        new_root_path = parse.group(1)
+        if new_root_path[-1] != '/':
+            new_root_path += '/'
+        self.db_helper.set_root_path(new_root_path)
+        print('\n[+] Root path changed\n')
+
+    @parse_function
     def parse_user(self, parse):
         username = parse.group(1)
         if self.db_helper.user_exists(username) and \
-           self.db_helper.get_visible(username):
+           self.db_helper.get_visibility(username):
             UserChat(username=username, client=self.client).open()
         else:
-            print('[-] No such user in the chat\n')
+            print('\n[-] No such user in the chat\n')
 
     @parse_function
     def parse_room(self, parse):
@@ -54,7 +62,7 @@ class MainChat(BaseChat):
         if self.db_helper.room_exists(room_name):
             RoomChat(room_name=room_name, client=self.client).open()
         else:
-            print('[-] No such room in the chat\n')
+            print('\n[-] No such room in the chat\n')
 
     @parse_function
     def parse_create_room(self, parse):
@@ -79,13 +87,15 @@ class MainChat(BaseChat):
         username = parse.group(1)
         room_name = parse.group(2)
         if not self.add_user2room(username, room_name):
-            print('[-] Error while trying add user to the room')
+            print('\n[-] Error while trying add user to the room\n')
 
     def run(self):
         if not self.cur_user_exists():
             self.specify_username()
+            self.specify_root_path()
         else:
             print('Hello again, %s!' % self.client.username)
+            print('Your storage directory: %s' % self.db_helper.get_root_path())
         self.db_helper.specify_username(self.client)
         if not self.client.start():
             print('[-] Sorry. But it seems there isn\'t Internet connection')
@@ -103,7 +113,8 @@ class MainChat(BaseChat):
             'remove_room "roomname"': 'Removes created room.',
             'add_user': '"username" "room_name"',
             'create_room "roomname"': 'Creates new room. ',
-            'exit': 'Closes chat.'
+            'exit': 'Closes chat.',
+            'change_root_path "root path"': 'Changes directory for storing files'
         }
 
     def handle_command(self, command):
@@ -114,6 +125,7 @@ class MainChat(BaseChat):
         create_room_parse = self.CREATE_ROOM_PATTERN.match(command)
         remove_room_parse = self.REMOVE_ROOM_PATTERN.match(command)
         add_user_parse = self.ADD_USER_PATTERN.match(command)
+        root_path_parse = self.ROOT_PATH_PATTERN.match(command)
 
         try:
             self.command_handlers[command]()
@@ -125,6 +137,7 @@ class MainChat(BaseChat):
             self.parse_create_room(create_room_parse)
             self.parse_remove_room(remove_room_parse)
             self.parse_add_user(add_user_parse)
+            self.parse_root_path(root_path_parse)
         else:
             if not bc.operation_done:
                 print('[-] Invalid command\n')

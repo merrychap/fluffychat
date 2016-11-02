@@ -57,6 +57,12 @@ class ChatDBHelper:
     def user_exists(self, username):
         return self._db.user_exists(username)
 
+    def get_root_path(self):
+        return self._db.get_root_path()
+
+    def set_root_path(self, root_path):
+        self._db.set_root_path(root_path, self.user_id)
+
     def room_exists(self, room_name):
         return self._db.room_exists(room_name)
 
