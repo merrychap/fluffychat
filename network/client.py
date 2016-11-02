@@ -247,7 +247,8 @@ class ChatClient:
                         del message_queues[sock]
 
     def _update_visibility(self, data):
-        self._db.set_visibility(data['user_id'], data['visible'])
+        self._db.set_visibility(data['user_id'], 1 if not ('visible' in data)\
+                                else data['visible'])
 
     def _save_file(self, filename, _file):
         with open(self.root_path + filename, 'wb') as new_file:
