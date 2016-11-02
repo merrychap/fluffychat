@@ -47,6 +47,8 @@ class ChatClient:
     def __init__(self, server_host=None):
         self.user_id2filename = dict()
 
+        self.user_id = -1
+
         self._server_host = server_host
         self._recv_sock = self._create_recv_socket()
         self._host = self._get_ip_addr()
@@ -60,8 +62,6 @@ class ChatClient:
 
         self._db.try_create_database()
         self._init_user_data()
-
-        self.user_id = -1
 
         self.host2user_id = dict()
         self.user_id2host = dict()
@@ -351,6 +351,7 @@ class ChatClient:
             self._db.save_user(user_id=user_id,
                                username=username,
                                visibility=visibility)
+        print(self.user_id)
         if self.user_id == -1:
             self.user_id = len(self._connected)
         self.user_id_assigned = True
