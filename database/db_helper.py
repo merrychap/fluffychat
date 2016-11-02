@@ -551,7 +551,7 @@ class DBHelper:
                           conv_table=TABLE_ROOM_CONVERSATION, rc_user=True,
                           conv_table_reply=TABLE_ROOM_CONVERSATION_REPLY)
 
-    def save_user(self, username, user_id=None, password=''):
+    def save_user(self, username, user_id=None, visibility=1, password=''):
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
@@ -559,13 +559,14 @@ class DBHelper:
                 if user_id is not None:
                     cur.execute('''
                         INSERT OR IGNORE INTO users (user_id, username, password)
-                        VALUES (?, ?, ?);''', (user_id, username, password))
+                        VALUES (?, ?, ?, ?);''', (user_id, username, visibility,
+                                               password))
                     logger.info('[+] User with id = {0} was created successfully'
                                 .format(user_id))
                 else:
                     cur.execute('''
                         INSERT OR IGNORE INTO users (username, password)
-                        VALUES (?, ?);''', (username, password))
+                        VALUES (?, ?);''', (username, visibility))
                     logger.info('[+] User "{0}" was created successfully'
                                 .format(username))
                 return True

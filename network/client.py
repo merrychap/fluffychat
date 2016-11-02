@@ -330,6 +330,7 @@ class ChatClient:
             host = tuple(host_data[0])
             user_id = int(host_data[1])
             username = host_data[2]
+            visibility = host_data[3]
 
             logger.info('[+] Connected host: {0}, username: {1}, user_id: {2}'
                         .format(host, username, user_id))
@@ -339,7 +340,8 @@ class ChatClient:
 
             self._connected.add(host)
             self._db.save_user(user_id=user_id,
-                               username=username)
+                               username=username,
+                               visibility=visibility)
         self.user_id = len(self._connected)
         self.user_id_assigned = True
         logger.info('[*] Current user id: %s' % self.user_id)
@@ -392,8 +394,11 @@ class ChatClient:
     def _send_connected(self, host):
         host = tuple(host)
         tun_data = self.create_data(json_format=False)
-        tun_data['connected'] = [(host, user_id, self._db.get_username(user_id)) \
-                                  for host, user_id in self.host2user_id.items()]
+        _connected = []
+        for host, user_id in self.host2user_id.items():
+            _connected.append((host, user_id, self._db.get_username(user_id),
+                               self._db.get_visibility(user_id)))
+        tun_data['connected'] = _connected
         logger.info('[+] Sending connected hosts to: %s' % str(host))
         self.send_msg(host=host, msg=json.dumps(tun_data))
 
