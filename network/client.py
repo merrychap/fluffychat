@@ -95,9 +95,11 @@ class ChatClient:
             self.username = user[1]
             self.root_path = user[2]
         else:
+            self.user_id = -1
             self.username = ''
-            self.user_id = 1
             self.root_path = ''
+            if self._server_host is None:
+                self.user_id = 1
 
     def specify_username(self, username):
         self.username = username
