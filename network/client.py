@@ -173,7 +173,6 @@ class ChatClient:
         except FileNotFoundError as e:
             return None
 
-
     def create_data(self, msg='', host='', action='', is_server=0,
                     username='', user_id=-1, json_format=True,
                     room_name='', room_creator = '', new_room_user = '',
@@ -401,7 +400,7 @@ class ChatClient:
 
     def _send_connected(self, host):
         host = tuple(host)
-        tun_data = self.create_data(json_format=False)
+        tun_data = self.create_data(json_format=False, visibility=False)
         _connected = []
         for host, user_id in self.host2user_id.items():
             _connected.append((host, user_id, self._db.get_username(user_id),
