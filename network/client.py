@@ -184,7 +184,7 @@ class ChatClient:
             'action': action,
             'username': username,
             'user_id': user_id,
-            'visible': self._db.get_visibility(user_id)
+            'visible': self._db.get_visibility(self.user_id)
         }
 
         if room_name != '':
