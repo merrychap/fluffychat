@@ -127,7 +127,6 @@ class BaseChat:
         filename = file_location.replace('/', ' ').replace('\\', ' ').split()[-1]
         message = self.client.create_file_data(file_location, filename,
                                                user_id=self.client.user_id)
-        print(message)
         if message is None:
             print('[-] Maybe that file doesn\'t exist')
             return

@@ -61,6 +61,8 @@ class ChatClient:
         self._db.try_create_database()
         self._init_user_data()
 
+        self.user_id = -1
+
         self.host2user_id = dict()
         self.user_id2host = dict()
 
@@ -349,7 +351,7 @@ class ChatClient:
             self._db.save_user(user_id=user_id,
                                username=username,
                                visibility=visibility)
-        if self.user_id == 1:
+        if self.user_id == -1:
             self.user_id = len(self._connected)
         self.user_id_assigned = True
         logger.info('[*] Current user id: %s' % self.user_id)
