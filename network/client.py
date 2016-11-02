@@ -134,7 +134,8 @@ class ChatClient:
 
     def _get_connected(self):
         logger.info('[*] Getting connected hosts')
-        data = self.create_data(host=self._host, action='_get_connected')
+        data = self.create_data(host=self._host, action='_get_connected',
+                                visibility=False)
         self.send_msg(host=self._server_host, msg=data)
 
     def _connect(self, serv_host=None):
@@ -176,7 +177,7 @@ class ChatClient:
     def create_data(self, msg='', host='', action='', is_server=0,
                     username='', user_id=-1, json_format=True,
                     room_name='', room_creator = '', new_room_user = '',
-                    remove_room='No', users_in_room=[]):
+                    remove_room='No', users_in_room=[], visibility=True):
         data = {
             'message': msg,
             'host': host,
@@ -184,8 +185,10 @@ class ChatClient:
             'action': action,
             'username': username,
             'user_id': user_id,
-            'visible': self._db.get_visibility(self.user_id)
         }
+
+        if visibility:
+            data['visible'] = self._db.get_visibility(user_id)
 
         if room_name != '':
             data['room'] = room_name
