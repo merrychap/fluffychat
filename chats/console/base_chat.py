@@ -92,8 +92,10 @@ class BaseChat:
         self.client.specify_username(username)
 
     def specify_root_path(self):
-        root_path = input('[*] Specify your root path for storing files:> ')
-        self.client.specify_root_path(root_path)
+        while True:
+            root_path = input('[*] Specify your root path for storing files:> ')
+            if self.client.specify_root_path(root_path):
+                break
 
     def send_room_message(self, room_name, text, room_user = '',
                           remove_room='No'):

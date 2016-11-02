@@ -101,7 +101,11 @@ class ChatClient:
         self.username = username
 
     def specify_root_path(self, root_path):
+        if not os.path.isdir(root_path):
+            print('\n[-] This is not a directory\n')
+            return False
         self.root_path = root_path
+        return True
 
     def _handle_root_path(self):
         self.root_path = self._db.get_root_path()

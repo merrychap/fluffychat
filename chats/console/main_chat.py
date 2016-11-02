@@ -5,6 +5,8 @@ from chats.console.user_chat import UserChat
 
 import chats.console.base_chat as bc
 
+import os
+
 
 class MainChat(BaseChat):
     def __init__(self, client):
@@ -42,6 +44,8 @@ class MainChat(BaseChat):
     @parse_function
     def parse_root_path(self, parse):
         new_root_path = parse.group(1)
+        if not os.path.isdir(new_root_path):
+            print('\n[-] This is not a directory\n')
         if new_root_path[-1] != '/':
             new_root_path += '/'
         self.db_helper.set_root_path(new_root_path)

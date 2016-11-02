@@ -558,14 +558,14 @@ class DBHelper:
             if not self._user_exists(cur, username):
                 if user_id is not None:
                     cur.execute('''
-                        INSERT OR IGNORE INTO users (user_id, username, password)
-                        VALUES (?, ?, ?, ?);''', (user_id, username, visibility,
-                                               password))
+                        INSERT OR IGNORE INTO users (user_id, username, visible,
+                        password) VALUES (?, ?, ?, ?);''', (user_id, username,
+                                                            visibility, password))
                     logger.info('[+] User with id = {0} was created successfully'
                                 .format(user_id))
                 else:
                     cur.execute('''
-                        INSERT OR IGNORE INTO users (username, password)
+                        INSERT OR IGNORE INTO users (username, visible)
                         VALUES (?, ?);''', (username, visibility))
                     logger.info('[+] User "{0}" was created successfully'
                                 .format(username))
