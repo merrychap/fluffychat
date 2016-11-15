@@ -41,12 +41,12 @@ class RoomChat(BaseChat):
             self.command_handlers[command]()
             bc.operation_done = True
         except KeyError:
-            self.parse_add_user(add_parse)
+            if add_parse is not None:
+                self.parse_add_user(add_parse)
+            else:
+                self.send_room_message(self.room_name, command)
         except BreakLoopException:
             raise BreakLoopException
-        else:
-            if not bc.operation_done:
-                self.send_room_message(self.room_name, command)
 
     def open(self):
         print()

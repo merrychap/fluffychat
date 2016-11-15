@@ -172,10 +172,13 @@ class BaseChat:
 
     def _send_message(self, user_id, message, text=''):
         # Destination host
-        host = self.client.user_id2host[user_id]
-        if user_id != self.client.user_id:
-            self.db_helper.save_message(user_id, text)
-        self.client.send_msg(host=host, msg=message)
+        try:
+            host = self.client.user_id2host[user_id]
+            if user_id != self.client.user_id:
+                self.db_helper.save_message(user_id, text)
+            self.client.send_msg(host=host, msg=message)
+        except KeyError:
+            pass
 
     def get_last_message(self, dst, room=False):
         for message in self.db_helper.get_history(dst, 1, room):
