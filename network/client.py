@@ -5,6 +5,7 @@ from copy import deepcopy
 from multiprocessing import Queue
 
 import os
+import base64
 import select
 import socket
 import urllib
@@ -165,11 +166,11 @@ class ChatClient:
             user_id = self._db.get_user_id(username)
         try:
             with open(file_location, 'rb') as _file:
-                file_data = _file.read().decode('utf-8')
+                file_data = base64.b64encode(_file.read())
                 data = {
                     'file': True,
                     'filename': filename,
-                    'file_data': file_data,
+                    'file_data': file_data.decode('utf-8'),
                     'username': username,
                     'user_id': user_id
                 }
@@ -255,7 +256,7 @@ class ChatClient:
 
     def _save_file(self, filename, _file):
         with open(self.root_path + filename, 'wb') as new_file:
-            new_file.write(_file.encode('utf-8'))
+            new_file.write(base64.b64decode(_file))
 
     def remove_file(self, user_id):
         os.remove(self.root_path + self.user_id2filename[user_id])

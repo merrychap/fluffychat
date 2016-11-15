@@ -21,7 +21,6 @@ def print_information(printer):
         printer(self)
         print(INDENT + '\n')
         operation_done = True
-
     return wrapper
 
 
@@ -32,7 +31,6 @@ def parse_function(handler):
         if parse:
             handler(self, parse)
             operation_done = True
-
     return wrapper
 
 
@@ -182,8 +180,6 @@ class BaseChat:
     def get_last_message(self, dst, room=False):
         for message in self.db_helper.get_history(dst, 1, room):
             return message
-            # if message != None and message[2] == user_id:
-            #    return message
         return ('', 0, -1)
 
     def cur_user_exists(self):

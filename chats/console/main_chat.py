@@ -4,6 +4,7 @@ from chats.console.room_chat import RoomChat
 from chats.console.user_chat import UserChat
 
 import chats.console.base_chat as bc
+from opt.appearance import Colors
 
 import os
 
@@ -98,7 +99,8 @@ class MainChat(BaseChat):
             self.specify_username()
             self.specify_root_path()
         else:
-            print('Hello again, %s!' % self.client.username)
+            print('Hello again, {}{}{}!'.format(Colors.blue, self.client.username,
+                                                Colors.white))
             print('Your storage directory: %s' % self.db_helper.get_root_path())
         self.db_helper.specify_username(self.client)
         if not self.client.start():
