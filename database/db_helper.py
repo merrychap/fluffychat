@@ -355,8 +355,8 @@ class DBHelper:
 
     def _set_root_path(self, cur, root_path, user_id):
         cur.execute('''
-            UPDATE {0} SET root_path=? WHERE user_id=?;'''.format(TABLE_CURRENT_USER),
-            (root_path, user_id))
+            UPDATE {0} SET root_path=? WHERE user_id=?;'''
+            .format(TABLE_CURRENT_USER), (root_path, user_id))
 
     def get_root_path(self):
         con = sql.connect(DATABASE)
@@ -579,8 +579,9 @@ class DBHelper:
                 return True
             else:
                 cur.execute('''
-                    UPDATE {} SET username = {}, visible = {}'''
-                    .format(TABLE_USERS, username, visibility))
+                    UPDATE {} SET username=?, visible=?
+                    WHERE user_id=?;'''
+                    .format(TABLE_USERS), (username, visibility, user_id)))
                 logger.info('[-] User "{0}" is updated'.format(username))
                 return False
 
