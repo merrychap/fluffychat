@@ -317,7 +317,6 @@ class DBHelper:
             traceback.logger.info_exc()
 
     def get_visibility(self, user_id):
-        print('USER ID: {}'.format(user_id))
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()

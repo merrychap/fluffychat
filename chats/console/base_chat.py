@@ -181,7 +181,7 @@ class BaseChat:
             pass
 
     def send_visibility(self):
-        for host in self.host2user_id.keys():
+        for host in self.client.host2user_id.keys():
             self._send_connected(host)
 
     def get_last_message(self, dst, room=False):
