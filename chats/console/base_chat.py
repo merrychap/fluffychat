@@ -182,7 +182,7 @@ class BaseChat:
 
     def send_visibility(self):
         for host in self.client.host2user_id.keys():
-            self._send_connected(host)
+            self.client._send_connected(host)
 
     def get_last_message(self, dst, room=False):
         for message in self.db_helper.get_history(dst, 1, room):
