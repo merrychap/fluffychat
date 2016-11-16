@@ -578,7 +578,10 @@ class DBHelper:
                                 .format(username))
                 return True
             else:
-                logger.info('[-] User "{0}" is already exists'.format(username))
+                cur.execute('''
+                    UPDATE {} SET username = {}, visible = {}'''
+                    .format(TABLE_USERS, username, visibility))
+                logger.info('[-] User "{0}" is updated'.format(username))
                 return False
 
     def add_user2room(self, *args, **kwargs):
