@@ -14,7 +14,7 @@ class ChatDBHelper:
         self.username = client.username
         self._client = client
 
-    def get_user_id(self):
+    def get_cur_user_id(self):
         return self._client.user_id
 
     def create_data(self, *args, **kwargs):

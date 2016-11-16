@@ -35,7 +35,7 @@ class MainChat(BaseChat):
     def print_users(self):
         for user_id in self.client.host2user_id.values():
             if self.db_helper.get_visibility(user_id=user_id) or \
-               user_id == self.db_helper.get_user_id():
+               user_id == self.db_helper.get_cur_user_id():
                 print('+ %s' % self.db_helper.get_username(user_id))
 
     @print_information
