@@ -192,7 +192,7 @@ class ChatClient:
         }
 
         if visibility:
-            data['visible'] = self._db.get_visibility(user_id)
+            data['visible'] = self._db.get_visibility(self.user_id)
 
         if room_name != '':
             data['room'] = room_name
