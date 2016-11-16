@@ -12,7 +12,7 @@ class ChatDBHelper:
     def specify_username(self, client):
         self._db = client._db
         self.username = client.username
-        self.user_id = client.user_id
+        self.client.user_id = client.user_id
         self._client = client
 
     def create_data(self, *args, **kwargs):
@@ -23,9 +23,9 @@ class ChatDBHelper:
 
     def get_history(self, dst, count, room=False):
         if not room:
-            return self._db.get_history(self.user_id, dst, count)
+            return self._db.get_history(self.client.user_id, dst, count)
         else:
-            return self._db.get_room_history(self.user_id, dst, count)
+            return self._db.get_room_history(self.client.user_id, dst, count)
 
     def get_username(self, user_id):
         return self._db.get_username(user_id)
@@ -35,14 +35,14 @@ class ChatDBHelper:
 
     def save_message(self, user_id, message):
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        self._db.save_message(self.user_id, user_id, message, cur_time)
+        self._db.save_message(self.client.user_id, user_id, message, cur_time)
 
     def create_room(self, room_name):
         return self._db.try_create_room(room_name=room_name,
                                         creator_name=self.username)
 
     def change_username(self, new_username):
-        data = self.create_data(username=self.username, user_id=self.user_id,
+        data = self.create_data(username=self.username, user_id=self.client.user_id,
                                 json_format=False)
         data['new_username'] = new_username
         data_dump = json.dumps(data)
@@ -50,9 +50,9 @@ class ChatDBHelper:
             if host != self._client._host:
                 self.send_msg(host=host, msg=data_dump)
         self.username = new_username
-        self._db.change_username(user_id=self.user_id,
+        self._db.change_username(user_id=self.client.user_id,
                                  new_username=new_username)
-        self._db.save_current_user(user_id=self.user_id, username=self.username)
+        self._db.save_current_user(user_id=self.client.user_id, username=self.username)
 
     def user_exists(self, username):
         return self._db.user_exists(username)
@@ -61,7 +61,7 @@ class ChatDBHelper:
         return self._db.get_root_path()
 
     def set_root_path(self, root_path):
-        self._db.set_root_path(root_path, self.user_id)
+        self._db.set_root_path(root_path, self.client.user_id)
 
     def room_exists(self, room_name):
         return self._db.room_exists(room_name)
@@ -82,11 +82,11 @@ class ChatDBHelper:
         return self._db.get_room_creator(room_name)
 
     def change_visibility(self):
-        self._db.set_visibility(self.user_id,
-                                not self._db.get_visibility(self.user_id))
+        self._db.set_visibility(self.client.user_id,
+                                not self._db.get_visibility(self.client.user_id))
 
     def get_last_user_id(self):
-        return self._db.get_last_user_id()
+        self._db.get_last_user_id()
 
     def get_visibility(self, username=None, user_id=None):
         if user_id is None:
