@@ -581,7 +581,7 @@ class DBHelper:
                 cur.execute('''
                     UPDATE {} SET username=?, visible=?
                     WHERE user_id=?;'''
-                    .format(TABLE_USERS), (username, visibility, user_id)))
+                    .format(TABLE_USERS), (username, visibility, user_id))
                 logger.info('[-] User "{0}" is updated'.format(username))
                 return False
 
