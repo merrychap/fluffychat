@@ -180,7 +180,7 @@ class BaseChat:
         except KeyError:
             pass
 
-    def send_visibility():
+    def send_visibility(self):
         for host in self.host2user_id.keys():
             self._send_connected(host)
 
