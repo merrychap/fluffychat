@@ -12,7 +12,6 @@ class ChatDBHelper:
     def specify_username(self, client):
         self._db = client._db
         self.username = client.username
-        self._client.user_id = client.user_id
         self._client = client
 
     def create_data(self, *args, **kwargs):
