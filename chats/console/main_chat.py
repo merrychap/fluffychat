@@ -27,8 +27,9 @@ class MainChat(BaseChat):
     @print_information
     def change_visibility(self):
         self.db_helper.change_visibility()
+        self.send_visibility()
         print('[+] You changed visibility: {0}'
-              .format(self.db_helper.get_visibility(user_id=self.db_helper.user_id)))
+              .format(self.db_helper.get_visibility(user_id=self.client.user_id)))
 
     @print_information
     def print_users(self):

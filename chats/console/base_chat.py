@@ -180,6 +180,10 @@ class BaseChat:
         except KeyError:
             pass
 
+    def send_visibility():
+        for host in self.host2user_id.keys():
+            self._send_connected(host)
+
     def get_last_message(self, dst, room=False):
         for message in self.db_helper.get_history(dst, 1, room):
             return message

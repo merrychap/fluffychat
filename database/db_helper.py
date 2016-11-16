@@ -343,7 +343,6 @@ class DBHelper:
             self._set_visibility(cur, user_id, visible)
 
     def _set_visibility(self, cur, user_id, visible):
-        # new_visible = not self._get_visible(cur, user_id)
         cur.execute('''
             UPDATE {0} SET visible=? WHERE user_id LIKE ?;'''
             .format(TABLE_USERS), (1 if visible else 0, user_id))
