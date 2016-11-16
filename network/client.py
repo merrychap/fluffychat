@@ -356,7 +356,7 @@ class ChatClient:
                                visibility=visibility)
         print(self.user_id)
         if self.user_id == -1:
-            self.user_id = len(self._connected)
+            self.user_id = self._db.get_last_user_id()
         self.user_id_assigned = True
         logger.info('[*] Current user id: %s' % self.user_id)
         logger.info('[*] Connected hosts: %s' % str(self._connected))

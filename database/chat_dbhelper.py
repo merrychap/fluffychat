@@ -85,6 +85,9 @@ class ChatDBHelper:
         self._db.set_visibility(self.user_id,
                                 not self._db.get_visibility(self.user_id))
 
+    def get_last_user_id(self):
+        return self._db.get_last_user_id()
+
     def get_visibility(self, username=None, user_id=None):
         if user_id is None:
             user_id = self._db.get_user_id(username)

@@ -328,6 +328,14 @@ class DBHelper:
             .format(TABLE_USERS), (user_id,))
         return cur.fetchone()[0] == 1
 
+    def get_last_user_id(self):
+        con = sql.connect(DATABASE)
+        with con:
+            cur = con.cursor()
+            cur.execute('''
+                SELECT max(user_id) FROM {}'''.format(TABLE_USERS))
+            return cur.fetchone()[0]
+
     def set_visibility(self, user_id, visible):
         con = sql.connect(DATABASE)
         with con:
@@ -763,6 +771,7 @@ class DBHelper:
                                 dst_name='room_id',
                                 room=True, conv_table=TABLE_ROOM_CONVERSATION,
                                 conv_table_reply=TABLE_ROOM_CONVERSATION_REPLY)
+
 
 if __name__ == '__main__':
     db = DBHelper()

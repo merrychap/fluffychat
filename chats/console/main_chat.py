@@ -120,6 +120,7 @@ class MainChat(BaseChat):
             'add_user': '"username" "room_name"',
             'create_room "roomname"': 'Creates new room. ',
             'exit': 'Closes chat.',
+            'change_visibility': 'Changes your visibility in the chat',
             'change_root_path "root path"': 'Changes directory for storing files'
         }
 
