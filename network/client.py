@@ -258,16 +258,8 @@ class ChatClient:
         message_queues = {}
 
         while self._handle_recv_data:
-            # TODO ADD TIMEOUT TO THE SELECT SECTION
-            # THIS
-            # IS
-            # IMPORTANT
-            try:
-                readable, writable, exceptional = select.select(inputs, outputs,
-                                                                inputs)
-            except (Exception, select.error):
-                if not self._handle_recv_data:
-                    break
+            readable, writable, exceptional = select.select(inputs, outputs,
+                                                            inputs, 2)
             for sock in readable:
                 if sock is self._recv_sock:
                     # A "readable" server socket is ready to accept a connection
@@ -295,7 +287,6 @@ class ChatClient:
                         logger.info('[+] Recieved: %s' % message_queues[sock])
                         self._parse_data(message_queues[sock])
                         del message_queues[sock]
-        print('Handling thread is ended')
 
     def _update_visibility(self, data):
         self._db.set_visibility(data['user_id'], 1 if not ('visible' in data)\

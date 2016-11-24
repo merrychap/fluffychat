@@ -168,14 +168,14 @@ class BaseChat:
                                           room_creator=room_creator,
                                           new_room_user=room_user,
                                           users_in_room=users_in_room)
-        self._send_message(user_id, message, text, room)
+        self._send_message(user_id, message, room, text)
 
-    def _send_message(self, user_id, message, text='', room=''):
+    def _send_message(self, user_id, message, room, text=''):
         # Destination host
         try:
             host = self.client.user_id2host[user_id]
             if user_id != self.client.user_id:
-                self.db_helper.save_message(user_id, text)
+                self.db_helper.save_message(user_id, text, room)
             self.client.send_msg(host=host, msg=message)
         except KeyError:
             pass

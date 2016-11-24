@@ -35,9 +35,13 @@ class ChatDBHelper:
     def get_user_id(self, username):
         return self._db.get_user_id(username)
 
-    def save_message(self, user_id, message):
+    def save_message(self, user_id, message, room):
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        self._db.save_message(self._client.user_id, user_id, message, cur_time)
+        if room != '':
+            self._db.save_room_message(src=user_id, message=message,
+                                       time=cur_time, room_name=room)
+        else:
+            self._db.save_message(self._client.user_id, user_id, message, cur_time)
 
     def create_room(self, room_name):
         return self._db.try_create_room(room_name=room_name,
