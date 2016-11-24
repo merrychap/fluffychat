@@ -168,9 +168,9 @@ class BaseChat:
                                           room_creator=room_creator,
                                           new_room_user=room_user,
                                           users_in_room=users_in_room)
-        self._send_message(user_id, message, text)
+        self._send_message(user_id, message, text, room)
 
-    def _send_message(self, user_id, message, text=''):
+    def _send_message(self, user_id, message, text='', room=''):
         # Destination host
         try:
             host = self.client.user_id2host[user_id]
@@ -261,7 +261,12 @@ class BaseChat:
         global operation_done
         operation_done = True
 
-        self.client.disconnect()
+        try:
+            self.client.disconnect()
+        except TypeError as e:
+            pass
+            # import traceback
+            # traceback.print_exc(e)
         self.stop_printing = True
         for thread in self.inner_threads:
             thread.join()

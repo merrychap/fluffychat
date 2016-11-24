@@ -22,30 +22,48 @@ import database.db_helper as db_helper
 
 PORT = 9090
 EMPTY = ' '
+RESTART_CHAT = False
 logger = logging.getLogger(__name__)
+
 interfaces = ['eth', 'wlan', 'en', 'wl']
+connection_established = False
+lock = threading.Lock()
+
 received_file_message = ('User sended you a file. Do you want to save it?'
                          '(Yes\\No)')
 
 
-class NetworkConnectionChecker(threading.Thread):
-    def __init__(self, client):
-        self.client = client
-
-    def run(self):
-        was_connected = True
-        while True:
-            try:
-                response = urllib.urlopen('google.com', timeout=1)
-                if not was_connected:
-                    self.client._connect()
-                    was_connected = True
-            except urllib.URLError as e:
-                pass
+# Now it isn't used, but it should work in the future
+# class NetworkConnectionChecker(threading.Thread):
+#     '''
+#     Class for updating online data of chat client depending on
+#     current network connection
+#     '''
+#
+#     def __init__(self, client):
+#         self.client = client
+#
+#     def run(self):
+#         while True:
+#             try:
+#                 response = urllib.urlopen('google.com', timeout=1)
+#                 with lock:
+#                     connection_established = True
+#             except urllib.URLError as e:
+#                 with lock:
+#                     connection_established = False
 
 
 class ChatClient:
+    '''
+    Class for network part of the chat
+    '''
+
     def __init__(self, server_host=None):
+        self._init_data(server_host)
+        self.add_thread(self.check_connection)
+
+    def _init_data(self, server_host):
         self.user_id2filename = dict()
 
         self.user_id = -1
@@ -69,16 +87,21 @@ class ChatClient:
 
         self._connected.add(self._host)
 
+    def restart(self, server_host):
+        self._init_data(server_host)
+        return self.start()
+
     def start(self):
+        self._host = self._get_host_ip()
         if self._host is None:
             return False
         print(self._host)
-        handler = threading.Thread(target=self._handle_recv)
-        self.inner_threads.append(handler)
-        handler.start()
+
+        self.add_thread(self._handle_recv)
 
         if self._server_host is not None:
-            self._get_connected()
+            if not self._get_connected():
+                return False
             while not self.user_id_assigned:
                 pass
             self._handle_username()
@@ -88,6 +111,30 @@ class ChatClient:
             self.host2user_id[self._host] = self.user_id
             self.user_id2host[self.user_id] = self._host
         return True
+
+    def disconnect(self):
+        logger.info('[*] Disconnecting: %s' % str(self._host))
+
+        self._handle_recv_data = False
+        for thread in self.inner_threads:
+            thread.join()
+
+        data = self.create_data(host=self._host, action='disconnect',
+                                username=self.username, user_id=self.user_id)
+        for host in self._connected:
+            self.send_msg(host=host, msg=data)
+
+    def add_thread(self, target):
+        thread = threading.Thread(target=target)
+        self.inner_threads.append(thread)
+        thread.start()
+
+    def get_connected(self):
+        return self._connected
+
+    def _get_host_ip(self):
+        ip = self._get_ip_addr()
+        return ip if self._host is None else self._host
 
     def _init_user_data(self):
         user = self._db.get_current_user()
@@ -141,24 +188,13 @@ class ChatClient:
         logger.info('[*] Getting connected hosts')
         data = self.create_data(host=self._host, action='_get_connected',
                                 visibility=False)
-        self.send_msg(host=self._server_host, msg=data)
+        return self.send_msg(host=self._server_host, msg=data)
 
     def _connect(self, serv_host=None):
         logger.info('[*] Connecting to: %s' % str(self._server_host))
         data = self.create_data(host=self._host, action='connect',
                                 username=self.username, user_id=self.user_id)
         self.send_msg(host=self._server_host, msg=data)
-
-    def disconnect(self):
-        logger.info('[*] Disconnecting: %s' % str(self._host))
-        data = self.create_data(host=self._host, action='disconnect',
-                                username=self.username, user_id=self.user_id)
-        for host in self._connected:
-            self.send_msg(host=host, msg=data)
-
-        self._handle_recv_data = False
-        for thread in self.inner_threads:
-            thread.join()
 
     def create_file_data(self, file_location, filename, username='', user_id=-1,
                          json_format=True):
@@ -209,8 +245,10 @@ class ChatClient:
             send_sock = self._create_send_socket()
             send_sock.connect(host)
             send_sock.sendall(bytes(msg, 'utf-8'))
+            return True
         except (Exception, socket.error) as e:
             logger.error('[-] Connection failed: %s' % str(host))
+            return False
         finally:
             send_sock.close()
 
@@ -220,8 +258,16 @@ class ChatClient:
         message_queues = {}
 
         while self._handle_recv_data:
-            readable, writable, exceptional = select.select(inputs, outputs,
-                                                            inputs)
+            # TODO ADD TIMEOUT TO THE SELECT SECTION
+            # THIS
+            # IS
+            # IMPORTANT
+            try:
+                readable, writable, exceptional = select.select(inputs, outputs,
+                                                                inputs)
+            except (Exception, select.error):
+                if not self._handle_recv_data:
+                    break
             for sock in readable:
                 if sock is self._recv_sock:
                     # A "readable" server socket is ready to accept a connection
@@ -249,6 +295,7 @@ class ChatClient:
                         logger.info('[+] Recieved: %s' % message_queues[sock])
                         self._parse_data(message_queues[sock])
                         del message_queues[sock]
+        print('Handling thread is ended')
 
     def _update_visibility(self, data):
         self._db.set_visibility(data['user_id'], 1 if not ('visible' in data)\
@@ -416,6 +463,9 @@ class ChatClient:
         logger.info('[+] Sending connected hosts to: %s' % str(host))
         self.send_msg(host=host, msg=json.dumps(tun_data))
 
+    def is_connection_established(self):
+        return self._get_ip_addr() is not None
+
     def _get_ip_addr(self):
         for gl_if in nf.interfaces():
             for lc_if in interfaces:
@@ -425,6 +475,36 @@ class ChatClient:
                     except KeyError:
                         pass
 
+    def try2connect(self):
+        '''
+        It iterates through all known hosts and tryies
+        to establish connection with one of them
+        '''
+
+        online_hosts = self.get_connected()
+        self.disconnect()
+        for host in online_hosts:
+            if self.restart(host):
+                return True
+        return False
+
+    def check_connection(self):
+        '''
+        This method contains logic of updating connection
+        between online hosts in the chat.
+
+        If connection was lost then this class tryies to establish
+        connection with some host in the chat. And if this impossible
+        then it stops chat client and run it again.
+        '''
+        global RESTART_CHAT
+
+        while self._handle_recv_data:
+            if not self.is_connection_established():
+                if not self.try2connect():
+                    RESTART_CHAT = True
+                else:
+                    RESTART_CHAT = False
 
 if __name__ == '__main__':
     pass
