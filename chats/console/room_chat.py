@@ -5,6 +5,8 @@ from chats.console.base_chat import BreakLoopException, lock, print_information
 
 import chats.console.base_chat as bc
 
+from opt.appearance import printc
+
 
 class RoomChat(BaseChat):
     def __init__(self, room_name, client):
@@ -27,7 +29,7 @@ class RoomChat(BaseChat):
     def parse_add_user(self, parse):
         username = add_parse.group(1)
         if not self.add_user2room(username, self.room_name):
-            print('[-] Error while trying add user to the room')
+            printc('[-] Error while trying add user to the room')
 
     def _remove_room(self):
         self.remove_room(self.room_name)
@@ -49,7 +51,7 @@ class RoomChat(BaseChat):
             raise BreakLoopException
 
     def open(self):
-        print()
+        printc()
         self.print_last_messages(self.room_name, True)
 
         while True:

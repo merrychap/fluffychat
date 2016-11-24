@@ -5,6 +5,8 @@ from chats.console.base_chat import print_information, parse_function
 
 import chats.console.base_chat as bc
 
+from opt.appearance import printc
+
 
 class UserChat(BaseChat):
     def __init__(self, username, client):
@@ -45,7 +47,7 @@ class UserChat(BaseChat):
                 self.send_message(username=self.username, text=command)
 
     def open(self):
-        print()
+        printc()
         self.print_last_messages(self.user_id)
 
         while True:
@@ -53,7 +55,8 @@ class UserChat(BaseChat):
                 try:
                     input()
                     with lock:
-                        message = input('%s:> ' % self.client.username)
+                        printc('<lblue>%s</lblue>:> ' % self.client.username, end='')
+                        message = input()
                     self.handle_command(message)
                 except KeyboardInterrupt:
                     self.back2main()

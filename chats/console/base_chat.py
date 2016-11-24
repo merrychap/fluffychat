@@ -4,6 +4,7 @@ import re
 import network.client as nc
 
 from database.chat_dbhelper import ChatDBHelper
+from opt.appearance import printc
 
 
 EMPTY = ' '
@@ -17,9 +18,9 @@ def print_information(printer):
     def wrapper(self):
         global operation_done
 
-        print('\n' + INDENT)
+        printc('\n' + INDENT)
         printer(self)
-        print(INDENT + '\n')
+        printc(INDENT + '\n')
         operation_done = True
     return wrapper
 
@@ -70,20 +71,20 @@ class BaseChat:
 
     def back2main(self):
         self.stop_printing = True
-        print('\n[*] Switched to command mode\n' + INDENT + '\n')
+        printc('\n[*] Switched to <blue>command mode</blue>\n' + INDENT + '\n')
         raise BreakLoopException
 
     @print_information
     def print_help(self, message=None):
-        print(('Type commands with @ on the left side of command.'
+        printc(('Type commands with <lpurple>@</lpurple> on the left side of command.'
                '\nList of commands:\n'))
         for command, descr in self.commands.items():
-            print('+ %s : %s' % (command, descr))
+            printc('<lred>+</lred> <lpurple>%s</lpurple> : %s' % (command, descr))
 
     def print_mode_help(self, mode):
-        print(('\n[*] Switched to %s mode\n'
+        printc(('\n[*] Switched to <blue>%s mode</blue>\n'
                'Type "enter" to start typing message\n'
-               'You can type @help for list of available '
+               'You can type <lpurple>@help</lpurple> for list of available '
                'commands\n' + INDENT + '\n') % mode)
 
     def specify_username(self):
@@ -126,7 +127,7 @@ class BaseChat:
         message = self.client.create_file_data(file_location, filename,
                                                user_id=self.client.user_id)
         if message is None:
-            print('[-] Maybe that file doesn\'t exist')
+            printc('[-] Maybe that file doesn\'t exist')
             return
 
         self._send_message(user_id, message)
@@ -194,15 +195,15 @@ class BaseChat:
 
     def change_username(self, username):
         self.db_helper.change_username(username)
-        print('\n[+] Username changed, %s!\n' % username)
+        printc('\n[+] Username changed, %s!\n' % username)
 
     def print_last_messages(self, dst, room=False):
         for message in list(self.db_helper.get_history(dst, 10, room))[::-1]:
             if message == None or message[1] == -1:
                 continue
-            print('{0} : {1}:> {2}'.format(message[3],
-                                    self.db_helper.get_username(message[2]),
-                                    message[0]))
+            printc('<yellow>{0}</yellow> : <lblue>{1}</lblue>:> {2}'
+                   .format(message[3], self.db_helper.get_username(message[2]),
+                           message[0]))
 
     def init_print_messages(self, room=False):
         self.stop_printing = False
@@ -230,7 +231,7 @@ class BaseChat:
                                                       room)
                 for message in messages:
                     if self.self_chat or message[2] != self.client.user_id:
-                        print('{0} : {1}:> {2}'
+                        printc('<yellow>{0}</yellow> : <lblue>{1}</lblue>:> {2}'
                               .format(message[3],
                                       self.db_helper.get_username(message[2]),
                                       message[0]))
@@ -241,11 +242,11 @@ class BaseChat:
         self.send_room_message(room_name, "Room was deleted",
                                remove_room='Yes')
         self.db_helper.remove_room(room_name)
-        print('\nRoom "{0}" was deleted\n'.format(room_name))
+        printc('\nRoom "{0}" was deleted\n'.format(room_name))
 
     def add_user2room(self, username, room_name):
         if not self.db_helper.user_exists(username):
-            print('[-] No such user in the chat\n')
+            printc('[-] No such user in the chat\n')
             return False
         self.db_helper.add_user2room(username=username,
                                      room_name=room_name)
@@ -253,7 +254,7 @@ class BaseChat:
         # empty message
         self.send_room_message(room_name, EMPTY,
                                room_user=username)
-        print('\n[+] You have invited "{0}" to the "{1}" room\n'.
+        printc('\n[+] You have invited "{0}" to the "{1}" room\n'.
               format(username, room_name))
         return True
 
@@ -270,5 +271,5 @@ class BaseChat:
         self.stop_printing = True
         for thread in self.inner_threads:
             thread.join()
-        print ('\nBye!')
+        printc('\n<yellow>Bye!</yellow>')
         sys.exit()

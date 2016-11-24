@@ -13,6 +13,8 @@ import time
 import traceback
 import logging
 
+from opt.appearance import printc
+
 
 logger = logging.getLogger(__name__)
 DATABASE = 'database.db'
@@ -793,14 +795,14 @@ if __name__ == '__main__':
     db.try_create_room(room_name='Hyouka', creator_name='Mike')
 
     for user in db.get_users_by_room('Hyouka'):
-        print(user)
+        printc(user)
 
     db.remove_user_from_room('Mike', 'Wolf and Spice')
 
     db.remove_room(room_name='Hyouka')
 
     for user in db.get_users_by_room('Wolf and Spice'):
-        print(user)
+        printc(user)
 
     db.save_room_message(src=1, message='hi all', time=1, room_name='Wolf and Spice')
 

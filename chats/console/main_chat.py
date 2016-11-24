@@ -4,7 +4,7 @@ from chats.console.room_chat import RoomChat
 from chats.console.user_chat import UserChat
 
 import chats.console.base_chat as bc
-from opt.appearance import Colors
+from opt.appearance import printc
 
 import os
 
@@ -28,7 +28,7 @@ class MainChat(BaseChat):
     def change_visibility(self):
         self.db_helper.change_visibility()
         self.send_visibility()
-        print('[+] You changed visibility: {0}'
+        printc('[+] You changed visibility: <lred>{0}</lred>'
               .format(self.db_helper.get_visibility(user_id=self.client.user_id)))
 
     @print_information
@@ -36,22 +36,22 @@ class MainChat(BaseChat):
         for user_id in self.client.host2user_id.values():
             if self.db_helper.get_visibility(user_id=user_id) or \
                user_id == self.db_helper.get_cur_user_id():
-                print('+ %s' % self.db_helper.get_username(user_id))
+                printc('+ <lblue>%s</lblue>' % self.db_helper.get_username(user_id))
 
     @print_information
     def print_rooms(self):
         for room in self.db_helper.get_user_rooms():
-            print('+ %s' % room)
+            printc('+ <lred>%s</lred>' % room)
 
     @parse_function
     def parse_root_path(self, parse):
         new_root_path = parse.group(1)
         if not os.path.isdir(new_root_path):
-            print('\n[-] This is not a directory\n')
+            printc('\n[-] This is not a directory\n')
         if new_root_path[-1] != '/':
             new_root_path += '/'
         self.db_helper.set_root_path(new_root_path)
-        print('\n[+] Root path changed\n')
+        printc('\n[+] Root path changed\n')
 
     @parse_function
     def parse_user(self, parse):
@@ -60,7 +60,7 @@ class MainChat(BaseChat):
            self.db_helper.get_visibility(username):
             UserChat(username=username, client=self.client).open()
         else:
-            print('\n[-] No such user in the chat\n')
+            printc('\n[-] No such user in the chat\n')
 
     @parse_function
     def parse_room(self, parse):
@@ -68,16 +68,16 @@ class MainChat(BaseChat):
         if self.db_helper.room_exists(room_name):
             RoomChat(room_name=room_name, client=self.client).open()
         else:
-            print('\n[-] No such room in the chat\n')
+            printc('\n[-] No such room in the chat\n')
 
     @parse_function
     def parse_create_room(self, parse):
         room_name = parse.group(1)
         if self.db_helper.create_room(room_name):
-            print('\n[+] You\'ve created room "{0}"\n'
+            printc('\n[+] You\'ve created room "{0}"\n'
                   .format(room_name))
         else:
-            print('\n[-] Room with this name already exists\n')
+            printc('\n[-] Room with this name already exists\n')
 
     @parse_function
     def parse_username(self, parse):
@@ -93,19 +93,18 @@ class MainChat(BaseChat):
         username = parse.group(1)
         room_name = parse.group(2)
         if not self.add_user2room(username, room_name):
-            print('\n[-] Error while trying add user to the room\n')
+            printc('\n[-] Error while trying add user to the room\n')
 
     def run(self):
         if not self.cur_user_exists():
             self.specify_username()
             self.specify_root_path()
         else:
-            print('Hello again, {}{}{}!'.format(Colors.blue, self.client.username,
-                                                Colors.white))
-            print('Your storage directory: %s' % self.db_helper.get_root_path())
+            printc('Hello again, <lblue>{}</lblue>!'.format(self.client.username))
+            printc('Your storage directory: <lyellow>%s</lyellow>' % self.db_helper.get_root_path())
         self.db_helper.specify_username(self.client)
         if not self.client.start():
-            print('[-] Sorry. But it seems there isn\'t Internet connection')
+            printc('[-] Sorry. But it seems there isn\'t Internet connection')
             self.exit()
         self.command_mode()
 
@@ -148,13 +147,13 @@ class MainChat(BaseChat):
             self.parse_root_path(root_path_parse)
         else:
             if not bc.operation_done:
-                print('[-] Invalid command\n')
+                printc('[-] Invalid command\n')
 
     def handle_signal(signal, frame):
         self.exit()
 
     def command_mode(self):
-        print('\nType "@help" for list of commands with description')
+        printc('\nType "<lpurple>@help</lpurple>" for list of commands with description')
 
         while True:
             try:

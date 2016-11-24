@@ -19,6 +19,8 @@ import logging
 import netifaces as nf
 import database.db_helper as db_helper
 
+from opt.appearance import printc
+
 
 PORT = 9090
 EMPTY = ' '
@@ -95,7 +97,7 @@ class ChatClient:
         self._host = self._get_host_ip()
         if self._host is None:
             return False
-        print(self._host)
+        printc(self._host)
 
         self.add_thread(self._handle_recv)
 
@@ -154,7 +156,7 @@ class ChatClient:
 
     def specify_root_path(self, root_path):
         if not os.path.isdir(root_path):
-            print('\n[-] This is not a directory\n')
+            printc('\n[-] This is not a directory\n')
             return False
         self.root_path = root_path
         return True
@@ -392,7 +394,7 @@ class ChatClient:
             self._db.save_user(user_id=user_id,
                                username=username,
                                visibility=visibility)
-        # print(self.user_id)
+        # printc(self.user_id)
         if self.user_id == -1:
             self.user_id = self._db.get_last_user_id() + 1
         self.user_id_assigned = True
