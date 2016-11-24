@@ -55,8 +55,7 @@ class UserChat(BaseChat):
                 try:
                     input()
                     with lock:
-                        printc('<lblue>%s</lblue>:> ' % self.client.username, end='')
-                        message = input()
+                        message = self.user_input()
                     self.handle_command(message)
                 except KeyboardInterrupt:
                     self.back2main()

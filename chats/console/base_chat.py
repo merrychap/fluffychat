@@ -79,7 +79,7 @@ class BaseChat:
         printc(('Type commands with <lpurple>@</lpurple> on the left side of command.'
                '\nList of commands:\n'))
         for command, descr in self.commands.items():
-            printc('<lred>+</lred> <lpurple>%s</lpurple> : %s' % (command, descr))
+            printc('<lyellow>+</lyellow> <lpurple>%s</lpurple> : %s' % (command, descr))
 
     def print_mode_help(self, mode):
         printc(('\n[*] Switched to <blue>%s mode</blue>\n'
@@ -201,9 +201,14 @@ class BaseChat:
         for message in list(self.db_helper.get_history(dst, 10, room))[::-1]:
             if message == None or message[1] == -1:
                 continue
-            printc('<yellow>{0}</yellow> : <lblue>{1}</lblue>:> {2}'
+            printc('<yellow>{0}</yellow>: <lblue>{1}</lblue><red>:></red> {2}'
                    .format(message[3], self.db_helper.get_username(message[2]),
                            message[0]))
+
+    def user_input(self):
+        printc('<lblue>%s</lblue><red>:></red> ' % \
+               self.client.username, end='')
+        return input()
 
     def init_print_messages(self, room=False):
         self.stop_printing = False
@@ -231,8 +236,9 @@ class BaseChat:
                                                       room)
                 for message in messages:
                     if self.self_chat or message[2] != self.client.user_id:
-                        printc('<yellow>{0}</yellow> : <lblue>{1}</lblue>:> {2}'
-                              .format(message[3],
+                        printc('<yellow>{0}</yellow>: '
+                               '<lblue>{1}</lblue><red>:></red> {2}'
+                               .format(message[3],
                                       self.db_helper.get_username(message[2]),
                                       message[0]))
                 last_msg = cur_msg

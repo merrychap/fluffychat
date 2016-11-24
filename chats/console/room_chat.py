@@ -59,7 +59,7 @@ class RoomChat(BaseChat):
                 try:
                     input()
                     with lock:
-                        message = input('%s:> ' % self.client.username)
+                        message = self.user_input()
                     self.handle_command(message)
                 except KeyboardInterrupt:
                     self.back2main()

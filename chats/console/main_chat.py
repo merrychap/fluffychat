@@ -36,12 +36,12 @@ class MainChat(BaseChat):
         for user_id in self.client.host2user_id.values():
             if self.db_helper.get_visibility(user_id=user_id) or \
                user_id == self.db_helper.get_cur_user_id():
-                printc('+ <lblue>%s</lblue>' % self.db_helper.get_username(user_id))
+                printc('<lyellow>+</lyellow> <lblue>%s</lblue>' % self.db_helper.get_username(user_id))
 
     @print_information
     def print_rooms(self):
         for room in self.db_helper.get_user_rooms():
-            printc('+ <lred>%s</lred>' % room)
+            printc('<lyellow>+</lyellow> <lred>%s</lred>' % room)
 
     @parse_function
     def parse_root_path(self, parse):
@@ -121,7 +121,7 @@ class MainChat(BaseChat):
             'create_room "roomname"': 'Creates new room. ',
             'exit': 'Closes chat.',
             'change_visibility': 'Changes your visibility in the chat',
-            'change_root_path "root path"': 'Changes directory for storing files'
+            'change_root_path "root path"': 'Changes directory of storing files'
         }
 
     def handle_command(self, command):
