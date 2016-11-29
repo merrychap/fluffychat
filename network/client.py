@@ -102,11 +102,11 @@ class ChatClient:
                 thread.join()
             except (KeyboardInterrupt):
                 pass
-
         data = self.create_data(host=self._host, action='disconnect',
                                 username=self.username, user_id=self.user_id)
         for host in self._connected:
             self.send_msg(host=host, msg=data)
+        self._recv_sock.close()
 
     def add_thread(self, target):
         thread = threading.Thread(target=target)
