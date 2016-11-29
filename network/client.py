@@ -8,11 +8,9 @@ import os
 import base64
 import select
 import socket
-import urllib
 import json
 import time
 import datetime
-import traceback
 import threading
 import logging
 
@@ -33,27 +31,6 @@ lock = threading.Lock()
 
 received_file_message = ('User sended you a file. Do you want to save it?'
                          '(Yes\\No)')
-
-
-# Now it isn't used, but it should work in the future
-# class NetworkConnectionChecker(threading.Thread):
-#     '''
-#     Class for updating online data of chat client depending on
-#     current network connection
-#     '''
-#
-#     def __init__(self, client):
-#         self.client = client
-#
-#     def run(self):
-#         while True:
-#             try:
-#                 response = urllib.urlopen('google.com', timeout=1)
-#                 with lock:
-#                     connection_established = True
-#             except urllib.URLError as e:
-#                 with lock:
-#                     connection_established = False
 
 
 class ChatClient:

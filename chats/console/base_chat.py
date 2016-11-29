@@ -3,6 +3,8 @@ import sys
 import re
 import network.client as nc
 
+from functools import wraps
+
 from database.chat_dbhelper import ChatDBHelper
 from opt.appearance import printc
 
@@ -15,6 +17,7 @@ operation_done = True
 
 
 def print_information(printer):
+    @wraps(printer)
     def wrapper(self):
         global operation_done
 
@@ -26,6 +29,7 @@ def print_information(printer):
 
 
 def parse_function(handler):
+    @wraps(handler)
     def wrapper(self, parse):
         global operation_done
 
