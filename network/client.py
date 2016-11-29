@@ -292,6 +292,9 @@ class ChatClient:
 
     def _parse_data(self, json_data, conn=None):
         data = json.loads(json_data)
+        if data == '':
+            return
+            
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
         # If this data is associated with file then handle only

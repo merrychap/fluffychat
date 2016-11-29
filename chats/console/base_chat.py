@@ -1,6 +1,7 @@
 import threading
 import sys
 import re
+import json
 import network.client as nc
 
 from functools import wraps
@@ -140,7 +141,7 @@ class BaseChat:
         if user_id is None:
             user_id = self.db_helper.get_user_id(username)
         host = self.client.user_id2host[user_id]
-        return self.client.send_msg(host=host, msg='')
+        return self.client.send_msg(host=host, msg=json.dumps(''))
 
     def send_message(self, room="", user_id=None, username=None,
                      text=None, remove_room='No', room_user = '',
