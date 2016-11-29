@@ -100,8 +100,8 @@ class BaseChat:
 
     def specify_root_path(self):
         while True:
-            printc('<lpurple>[*]</lpurple> Specify your root path'
-                   'for storing files:> ', end='')
+            printc('<lpurple>[*]</lpurple> Specify your '
+                   '<lyellow>root path</lyellow> for storing files:> ', end='')
             root_path = input()
             if self.client.specify_root_path(root_path):
                 break

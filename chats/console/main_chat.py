@@ -151,7 +151,7 @@ class MainChat(BaseChat):
             self.parse_root_path(root_path_parse)
         else:
             if not bc.operation_done:
-                printc('[-] Invalid command\n')
+                printc('<lred>[-]</lred> Invalid command\n')
 
     def handle_signal(signal, frame):
         self.exit()
@@ -161,7 +161,8 @@ class MainChat(BaseChat):
 
         while True:
             try:
-                command = input('<lpurple>[*]</lpurple> Enter command:> ')
+                printc('<lpurple>[*]</lpurple> Enter command:> ', end='')
+                command = input()
                 self.handle_command(command)
             except KeyboardInterrupt as e:
                 self.exit()
