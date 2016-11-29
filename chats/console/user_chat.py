@@ -44,7 +44,8 @@ class UserChat(BaseChat):
             if send_file_parse:
                 self.parse_sending_file(send_file_parse)
             else:
-                self.send_message(username=self.username, text=command)
+                if not self.send_message(username=self.username, text=command):
+                    printc('<lred>[-]</lred> Connection failed')
 
     def open(self):
         printc()

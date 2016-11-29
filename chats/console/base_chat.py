@@ -136,6 +136,12 @@ class BaseChat:
 
         self._send_message(user_id, message)
 
+    def is_online(username=None, user_id=None):
+        if user_id is None:
+            user_id = self.db_helper.get_user_id(username)
+        host = self.client.user_id2host[user_id]
+        return self.client.send_msg(host=host, msg='')
+
     def send_message(self, room="", user_id=None, username=None,
                      text=None, remove_room='No', room_user = '',
                      room_creator='', users_in_room=[]):
@@ -173,7 +179,7 @@ class BaseChat:
                                           room_creator=room_creator,
                                           new_room_user=room_user,
                                           users_in_room=users_in_room)
-        self._send_message(user_id, message, room, text)
+        return self._send_message(user_id, message, room, text)
 
     def _send_message(self, user_id, message, room, text=''):
         # Destination host
@@ -181,7 +187,7 @@ class BaseChat:
             host = self.client.user_id2host[user_id]
             if user_id != self.client.user_id:
                 self.db_helper.save_message(user_id, text, room)
-            self.client.send_msg(host=host, msg=message)
+            return self.client.send_msg(host=host, msg=message)
         except KeyError:
             pass
 
@@ -199,7 +205,7 @@ class BaseChat:
 
     def change_username(self, username):
         self.db_helper.change_username(username)
-        printc('\n[+] Username changed, %s!\n' % username)
+        printc('\n[+] Username changed, <lblue>%s</lblue>!\n' % username)
 
     def print_last_messages(self, dst, room=False):
         for message in list(self.db_helper.get_history(dst, 10, room))[::-1]:
@@ -264,7 +270,7 @@ class BaseChat:
         # empty message
         self.send_room_message(room_name, EMPTY,
                                room_user=username)
-        printc('\n[+] You have invited "{0}" to the "{1}" room\n'.
+        printc('\n[+] You have invited "<lblue>{0}</lblue>" to the "<lred>{1}</lred>" room\n'.
               format(username, room_name))
         return True
 

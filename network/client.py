@@ -98,7 +98,7 @@ class ChatClient:
         for thread in self.inner_threads:
             try:
                 thread.join()
-            except KeyboardInterrupt:
+            except (Exception, KeyboardInterrupt):
                 pass
 
         data = self.create_data(host=self._host, action='disconnect',

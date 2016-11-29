@@ -34,9 +34,11 @@ class MainChat(BaseChat):
     @print_information
     def print_users(self):
         for user_id in self.client.host2user_id.values():
-            if self.db_helper.get_visibility(user_id=user_id) or \
-               user_id == self.db_helper.get_cur_user_id():
-                printc('<lyellow>+</lyellow> <lblue>%s</lblue>' % self.db_helper.get_username(user_id))
+            if (self.db_helper.get_visibility(user_id=user_id) or \
+               user_id == self.db_helper.get_cur_user_id()) and \
+               self.is_online(user_id=user_id):
+                printc('<lyellow>+</lyellow> <lblue>%s</lblue>' % \
+                       self.db_helper.get_username(user_id))
 
     @print_information
     def print_rooms(self):
@@ -57,7 +59,8 @@ class MainChat(BaseChat):
     def parse_user(self, parse):
         username = parse.group(1)
         if self.db_helper.user_exists(username) and \
-           self.db_helper.get_visibility(username):
+           self.db_helper.get_visibility(username) and \
+           self.is_online(username=username):
             UserChat(username=username, client=self.client).open()
         else:
             printc('\n[-] No such user in the chat\n')
@@ -111,17 +114,17 @@ class MainChat(BaseChat):
     def create_command_descrypt(self):
         return {
             'help': 'Shows this output',
-            'username "username"': 'Changes current username. ',
+            'username "username"': 'Changes the current username. ',
             'rooms': 'Shows available rooms.',
             'users': 'Shows online users.',
-            'user "username"': 'Switches to user message mode. ',
-            'room "room_name"': 'Switches to room message mode. ',
+            'user "username"': 'Switches to the user message mode. ',
+            'room "room_name"': 'Switches to the room message mode. ',
             'remove_room "roomname"': 'Removes created room.',
             'add_user': '"username" "room_name"',
             'create_room "roomname"': 'Creates new room. ',
             'exit': 'Closes chat.',
             'change_visibility': 'Changes your visibility in the chat',
-            'change_root_path "root path"': 'Changes directory of storing files'
+            'change_root_path "root path"': 'Changes the directory of storing files'
         }
 
     def handle_command(self, command):
@@ -153,7 +156,7 @@ class MainChat(BaseChat):
         self.exit()
 
     def command_mode(self):
-        printc('\nType "<lpurple>@help</lpurple>" for list of commands with description')
+        printc('\nType "<lpurple>@help</lpurple>" for list of commands with the description')
 
         while True:
             try:
