@@ -107,6 +107,7 @@ class ChatClient:
         for host in self._connected:
             self.send_msg(host=host, msg=data)
         self._recv_sock.close()
+        del self._recv_sock
 
     def add_thread(self, target):
         thread = threading.Thread(target=target)
