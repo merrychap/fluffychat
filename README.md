@@ -28,5 +28,5 @@ $ python3 chat_console.py -H __ip address of the host__
 - [x] Private messages
 - [x] Rooms
 - [x] Sending files
-- [] Tests
-- [] GUI (?)
+- [ ] Tests
+- [ ] GUI (?)

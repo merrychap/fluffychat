@@ -28,7 +28,7 @@ class MainChat(BaseChat):
     def change_visibility(self):
         self.db_helper.change_visibility()
         self.send_visibility()
-        printc('[+] You changed visibility: <lred>{0}</lred>'
+        printc('<lgreen>[+]</lgreen> You changed visibility: <lred>{0}</lred>'
               .format(self.db_helper.get_visibility(user_id=self.client.user_id)))
 
     @print_information
@@ -49,11 +49,11 @@ class MainChat(BaseChat):
     def parse_root_path(self, parse):
         new_root_path = parse.group(1)
         if not os.path.isdir(new_root_path):
-            printc('\n[-] This is not a directory\n')
+            printc('\n<lred>[-]</lred> This is not a directory\n')
         if new_root_path[-1] != '/':
             new_root_path += '/'
         self.db_helper.set_root_path(new_root_path)
-        printc('\n[+] Root path changed\n')
+        printc('\n<lgreen>[+]</lgreen> Root path changed\n')
 
     @parse_function
     def parse_user(self, parse):
@@ -63,7 +63,7 @@ class MainChat(BaseChat):
            self.is_online(username=username):
             UserChat(username=username, client=self.client).open()
         else:
-            printc('\n[-] No such user in the chat\n')
+            printc('\n<lred>[-]</lred> No such user in the chat\n')
 
     @parse_function
     def parse_room(self, parse):
@@ -71,16 +71,16 @@ class MainChat(BaseChat):
         if self.db_helper.room_exists(room_name):
             RoomChat(room_name=room_name, client=self.client).open()
         else:
-            printc('\n[-] No such room in the chat\n')
+            printc('\n<lred>[-]</lred> No such room in the chat\n')
 
     @parse_function
     def parse_create_room(self, parse):
         room_name = parse.group(1)
         if self.db_helper.create_room(room_name):
-            printc('\n[+] You\'ve created room "{0}"\n'
-                  .format(room_name))
+            printc('\n<lgreen>[+]</lgreen> You\'ve created room "<lred>{0}'
+                   '</lred>"\n'.format(room_name))
         else:
-            printc('\n[-] Room with this name already exists\n')
+            printc('\n<lred>[-]</lred> Room with this name already exists\n')
 
     @parse_function
     def parse_username(self, parse):
@@ -96,7 +96,7 @@ class MainChat(BaseChat):
         username = parse.group(1)
         room_name = parse.group(2)
         if not self.add_user2room(username, room_name):
-            printc('\n[-] Error while trying add user to the room\n')
+            printc('\n<lred>[-]</lred> Error while trying add user to the room\n')
 
     def run(self):
         if not self.cur_user_exists():
@@ -107,7 +107,8 @@ class MainChat(BaseChat):
             printc('Your storage directory: <lyellow>%s</lyellow>' % self.db_helper.get_root_path())
         self.db_helper.specify_username(self.client)
         if not self.client.start():
-            printc('[-] Sorry. But it seems there isn\'t Internet connection')
+            printc('<lred>[-]</lred> Sorry. But it seems there isn\'t Internet connection '
+                   'or connection host is down')
             self.exit()
         self.command_mode()
 
@@ -160,7 +161,7 @@ class MainChat(BaseChat):
 
         while True:
             try:
-                command = input('[*] Enter command:> ')
+                command = input('<lpurple>[*]</lpurple> Enter command:> ')
                 self.handle_command(command)
             except KeyboardInterrupt as e:
                 self.exit()

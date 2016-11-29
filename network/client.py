@@ -40,7 +40,6 @@ class ChatClient:
 
     def __init__(self, server_host=None):
         self._init_data(server_host)
-        self.add_thread(self.check_connection)
 
     def _init_data(self, server_host):
         self.user_id2filename = dict()
@@ -53,7 +52,7 @@ class ChatClient:
         self._connected = set()
         self._db = db_helper.DBHelper()
 
-        self.inner_threads = []
+        self.inner_threads = {}
 
         self.user_id_assigned = False
         self._handle_recv_data = True
@@ -77,6 +76,7 @@ class ChatClient:
         printc(self._host)
 
         self.add_thread(self._handle_recv)
+        self.add_thread(self.check_connection)
 
         if self._server_host is not None:
             if not self._get_connected():
@@ -91,14 +91,16 @@ class ChatClient:
             self.user_id2host[self.user_id] = self._host
         return True
 
-    def disconnect(self):
+    def disconnect(self, exit=False):
         logger.info('[*] Disconnecting: %s' % str(self._host))
 
         self._handle_recv_data = False
-        for thread in self.inner_threads:
+        for name, thread in self.inner_threads.items():
             try:
+                if not exit and name == self.check_connection.__name__:
+                    continue
                 thread.join()
-            except (Exception, KeyboardInterrupt):
+            except (KeyboardInterrupt):
                 pass
 
         data = self.create_data(host=self._host, action='disconnect',
@@ -108,7 +110,7 @@ class ChatClient:
 
     def add_thread(self, target):
         thread = threading.Thread(target=target)
-        self.inner_threads.append(thread)
+        self.inner_threads[target.__name__] = thread
         thread.start()
 
     def get_connected(self):
@@ -156,6 +158,7 @@ class ChatClient:
 
     def _create_send_socket(self):
         send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        send.settimeout(1)
         return send
 
     def _create_recv_socket(self):
@@ -294,7 +297,7 @@ class ChatClient:
         data = json.loads(json_data)
         if data == '':
             return
-            
+
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
         # If this data is associated with file then handle only

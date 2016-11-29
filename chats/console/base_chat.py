@@ -76,7 +76,7 @@ class BaseChat:
 
     def back2main(self):
         self.stop_printing = True
-        printc('\n[*] Switched to <blue>command mode</blue>\n' + INDENT + '\n')
+        printc('\n<lpurple>[*]</lpurple> Switched to <blue>command mode</blue>\n' + INDENT + '\n')
         raise BreakLoopException
 
     @print_information
@@ -87,18 +87,22 @@ class BaseChat:
             printc('<lyellow>+</lyellow> <lpurple>%s</lpurple> : %s' % (command, descr))
 
     def print_mode_help(self, mode):
-        printc(('\n[*] Switched to <blue>%s mode</blue>\n'
+        printc(('\n<lpurple>[*]</lpurple> Switched to <blue>%s mode</blue>\n'
                'Type "enter" to start typing message\n'
                'You can type <lpurple>@help</lpurple> for list of available '
                'commands\n' + INDENT + '\n') % mode)
 
     def specify_username(self):
-        username = input('[*] Please, specify your username(a-zA-Z_.):> ')
+        printc('<lpurple>[*]</lpurple> Please, specify your '
+               '<lblue>username</lblue>(a-zA-Z_.):> ', end='')
+        username = input()
         self.client.specify_username(username)
 
     def specify_root_path(self):
         while True:
-            root_path = input('[*] Specify your root path for storing files:> ')
+            printc('<lpurple>[*]</lpurple> Specify your root path'
+                   'for storing files:> ', end='')
+            root_path = input()
             if self.client.specify_root_path(root_path):
                 break
 
@@ -132,7 +136,7 @@ class BaseChat:
         message = self.client.create_file_data(file_location, filename,
                                                user_id=self.client.user_id)
         if message is None:
-            printc('[-] Maybe that file doesn\'t exist')
+            printc('<lred>[-]</lred> Maybe that file doesn\'t exist')
             return
 
         self._send_message(user_id, message)
@@ -206,7 +210,7 @@ class BaseChat:
 
     def change_username(self, username):
         self.db_helper.change_username(username)
-        printc('\n[+] Username changed, <lblue>%s</lblue>!\n' % username)
+        printc('\n<lpurple>[+]</lpurple> Username changed, <lblue>%s</lblue>!\n' % username)
 
     def print_last_messages(self, dst, room=False):
         for message in list(self.db_helper.get_history(dst, 10, room))[::-1]:
@@ -259,11 +263,11 @@ class BaseChat:
         self.send_room_message(room_name, "Room was deleted",
                                remove_room='Yes')
         self.db_helper.remove_room(room_name)
-        printc('\nRoom "{0}" was deleted\n'.format(room_name))
+        printc('\n<lgreen>[+]</lgreen> Room "{0}" was deleted\n'.format(room_name))
 
     def add_user2room(self, username, room_name):
         if not self.db_helper.user_exists(username):
-            printc('[-] No such user in the chat\n')
+            printc('<lred>[-]</lred> No such user in the chat\n')
             return False
         self.db_helper.add_user2room(username=username,
                                      room_name=room_name)
@@ -271,7 +275,7 @@ class BaseChat:
         # empty message
         self.send_room_message(room_name, EMPTY,
                                room_user=username)
-        printc('\n[+] You have invited "<lblue>{0}</lblue>" to the "<lred>{1}</lred>" room\n'.
+        printc('\n<lgreen>[+]</lgreen> You have invited "<lblue>{0}</lblue>" to the "<lred>{1}</lred>" room\n'.
               format(username, room_name))
         return True
 
@@ -280,11 +284,9 @@ class BaseChat:
         operation_done = True
 
         try:
-            self.client.disconnect()
+            self.client.disconnect(exit=True)
         except TypeError as e:
             pass
-            # import traceback
-            # traceback.print_exc(e)
         self.stop_printing = True
         for thread in self.inner_threads:
             thread.join()
