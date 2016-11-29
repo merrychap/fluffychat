@@ -39,6 +39,10 @@ class ChatClient:
     '''
 
     def __init__(self, server_host=None):
+        self._recv_sock = self._create_recv_socket()
+        self.host2user_id = dict()
+        self.user_id2host = dict()
+        
         self._init_data(server_host)
 
     def _init_data(self, server_host):
@@ -47,7 +51,6 @@ class ChatClient:
         self.user_id = -1
 
         self._server_host = server_host
-        self._recv_sock = self._create_recv_socket()
         self._host = self._get_ip_addr()
         self._connected = set()
         self._db = db_helper.DBHelper()
@@ -59,9 +62,6 @@ class ChatClient:
 
         self._db.try_create_database()
         self._init_user_data()
-
-        self.host2user_id = dict()
-        self.user_id2host = dict()
 
         self._connected.add(self._host)
 
@@ -106,8 +106,8 @@ class ChatClient:
                                 username=self.username, user_id=self.user_id)
         for host in self._connected:
             self.send_msg(host=host, msg=data)
-        self._recv_sock.close()
-        del self._recv_sock
+        if exit:
+            self._recv_sock.close()
 
     def add_thread(self, target):
         thread = threading.Thread(target=target)
@@ -167,7 +167,7 @@ class ChatClient:
         recv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         recv.bind(('', PORT))
         recv.listen(10)
-        # recv.setblocking(0)
+        recv.setblocking(0)
         return recv
 
     def _get_connected(self):

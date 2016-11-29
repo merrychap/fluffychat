@@ -263,7 +263,7 @@ class BaseChat:
         self.send_room_message(room_name, "Room was deleted",
                                remove_room='Yes')
         self.db_helper.remove_room(room_name)
-        printc('\n<lgreen>[+]</lgreen> Room "{0}" was deleted\n'.format(room_name))
+        printc('\n<lgreen>[+]</lgreen> Room <lred>{0}</lred> was deleted\n'.format(room_name))
 
     def add_user2room(self, username, room_name):
         if not self.db_helper.user_exists(username):
@@ -275,7 +275,8 @@ class BaseChat:
         # empty message
         self.send_room_message(room_name, EMPTY,
                                room_user=username)
-        printc('\n<lgreen>[+]</lgreen> You have invited "<lblue>{0}</lblue>" to the "<lred>{1}</lred>" room\n'.
+        printc('\n<lgreen>[+]</lgreen> You have invited <lblue>{0}</lblue>'
+               ' to the <lred>{1}</lred> room\n'.
               format(username, room_name))
         return True
 

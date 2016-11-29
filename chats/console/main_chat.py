@@ -77,8 +77,8 @@ class MainChat(BaseChat):
     def parse_create_room(self, parse):
         room_name = parse.group(1)
         if self.db_helper.create_room(room_name):
-            printc('\n<lgreen>[+]</lgreen> You\'ve created room "<lred>{0}'
-                   '</lred>"\n'.format(room_name))
+            printc('\n<lgreen>[+]</lgreen> You\'ve created room <lred>{0}'
+                   '</lred>\n'.format(room_name))
         else:
             printc('\n<lred>[-]</lred> Room with this name already exists\n')
 
@@ -96,7 +96,8 @@ class MainChat(BaseChat):
         username = parse.group(1)
         room_name = parse.group(2)
         if not self.add_user2room(username, room_name):
-            printc('\n<lred>[-]</lred> Error while trying add user to the room\n')
+            printc('\n<lred>[-]</lred> Error while trying add user'
+                   'to the room\n')
 
     def run(self):
         if not self.cur_user_exists():
