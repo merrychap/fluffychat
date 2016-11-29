@@ -136,7 +136,7 @@ class BaseChat:
 
         self._send_message(user_id, message)
 
-    def is_online(username=None, user_id=None):
+    def is_online(self, username=None, user_id=None):
         if user_id is None:
             user_id = self.db_helper.get_user_id(username)
         host = self.client.user_id2host[user_id]
