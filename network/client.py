@@ -301,9 +301,7 @@ class ChatClient:
         data = json.loads(json_data)
         if data == '':
             return
-
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-
         # If this data is associated with file then handle only
         # in this case
         if 'file' in data:
@@ -318,12 +316,10 @@ class ChatClient:
         if data['action'] == 'connect':
             self._handle_host_action(data=data, action_type='connect',
                                     message='[+] Adding host: ')
-
         # The same with disconnection
         if data['action'] == 'disconnect':
             self._handle_host_action(data=data, action_type='disconnect',
                                     message='[+] Removing host: ')
-
         if data['action'] == '_get_connected':
             self._send_connected(host=data['host'])
 
@@ -331,31 +327,8 @@ class ChatClient:
         if data['message'] != '':
             # If action connected with room
             if 'room' in data:
-                # User has deleted the room
-                if data['remove_room'] != 'No':
-                    self._db.remove_user_from_room(data['username'],
-                                                   data['room'])
-                    return
-
-                # Else message sended in the room
-                # then room must be created if not exists
-                if not self._db.room_exists(data['room']):
-                    self._db.try_create_room(room_name=data['room'],
-                                             creator_name=data['room_creator'])
-                    self._db.add_user2room(username=self.username,
-                                           room_name=data['room'])
-                    for user in data['users_in_room']:
-                        self._db.add_user2room(username=self._db.get_username(user),
-                                               room_name=data['room'])
-                    if data['message'] == EMPTY:
-                        return
-
-                if 'room_user' in data:
-                    self._db.add_user2room(username=data['room_user'],
-                                           room_name=data['room'])
-                self._db.save_room_message(src=data['user_id'],
-                                           message=data['message'],
-                                           time=cur_time,room_name=data['room'])
+                self._handle_room_data(cur_time, data)
+            if data['user_id'] == self.user_id and data['message'] == EMPTY:
                 return
             self._db.save_message(src=data['user_id'], dst=self.user_id,
                                   message=data['message'], time=cur_time)
@@ -366,6 +339,34 @@ class ChatClient:
 
         if 'new_username' in data:
             self._update_username(data)
+
+    def _handle_room_data(self, cur_time, data):
+        # User has deleted the room
+        if data['remove_room'] != 'No':
+            self._db.remove_user_from_room(data['username'],
+                                           data['room'])
+            return
+
+        # Else message sended in the room
+        # then room must be created if not exists
+        if not self._db.room_exists(data['room']):
+            self._db.try_create_room(room_name=data['room'],
+                                     creator_name=data['room_creator'])
+            self._db.add_user2room(username=self.username,
+                                   room_name=data['room'])
+            for user in data['users_in_room']:
+                self._db.add_user2room(username=self._db.get_username(user),
+                                       room_name=data['room'])
+            if data['message'] == EMPTY:
+                return
+
+        if 'room_user' in data:
+            self._db.add_user2room(username=data['room_user'],
+                                   room_name=data['room'])
+        self._db.save_room_message(src=data['user_id'],
+                                   message=data['message'],
+                                   time=cur_time,room_name=data['room'])
+        return
 
     def _update_connected(self, data):
         for host_data in data['connected']:
