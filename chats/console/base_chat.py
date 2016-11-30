@@ -190,7 +190,7 @@ class BaseChat:
         # Destination host
         try:
             host = self.client.user_id2host[user_id]
-            if user_id != self.client.user_id and text.replace(' ', '') != '':
+            if user_id == self.client.user_id and text.replace(' ', '') != '':
                 self.db_helper.save_message(user_id, text, room)
             return self.client.send_msg(host=host, msg=message)
         except KeyError:

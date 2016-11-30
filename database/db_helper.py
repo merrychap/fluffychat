@@ -610,7 +610,7 @@ class DBHelper:
                    ' successfully').format(username, room_name))
             return True
         else:
-            logger.info('[-] User "{0}" is already exists to the room "{1}"'
+            logger.info('[-] User "{0}" is already exists in the room "{1}"'
                   .format(username, room_name))
             return False
 
