@@ -1,4 +1,5 @@
 import re
+import os
 
 
 DEFAULT = 'white'
@@ -22,7 +23,10 @@ def printc(text='', end='\n'):
             else:
                 color = color_f
             txt = match.group(2)
-        print(Colors.color[color] + txt + Colors.color[DEFAULT  ], end='')
+        if os.name != 'nt':
+            print(Colors.color[color] + txt + Colors.color[DEFAULT  ], end='')
+        else:
+            print(txt)
     print(end=end)
 
 
