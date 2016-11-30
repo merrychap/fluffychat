@@ -42,7 +42,7 @@ class ChatClient:
         self._recv_sock = self._create_recv_socket()
         self.host2user_id = dict()
         self.user_id2host = dict()
-        
+
         self._init_data(server_host)
 
     def _init_data(self, server_host):
@@ -214,7 +214,10 @@ class ChatClient:
         }
 
         if visibility:
-            data['visible'] = self._db.get_visibility(user_id)
+            try:
+                data['visible'] = self._db.get_visibility(user_id)
+            except TypeError:
+                data['visible'] = True
 
         if room_name != '':
             data['room'] = room_name

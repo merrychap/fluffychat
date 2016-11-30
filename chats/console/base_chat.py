@@ -276,8 +276,8 @@ class BaseChat:
         self.send_room_message(room_name, EMPTY,
                                room_user=username)
         printc('\n<lgreen>[+]</lgreen> You have invited <lblue>{0}</lblue>'
-               ' to the <lred>{1}</lred> room\n'.
-              format(username, room_name))
+               ' to the <lred>{1}</lred> room\n'
+               .format(username, room_name))
         return True
 
     def exit(self):
