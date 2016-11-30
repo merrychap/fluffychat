@@ -144,8 +144,11 @@ class BaseChat:
     def is_online(self, username=None, user_id=None):
         if user_id is None:
             user_id = self.db_helper.get_user_id(username)
-        host = self.client.user_id2host[user_id]
-        return self.client.send_msg(host=host, msg=json.dumps(''))
+        try:
+            host = self.client.user_id2host[user_id]
+            return self.client.send_msg(host=host, msg=json.dumps(''))
+        except KeyError:
+            return False
 
     def send_message(self, room="", user_id=None, username=None,
                      text=None, remove_room='No', room_user = '',
