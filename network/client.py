@@ -301,7 +301,9 @@ class ChatClient:
         data = json.loads(json_data)
         if data == '':
             return
+
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+
         # If this data is associated with file then handle only
         # in this case
         if 'file' in data:
@@ -327,8 +329,7 @@ class ChatClient:
         if data['message'] != '':
             # If action connected with room
             if 'room' in data:
-                self._handle_room_data(cur_time, data)
-            if data['user_id'] == self.user_id and data['message'] == EMPTY:
+                self._handle_room_data(data, cur_time)
                 return
             self._db.save_message(src=data['user_id'], dst=self.user_id,
                                   message=data['message'], time=cur_time)
@@ -340,7 +341,7 @@ class ChatClient:
         if 'new_username' in data:
             self._update_username(data)
 
-    def _handle_room_data(self, cur_time, data):
+    def _handle_room_data(self, data, cur_time):
         # User has deleted the room
         if data['remove_room'] != 'No':
             self._db.remove_user_from_room(data['username'],
@@ -363,10 +364,11 @@ class ChatClient:
         if 'room_user' in data:
             self._db.add_user2room(username=data['room_user'],
                                    room_name=data['room'])
+        if data['user_id'] == self.user_id and data['message'] == EMPTY:
+            return
         self._db.save_room_message(src=data['user_id'],
                                    message=data['message'],
                                    time=cur_time,room_name=data['room'])
-        return
 
     def _update_connected(self, data):
         for host_data in data['connected']:
