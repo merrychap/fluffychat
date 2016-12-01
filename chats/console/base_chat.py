@@ -202,7 +202,7 @@ class BaseChat:
                                           users_in_room=users_in_room)
         return self._send_message(user_id, message, room, text)
 
-    def _send_message(self, user_id, message, room, text=''):
+    def _send_message(self, user_id, message, room='', text=''):
         # Destination host
         try:
             host = self.client.user_id2host[user_id]
