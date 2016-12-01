@@ -128,6 +128,8 @@ class BaseChat:
 
         room_id = self.db_helper.get_room_id(room_name)
         users = self._get_users(room_name, room_id)
+        # if text.replace(' ', '') != '':
+        #     self.db_helper.save_message(self.client.user_id, text, room_name)
         for user in users:
             if remove_room == 'Yes' and user == self.client.user_id:
                 continue
@@ -195,6 +197,8 @@ class BaseChat:
 
         if room != '':
             room_creator = self.db_helper.get_room_creator(room)
+        if room == '':
+            self.db_helper.save_message(user_id, text, room)
         message = self.client.create_data(msg=text,
                                           username=self.client.username,
                                           user_id=self.client.user_id,
@@ -208,8 +212,6 @@ class BaseChat:
         # Destination host
         try:
             host = self.client.user_id2host[user_id]
-            if user_id == self.client.user_id and text.replace(' ', '') != '':
-                self.db_helper.save_message(user_id, text, room)
             return self.client.send_msg(host=host, msg=message)
         except KeyError:
             pass

@@ -544,9 +544,9 @@ class DBHelper:
 
     def save_room_message(self, src, message, time, room_name):
         '''
-        It is separate function of saving message in the database.
-        It uses save_message function, that provides saving room
-        messages, but for clarity current function exists.
+        It is separate function for saving message in the database.
+        It uses save_message function that provides saving room
+        messages, but current function exists for clarity.
 
         Args:
             src (int) Id of source user
