@@ -47,7 +47,7 @@ class RoomChat(BaseChat):
             if add_parse:
                 self.parse_add_user(add_parse)
             elif send_file_parse:
-                self.parse_sending_file(send_file_parse, self.room_name)
+                self.parse_sending_file(send_file_parse, room=self.room_name)
             else:
                 self.send_room_message(self.room_name, command)
         except BreakLoopException:

@@ -32,11 +32,11 @@ def print_information(printer):
 
 def parse_function(handler):
     @wraps(handler)
-    def wrapper(self, parse, *args):
+    def wrapper(self, parse, *args, **kwargs):
         global operation_done
 
         if parse:
-            handler(self, parse, *args)
+            handler(self, parse, *args, **kwargs)
             operation_done = True
     return wrapper
 
@@ -80,7 +80,7 @@ class BaseChat:
         raise BreakLoopException
 
     @parse_function
-    def parse_sending_file(self, parse, room=''):
+    def parse_sending_file(self, parse, username='', room=''):
         file_location = parse.group(1)
         self.send_file(file_location, self.username, room)
 
@@ -140,7 +140,8 @@ class BaseChat:
             self.client.remove_file(user_id)
 
     def send_file(self, file_location, username, room=''):
-        user_id = self.db_helper.get_user_id(username)
+        if username != ''
+            user_id = self.db_helper.get_user_id(username)
         filename = file_location.replace('/', ' ').replace('\\', ' ').split()[-1]
         message = self.client.create_file_data(file_location, filename,
                                                user_id=self.client.user_id)
