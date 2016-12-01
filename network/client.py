@@ -295,9 +295,13 @@ class ChatClient:
         global received_file_message
 
         self._save_file(data['filename'], data['file_data'])
-        self._db.save_message(src=data['user_id'], dst=self.user_id,
-                              message=received_file_message, time=cur_time,
-                              room_name=data['room'] if 'room' in data else '')
+        if 'room' in data:
+            self._db.save_room_message(src=data['user_id'], dst=self.user_id,
+                                  message=received_file_message, time=cur_time,
+                                  room_name=data['room'])
+        else:
+            self._db.save_room_message(src=data['user_id'], dst=self.user_id,
+                                  message=received_file_message, time=cur_time)
         self.user_id2filename[data['user_id']] = data['filename']
         file_received.add(data['user_id'])
 
