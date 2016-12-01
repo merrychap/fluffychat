@@ -140,7 +140,7 @@ class BaseChat:
             self.client.remove_file(user_id)
 
     def send_file(self, file_location, username, room=''):
-        if username != ''
+        if username != '':
             user_id = self.db_helper.get_user_id(username)
         filename = file_location.replace('/', ' ').replace('\\', ' ').split()[-1]
         message = self.client.create_file_data(file_location, filename,
