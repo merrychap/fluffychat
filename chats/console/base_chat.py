@@ -82,7 +82,7 @@ class BaseChat:
     @parse_function
     def parse_sending_file(self, parse, username='', room=''):
         file_location = parse.group(1)
-        self.send_file(file_location, self.username, room)
+        self.send_file(file_location, username, room)
 
     @print_information
     def print_help(self, message=None):
