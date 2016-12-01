@@ -177,7 +177,7 @@ class BaseChat:
 
         if (user_id is None and username is None):
            logger.info('[-] Invalid data for sending message')
-           return
+           return False
         # Destination user id
         if user_id is None:
             user_id = self.db_helper.get_user_id(username)
@@ -186,10 +186,10 @@ class BaseChat:
         if user_id in self.file_received:
             self.handle_received_file(user_id, text)
             self.file_received.remove(user_id)
-            return
+            return True
 
         if not self.db_helper.get_visibility(user_id=user_id):
-            return
+            return False
 
         if room != '':
             room_creator = self.db_helper.get_room_creator(room)
