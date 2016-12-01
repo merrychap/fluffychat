@@ -127,7 +127,8 @@ class BaseChat:
         '''
 
         room_id = self.db_helper.get_room_id(room_name)
-        for user in self._get_users(room_name, room_id):
+        users = self._get_users(room_name, room_id)
+        for user in users:
             if remove_room == 'Yes' and user == self.client.user_id:
                 continue
             self.send_message(user_id=user, room=room_name, text=text,
