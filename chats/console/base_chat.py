@@ -31,11 +31,11 @@ def print_information(printer):
 
 def parse_function(handler):
     @wraps(handler)
-    def wrapper(self, *args):
+    def wrapper(self, parse, *args):
         global operation_done
 
         if parse:
-            handler(self, *args)
+            handler(self, parse, *args)
             operation_done = True
     return wrapper
 
