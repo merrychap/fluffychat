@@ -38,13 +38,16 @@ class RoomChat(BaseChat):
     def handle_command(self, command):
         bc.operation_done = False
         add_parse = self.ADD_PATTERN.match(command)
+        send_file_parse = self.SEND_FILE_PATTERN.match(command)
 
         try:
             self.command_handlers[command]()
             bc.operation_done = True
         except KeyError:
-            if add_parse is not None:
+            if add_parse:
                 self.parse_add_user(add_parse)
+            elif send_file_parse:
+                self.parse_sending_file(send_file_parse, self.room_name)
             else:
                 self.send_room_message(self.room_name, command)
         except BreakLoopException:
@@ -73,5 +76,6 @@ class RoomChat(BaseChat):
             'help': 'Shows this output',
             'back': 'Returns to message mode',
             'add_user "username"': 'Adds passed user to the room',
-            'remove_room "room_name"': 'Removes room from chat'
+            'remove_room "room_name"': 'Removes room from chat',
+            'send_file "path to file"': 'Sends file to the room'
         }

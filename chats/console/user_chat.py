@@ -28,11 +28,6 @@ class UserChat(BaseChat):
             '@back': self.back2main,
         }
 
-    @parse_function
-    def parse_sending_file(self, parse):
-        file_location = parse.group(1)
-        self.send_file(file_location, self.username)
-
     def handle_command(self, command):
         bc.operation_done = False
         send_file_parse = self.SEND_FILE_PATTERN.match(command)

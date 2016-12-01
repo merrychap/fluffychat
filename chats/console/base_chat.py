@@ -31,11 +31,11 @@ def print_information(printer):
 
 def parse_function(handler):
     @wraps(handler)
-    def wrapper(self, parse):
+    def wrapper(self, *args):
         global operation_done
 
         if parse:
-            handler(self, parse)
+            handler(self, *args)
             operation_done = True
     return wrapper
 
@@ -79,6 +79,11 @@ class BaseChat:
         printc('\n<lpurple>[*]</lpurple> Switched to <blue>command mode</blue>\n' + INDENT + '\n')
         raise BreakLoopException
 
+    @parse_function
+    def parse_sending_file(self, parse, room=''):
+        file_location = parse.group(1)
+        self.send_file(file_location, self.username, room)
+
     @print_information
     def print_help(self, message=None):
         printc(('Type commands with <lpurple>@</lpurple> on the left side of command.'
@@ -106,6 +111,12 @@ class BaseChat:
             if self.client.specify_root_path(root_path):
                 break
 
+    def _get_users(self, room_name, room_id):
+        users = []
+        for user in self.db_helper.get_users_by_room(room_name, room_id):
+            users.append(user)
+        return users
+
     def send_room_message(self, room_name, text, room_user = '',
                           remove_room='No'):
         '''
@@ -115,11 +126,8 @@ class BaseChat:
             room_name (str) Passed name of the room
         '''
 
-        users = []
         room_id = self.db_helper.get_room_id(room_name)
-        for user in self.db_helper.get_users_by_room(room_name, room_id):
-            users.append(user)
-        for user in users:
+        for user in self._get_users(room_name, room_id):
             if remove_room == 'Yes' and user == self.client.user_id:
                 continue
             self.send_message(user_id=user, room=room_name, text=text,
@@ -130,7 +138,7 @@ class BaseChat:
         if msg != 'Yes':
             self.client.remove_file(user_id)
 
-    def send_file(self, file_location, username):
+    def send_file(self, file_location, username, room=''):
         user_id = self.db_helper.get_user_id(username)
         filename = file_location.replace('/', ' ').replace('\\', ' ').split()[-1]
         message = self.client.create_file_data(file_location, filename,
@@ -139,7 +147,12 @@ class BaseChat:
             printc('<lred>[-]</lred> Maybe that file doesn\'t exist')
             return
 
-        self._send_message(user_id, message)
+        if room != '':
+            room_id = self.db_helper.get_room_id(room)
+            for user_id in self._get_users(room, room_id):
+                self._send_message(user_id, message, room)
+        else:
+            self._send_message(user_id, message)
 
     def is_online(self, username=None, user_id=None):
         if user_id is None:
