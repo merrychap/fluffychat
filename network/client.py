@@ -185,7 +185,7 @@ class ChatClient:
         self.send_msg(host=self._server_host, msg=data)
 
     def create_file_data(self, file_location, filename, username='', user_id=-1,
-                         json_format=True):
+                         room_name='', json_format=True):
         if user_id == -1:
             user_id = self._db.get_user_id(username)
         try:
@@ -198,6 +198,8 @@ class ChatClient:
                     'username': username,
                     'user_id': user_id
                 }
+                if room_name != '':
+                    data['room'] = room_name
                 return json.dumps(data) if json_format else data
         except FileNotFoundError as e:
             return None
