@@ -284,7 +284,7 @@ class ChatClient:
                                 else data['visible'])
 
     def _save_file(self, filename, _file):
-        with open(os.path.joint(self.root_path, filename), 'wb') as new_file:
+        with open(os.path.join(self.root_path, filename), 'wb') as new_file:
             new_file.write(base64.b64decode(_file))
 
     def remove_file(self, user_id):
