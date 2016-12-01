@@ -140,8 +140,9 @@ class ChatClient:
 
     def specify_root_path(self, root_path):
         if not os.path.isdir(root_path):
-            printc('\n[-] This is not a directory\n')
+            printc('\n<lred>[-]</lred> This is not a directory\n')
             return False
+        root_path = os.path.join(root_path, '')
         self.root_path = root_path
         return True
 
@@ -283,7 +284,7 @@ class ChatClient:
                                 else data['visible'])
 
     def _save_file(self, filename, _file):
-        with open(self.root_path + filename, 'wb') as new_file:
+        with open(os.path.joint(self.root_path, filename), 'wb') as new_file:
             new_file.write(base64.b64decode(_file))
 
     def remove_file(self, user_id):
@@ -295,7 +296,8 @@ class ChatClient:
 
         self._save_file(data['filename'], data['file_data'])
         self._db.save_message(src=data['user_id'], dst=self.user_id,
-                              message=received_file_message, time=cur_time)
+                              message=received_file_message, time=cur_time,
+                              room_name=data['room'] if 'room' in data else '')
         self.user_id2filename[data['user_id']] = data['filename']
         file_received.add(data['user_id'])
 
@@ -370,7 +372,7 @@ class ChatClient:
             return
         self._db.save_room_message(src=data['user_id'],
                                    message=data['message'],
-                                   time=cur_time,room_name=data['room'])
+                                   time=cur_time, room_name=data['room'])
 
     def _update_connected(self, data):
         for host_data in data['connected']:
