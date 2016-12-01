@@ -29,7 +29,7 @@ class RoomChat(BaseChat):
     def parse_add_user(self, parse):
         username = add_parse.group(1)
         if not self.add_user2room(username, self.room_name):
-            printc('[-] Error while trying add user to the room')
+            printc('<lred>[-]</lred> Error while trying add user to the room')
 
     def _remove_room(self):
         self.remove_room(self.room_name)
@@ -54,7 +54,7 @@ class RoomChat(BaseChat):
             raise BreakLoopException
 
     def open(self):
-        printc()
+        # printc()
         self.print_last_messages(self.room_name, True)
 
         while True:

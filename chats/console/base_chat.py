@@ -13,6 +13,7 @@ from opt.appearance import printc
 EMPTY = ' '
 INDENT = 38 * '='
 INF = 1000
+
 lock = threading.Lock()
 operation_done = True
 
@@ -68,7 +69,6 @@ class BaseChat:
         self.inner_threads = []
         self.init_command_handlers()
 
-        self.file_received = set()
         self.self_chat = False
 
     def init_command_handlers():
@@ -183,9 +183,9 @@ class BaseChat:
             user_id = self.db_helper.get_user_id(username)
 
         # if user sended to us a file and now we wanted to save it or not
-        if user_id in self.file_received:
+        if user_id in nc.file_received:
             self.handle_received_file(user_id, text)
-            self.file_received.remove(user_id)
+            nc.file_received.remove(user_id)
             return True
 
         if not self.db_helper.get_visibility(user_id=user_id):
@@ -259,9 +259,9 @@ class BaseChat:
             cur_msg = self.get_last_message(dst, room)
             if last_msg[1] != cur_msg[1]:
                 # TODO This is haven't checked already for rooms
-                if dst in self.client.user_id2filename and \
-                   cur_msg[0] == nc.received_file_message:
-                    self.file_received.add(dst)
+                # if dst in self.client.user_id2filename and \
+                #    cur_msg[0] == nc.received_file_message:
+                #     self.file_received.add(dst)
                 messages = self.db_helper.get_history(dst,
                                                       cur_msg[1] - last_msg[1],
                                                       room)

@@ -43,7 +43,7 @@ class UserChat(BaseChat):
                     printc('<lred>[-]</lred> Connection failed')
 
     def open(self):
-        printc()
+        # printc()
         self.print_last_messages(self.user_id)
 
         while True:

@@ -29,6 +29,7 @@ interfaces = ['eth', 'wlan', 'en', 'wl']
 connection_established = False
 lock = threading.Lock()
 
+file_received = set()
 received_file_message = ('User sended you a file. Do you want to save it?'
                          '(Yes\\No)')
 
@@ -296,6 +297,7 @@ class ChatClient:
         self._db.save_message(src=data['user_id'], dst=self.user_id,
                               message=received_file_message, time=cur_time)
         self.user_id2filename[data['user_id']] = data['filename']
+        file_received.add(data['user_id'])
 
     def _parse_data(self, json_data, conn=None):
         data = json.loads(json_data)
