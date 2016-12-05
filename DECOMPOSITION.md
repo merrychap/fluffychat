@@ -4,7 +4,7 @@
 This is decomposition file with description by each directory and file
 
 ### Directory tree
-```├── app.log
+├── app.log
 ├── chat_console.py
 ├── chats
 │   └── console
@@ -24,19 +24,18 @@ This is decomposition file with description by each directory and file
 ├── README.md
 └── scripts
     └── ...
-```
 
 __Summary__: 5 directories, 13 files, 2055 lines
 
 
-### Directory description
+### Directory descriptions
 - chats/ ─ It contains modules for different types of chat. For instance, room or user chat
 - chats/console/ ─ There are placed console chat modules
 - database/ ─ Contains modules for working with application database
 - network/ ─ Module for networking is placed here
 - opt/ ─ Different optional modules that help work with chat. For example, module with colors class
 
-### Files description
+### Files descriptions
 #### Files that contain information
 - ```app.log``` ─ Chat's logging file
 - ```database.db``` ─ Application inner database

@@ -104,12 +104,14 @@ class MainChat(BaseChat):
             self.specify_username()
             self.specify_root_path()
         else:
-            printc('Hello again, <lblue>{}</lblue>!'.format(self.client.username))
-            printc('Your storage directory: <lyellow>%s</lyellow>' % self.db_helper.get_root_path())
+            printc('Hello again, <lblue>{}</lblue>!'
+                   .format(self.client.username))
+            printc('Your storage directory: <lyellow>%s</lyellow>' % \
+                   self.db_helper.get_root_path())
         self.db_helper.specify_username(self.client)
         if not self.client.start():
-            printc('<lred>[-]</lred> Sorry. But it seems there isn\'t Internet connection '
-                   'or connection host is down')
+            printc('<lred>[-]</lred> Sorry. But it seems there isn\'t '
+                   'Internet connection or connection host is down')
             self.exit()
         self.command_mode()
 
@@ -126,7 +128,8 @@ class MainChat(BaseChat):
             'create_room "roomname"': 'Creates new room. ',
             'exit': 'Closes chat.',
             'change_visibility': 'Changes your visibility in the chat',
-            'change_root_path "root path"': 'Changes the directory of storing files'
+            'change_root_path "root path"': 'Changes the directory '
+                                            'of storing files'
         }
 
     def handle_command(self, command):
@@ -154,11 +157,12 @@ class MainChat(BaseChat):
             if not bc.operation_done:
                 printc('<lred>[-]</lred> Invalid command\n')
 
-    def handle_signal(signal, frame):
+    def handle_signal(self, signal, frame):
         self.exit()
 
     def command_mode(self):
-        printc('\nType "<lpurple>@help</lpurple>" for list of commands with the description')
+        printc('\nType "<lpurple>@help</lpurple>" for list'
+               ' of commands with the description')
 
         while True:
             try:

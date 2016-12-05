@@ -11,7 +11,7 @@ $ vim app.log
 ```
 
 ### Requirements
-- Python3
+- Python 3.*
     - netifaces
 
 ### How to run application
