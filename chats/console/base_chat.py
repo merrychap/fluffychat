@@ -235,14 +235,16 @@ class BaseChat:
 
     def print_entered_users(self):
         last_users = set(self.client.host2user_id.values())
-        while not self.stop_printing:
-            cur_users = set(self.client.host2user_id.value())
+        while not self.stop_printing_users:
+            cur_users = set(self.client.host2user_id.values())
             if last_users != cur_users:
                 for new_user in cur_users.intersection(last_users):
                     printc('User <lblue>%s</lblue> in the chat' % \
                           self.db_helper.get_username(new_user))
+                last_users = cur_users
 
     def init_print_users(self):
+        self.stop_printing_users = False
         printer = threading.Thread(target=self.print_entered_users,
                                    daemon=True)
         self.inner_threads.append(printer)
@@ -321,6 +323,7 @@ class BaseChat:
         except TypeError as e:
             pass
         self.stop_printing = True
+        self.stop_printing_users = True
         for thread in self.inner_threads:
             thread.join()
         printc('\n<yellow>Bye!</yellow>')

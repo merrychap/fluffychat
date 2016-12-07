@@ -15,8 +15,6 @@ class MainChat(BaseChat):
         self.client = client
         self.commands = self.create_command_descrypt()
 
-        self.init_print_users()
-
     def init_command_handlers(self):
         self.command_handlers = {
             '@help': self.print_help,
@@ -115,6 +113,7 @@ class MainChat(BaseChat):
             printc('<lred>[-]</lred> Sorry. But it seems there isn\'t '
                    'Internet connection or connection host is down')
             self.exit()
+        self.init_print_users()
         self.command_mode()
 
     def create_command_descrypt(self):
