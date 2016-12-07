@@ -479,7 +479,7 @@ class ChatClient:
         online_hosts = self.get_connected()
         self.disconnect()
         for host in online_hosts:
-            if self.restart(host):
+            if host is not self._host and self.restart(host):
                 return True
         return False
 
