@@ -397,7 +397,6 @@ class ChatClient:
             self._db.save_user(user_id=user_id,
                                username=username,
                                visibility=visibility)
-        # printc(self.user_id)
         if self.user_id == -1:
             self.user_id = self._db.get_last_user_id() + 1
         self.user_id_assigned = True

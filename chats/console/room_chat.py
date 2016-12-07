@@ -54,7 +54,6 @@ class RoomChat(BaseChat):
             raise BreakLoopException
 
     def open(self):
-        # printc()
         self.print_last_messages(self.room_name, True)
 
         while True:

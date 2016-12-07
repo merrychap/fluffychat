@@ -15,6 +15,8 @@ class MainChat(BaseChat):
         self.client = client
         self.commands = self.create_command_descrypt()
 
+        self.init_print_users()
+
     def init_command_handlers(self):
         self.command_handlers = {
             '@help': self.print_help,
@@ -166,8 +168,10 @@ class MainChat(BaseChat):
 
         while True:
             try:
+                input()
                 printc('<lpurple>[*]</lpurple> Enter command:> ', end='')
-                command = input()
+                with lock:
+                    command = input()
                 self.handle_command(command)
             except KeyboardInterrupt as e:
                 self.exit()

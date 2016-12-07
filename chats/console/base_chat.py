@@ -233,6 +233,21 @@ class BaseChat:
         self.db_helper.change_username(username)
         printc('\n<lpurple>[+]</lpurple> Username changed, <lblue>%s</lblue>!\n' % username)
 
+    def print_entered_users(self):
+        last_users = set(self.client.host2user_id.values())
+        while not self.stop_printing:
+            cur_users = set(self.client.host2user_id.value())
+            if last_users != cur_users:
+                for new_user in cur_users.intersection(last_users):
+                    print('User %s in the chat' % \
+                          self.db_helper.get_username(new_user))
+
+    def init_print_users(self):
+        printer = threading.Thread(target=self.print_entered_users,
+                                   daemon=True)
+        self.inner_threads.append(printer)
+        printer.start()
+
     def print_last_messages(self, dst, room=False):
         for message in list(self.db_helper.get_history(dst, 10, room))[::-1]:
             if message == None or message[1] == -1:
@@ -263,10 +278,6 @@ class BaseChat:
         while not self.stop_printing:
             cur_msg = self.get_last_message(dst, room)
             if last_msg[1] != cur_msg[1]:
-                # TODO This is haven't checked already for rooms
-                # if dst in self.client.user_id2filename and \
-                #    cur_msg[0] == nc.received_file_message:
-                #     self.file_received.add(dst)
                 messages = self.db_helper.get_history(dst,
                                                       cur_msg[1] - last_msg[1],
                                                       room)
