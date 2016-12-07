@@ -238,13 +238,16 @@ class BaseChat:
         while not self.stop_printing_users:
             cur_users = set(self.client.host2user_id.values())
             if last_users != cur_users:
-                for new_user in cur_users.difference(last_users):
-                    printc('\n<lpurple>[*]</lpurple> User <lblue>%s</lblue>'
-                           ' come in the chat' % self.db_helper.get_username(new_user))
-                for rem_user in last_users.difference(cur_users):
-                    printc('\n<lpurple>[+]</lpurple> User <lblue>%s</lblue>'
-                           ' go out of the chat' % self.db_helper.get_username(new_user))
-                last_users = cur_users
+                try:
+                    for new_user in cur_users.difference(last_users):
+                        printc('\n<lpurple>[*]</lpurple> User <lblue>%s</lblue>'
+                               ' come in the chat' % self.db_helper.get_username(new_user))
+                    for rem_user in last_users.difference(cur_users):
+                        printc('\n<lpurple>[+]</lpurple> User <lblue>%s</lblue>'
+                               ' go out of the chat' % self.db_helper.get_username(new_user))
+                    last_users = cur_users
+                except TypeError:
+                    pass
 
     def init_print_users(self):
         self.stop_printing_users = False
