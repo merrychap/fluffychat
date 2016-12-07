@@ -239,7 +239,7 @@ class BaseChat:
             cur_users = set(self.client.host2user_id.value())
             if last_users != cur_users:
                 for new_user in cur_users.intersection(last_users):
-                    print('User %s in the chat' % \
+                    printc('User <lblue>%s</lblue> in the chat' % \
                           self.db_helper.get_username(new_user))
 
     def init_print_users(self):
