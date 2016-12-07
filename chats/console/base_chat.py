@@ -243,8 +243,8 @@ class BaseChat:
                         printc('\n<lpurple>[*]</lpurple> User <lblue>%s</lblue>'
                                ' come in the chat' % self.db_helper.get_username(new_user))
                     for rem_user in last_users.difference(cur_users):
-                        printc('\n<lpurple>[+]</lpurple> User <lblue>%s</lblue>'
-                               ' go out of the chat' % self.db_helper.get_username(new_user))
+                        printc('\n<lpurple>[*]</lpurple> User <lblue>%s</lblue>'
+                               ' go out of the chat' % self.db_helper.get_username(rem_user))
                     last_users = cur_users
                 except TypeError:
                     pass
