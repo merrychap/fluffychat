@@ -334,7 +334,7 @@ class DBHelper:
         with con:
             cur = con.cursor()
             cur.execute('''
-                SELECT max(user_id) FROM ?;''', (TABLE_USERS,))
+                SELECT max(user_id) FROM {};'''.format(TABLE_USERS))
             return cur.fetchone()[0]
 
     def set_visibility(self, user_id, visible):
