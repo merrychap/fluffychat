@@ -15,7 +15,7 @@ $ vim app.log
     - netifaces
 
 ### How to run application
-There is two ways of running chat. If you want to create a new chat, then you should run this:
+There are two ways of running chat. If you want to create a new chat, then you should run this:
 ```sh
 $ python3 chat_console.py
 ```
