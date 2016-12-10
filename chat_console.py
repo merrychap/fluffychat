@@ -24,8 +24,6 @@ def main():
                       help='specify connected host')
     (options, args) = parser.parse_args()
     conn_host = options.conn_host
-
-    # TODO check username correctness
     if conn_host is None:
         client = ChatClient()
     else:

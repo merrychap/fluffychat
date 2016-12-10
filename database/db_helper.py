@@ -13,8 +13,6 @@ import time
 import traceback
 import logging
 
-from opt.appearance import printc
-
 
 logger = logging.getLogger(__name__)
 DATABASE = 'database.db'
@@ -28,6 +26,7 @@ TABLE_RC_USER = 'rc_user'
 TABLE_CONVERATION_REPLY = 'conversation_reply'
 TABLE_ROOM_CONVERSATION_REPLY = 'room_conversation_reply'
 
+
 class DBHelper:
     def __init__(self):
         pass
@@ -39,7 +38,7 @@ class DBHelper:
                                          rc_user=rc_user)[0]
         cur.execute('''
             UPDATE {0} SET total_messages = total_messages + 1
-            WHERE c_id LIKE {1};'''.format(table, conv_id))
+            WHERE c_id LIKE ?;'''.format(table), (conv_id,))
 
     def _increment_users_count(self, cur, room_name):
         cur.execute('''
@@ -72,20 +71,21 @@ class DBHelper:
                 of the database
         '''
 
-        # logger.info('Src: {0}; Src name: {1}; Dst: {2}; Dst name: {3}; Table: {4}; Rc user: {5}'
-        #       .format(src, src_name, dst, dst_name, table, rc_user))
         if rc_user is not None:
-            where_query = '"{0}" LIKE {1};'.format(dst_name, dst)
+            cur.execute('SELECT c_id, total_messages FROM {} WHERE {} LIKE ?;'
+                        .format(table, dst_name), (dst,))
         else:
-            where_query = '"{0}" LIKE {1};'.format(src_name, src)
             if dst is not None:
-                where_query = '''
-                    ("{0}" LIKE {1} AND "{2}" LIKE {3})
-                    OR
-                    ("{0}" LIKE {3} AND "{2}" LIKE {1});'''.format(src_name, src,
-                                                                   dst_name, dst)
-        cur.execute('SELECT c_id, total_messages FROM "{0}" WHERE {1}'
-                    .format(table, where_query))
+                cur.execute('''SELECT c_id, total_messages FROM {0} WHERE
+                            ("{1}" LIKE ? AND "{2}" LIKE ?)
+                            OR
+                            ("{1}" LIKE ? AND "{2}" LIKE ?);'''
+                            .format(table, src_name, dst_name), (src, dst,
+                                                                 dst, src))
+            else:
+                cur.execute('''SELECT c_id, total_messages FROM {}
+                            WHERE {} LIKE ?;'''.format(table, src_name),
+                            (src,))
         return cur.fetchone()
 
     # TODO
@@ -147,8 +147,7 @@ class DBHelper:
             return
         cur.execute('''
             SELECT * FROM rc_user WHERE
-            room_id LIKE ? AND user_id LIKE ?;''',
-            (room_id, user_id))
+            room_id LIKE ? AND user_id LIKE ?;''', (room_id, user_id))
         return cur.fetchone() is not None
 
     def room_exists(self, room_name):
@@ -281,9 +280,9 @@ class DBHelper:
         con = sql.connect(DATABASE)
         with con:
             cur = con.cursor()
-            cur.execute('''
-                SELECT creator_id FROM {0} WHERE room_name LIKE ?;'''
-                .format(TABLE_ROOMS), (room_name,))
+            cur.execute(
+                '''SELECT creator_id FROM rooms WHERE room_name LIKE ?;''',
+                (room_name,))
             return self._get_username(cur, cur.fetchone()[0])
 
     def get_user_rooms(self, username, user_id=None):
@@ -325,9 +324,9 @@ class DBHelper:
             return self._get_visibility(cur, user_id)
 
     def _get_visibility(self, cur, user_id):
-        cur.execute('''
-            SELECT visible FROM {0} WHERE user_id LIKE ?;'''
-            .format(TABLE_USERS), (user_id,))
+        cur.execute(
+            '''SELECT visible FROM users WHERE user_id LIKE ?;''',
+            (user_id,))
         return cur.fetchone()[0] == 1
 
     def get_last_user_id(self):
@@ -335,7 +334,7 @@ class DBHelper:
         with con:
             cur = con.cursor()
             cur.execute('''
-                SELECT max(user_id) FROM {}'''.format(TABLE_USERS))
+                SELECT max(user_id) FROM ?;''', (TABLE_USERS,))
             return cur.fetchone()[0]
 
     def set_visibility(self, user_id, visible):
@@ -345,9 +344,9 @@ class DBHelper:
             self._set_visibility(cur, user_id, visible)
 
     def _set_visibility(self, cur, user_id, visible):
-        cur.execute('''
-            UPDATE {0} SET visible=? WHERE user_id LIKE ?;'''
-            .format(TABLE_USERS), (1 if visible else 0, user_id))
+        cur.execute(
+            '''UPDATE users SET visible=? WHERE user_id LIKE ?;''',
+            (1 if visible else 0, user_id))
 
     def set_root_path(self, root_path, user_id):
         con = sql.connect(DATABASE)
@@ -356,9 +355,9 @@ class DBHelper:
             self._set_root_path(cur, root_path, user_id)
 
     def _set_root_path(self, cur, root_path, user_id):
-        cur.execute('''
-            UPDATE {0} SET root_path=? WHERE user_id=?;'''
-            .format(TABLE_CURRENT_USER), (root_path, user_id))
+        cur.execute(
+            '''UPDATE current_user SET root_path=? WHERE user_id=?;''',
+            (root_path, user_id))
 
     def get_root_path(self):
         con = sql.connect(DATABASE)
@@ -368,7 +367,7 @@ class DBHelper:
 
     def _get_root_path(self, cur):
         cur.execute('''
-            SELECT root_path FROM {0};'''.format(TABLE_CURRENT_USER))
+            SELECT root_path FROM current_user;''')
         return cur.fetchone()[0]
 
     def try_create_room(self, room_name, creator_name, creator_id=None):
@@ -519,28 +518,29 @@ class DBHelper:
             if not conv_exists:
                 if rc_user is None:
                     cur.execute('''
-                        INSERT INTO {0} ({1}, {2}, total_messages)
+                        INSERT INTO {} ({}, {}, total_messages)
                         VALUES (?, ?, 0);'''.format(conv_table, src_name,
                                                     dst_name), (src, dst))
                 else:
-                    cur.execute('''
-                        INSERT INTO {0} ({1}, total_messages)
-                        VALUES (?, 0);'''
-                        .format(TABLE_ROOM_CONVERSATION, 'room_id'), (dst,))
+                    cur.execute(
+                        '''INSERT INTO {} (room_id, total_messages)
+                        VALUES (?, 0);'''.format(TABLE_ROOM_CONVERSATION),
+                        (dst,))
             # Get number of current message in database
             c_id, total_messages = self._get_message_data(cur, src, src_name,
                                                           conv_table, dst=dst,
                                                           dst_name=dst_name,
                                                           rc_user=rc_user)
             # Save message in the database
-            cur.execute('''
-                INSERT INTO {0} (reply, reply_id, user_id_fk,
+            cur.execute(
+                '''INSERT INTO {} (reply, reply_id, user_id_fk,
                 c_id_fk, time) VALUES (?, ?, ?, ?, ?);'''
                 .format(conv_table_reply), (message, total_messages + 1,
                                             src, c_id, time))
             self._increment_total_messages(cur, src, src_name, conv_table,
                                            dst, dst_name, rc_user)
-            logger.info('[+] Message from {0} to {1} was saved'.format(src, dst))
+            logger.info('[+] Message from {0} to {1} was saved'.format(src,
+                                                                       dst))
 
     def save_room_message(self, src, message, time, room_name):
         '''
@@ -566,12 +566,12 @@ class DBHelper:
             cur = con.cursor()
             if not self._user_exists(cur, username):
                 if user_id is not None:
-                    cur.execute('''
-                        INSERT OR IGNORE INTO users (user_id, username, visible,
-                        password) VALUES (?, ?, ?, ?);''', (user_id, username,
-                                                            visibility, password))
-                    logger.info('[+] User with id = {0} was created successfully'
-                                .format(user_id))
+                    cur.execute(
+                        '''INSERT OR IGNORE INTO users (user_id, username,
+                        visible, password) VALUES (?, ?, ?, ?);''',
+                        (user_id, username, visibility, password))
+                    logger.info('[+] User with id = {0} was created '
+                                'successfully'.format(user_id))
                 else:
                     cur.execute('''
                         INSERT OR IGNORE INTO users (username, visible)
@@ -580,10 +580,10 @@ class DBHelper:
                                 .format(username))
                 return True
             else:
-                cur.execute('''
-                    UPDATE {} SET username=?, visible=?
-                    WHERE user_id=?;'''
-                    .format(TABLE_USERS), (username, visibility, user_id))
+                cur.execute(
+                    '''UPDATE {} SET username=?, visible=?
+                    WHERE user_id=?;'''.format(TABLE_USERS),
+                    (username, visibility, user_id))
                 logger.info('[-] User "{0}" is updated'.format(username))
                 return False
 
@@ -594,7 +594,7 @@ class DBHelper:
             self._add_user2room(cur=cur, *args, **kwargs)
 
     def _add_user2room(self, cur, username, room_name, user_id=None,
-                      room_id=None):
+                       room_id=None):
         # Invalid function attributes
         if room_id is None:
             room_id = self._get_room_id(cur, room_name)
@@ -607,11 +607,11 @@ class DBHelper:
                 VALUES (?, ?);''', (user_id, room_id))
             self._increment_users_count(cur, room_name)
             logger.info(('[+] User "{0}" was added to the room "{1}"'
-                   ' successfully').format(username, room_name))
+                         ' successfully').format(username, room_name))
             return True
         else:
             logger.info('[-] User "{0}" is already exists in the room "{1}"'
-                  .format(username, room_name))
+                        .format(username, room_name))
             return False
 
     def save_current_user(self, username, user_id, cur=None, root_path=''):
@@ -641,15 +641,15 @@ class DBHelper:
         with con:
             cur = con.cursor()
             if not self._user_exists(cur, new_username):
-                cur.execute('''
-                    UPDATE users SET username = ? WHERE user_id = ?;''',
+                cur.execute(
+                    '''UPDATE users SET username = ? WHERE user_id = ?;''',
                     (new_username, user_id))
                 logger.info('[+] User {0} changed username: {1}'
                             .format(user_id, new_username))
                 return True
             else:
                 logger.info('[-] "{0}" already exists'
-                      .format(new_username))
+                            .format(new_username))
                 return False
 
     def get_users_by_room(self, room_name, room_id=None):
@@ -671,8 +671,8 @@ class DBHelper:
             if room_id is None:
                 room_id = self._get_room_id(cur, room_name)
 
-            cur.execute('''
-                SELECT user_id FROM {0} WHERE room_id LIKE ?;'''
+            cur.execute(
+                '''SELECT user_id FROM {} WHERE room_id LIKE ?;'''
                 .format(TABLE_RC_USER), (room_id,))
             for user_id in cur.fetchall():
                 yield user_id[0]
@@ -684,12 +684,11 @@ class DBHelper:
             room_id = self._get_room_id(cur, room_name)
             user_id = self._get_user_id(cur, username)
 
-            cur.execute('''
-                DELETE FROM {0} WHERE {1} LIKE ? AND {2} LIKE ?'''
-                .format(TABLE_RC_USER, 'room_id', 'user_id'), (room_id,
-                                                               user_id))
-            logger.info('[+] User "{0}" sucessfully removed from the "{0}" room'
-                        .format(username, room_name))
+            cur.execute(
+                '''DELETE FROM {} WHERE room_id LIKE ? AND user_id LIKE ?'''
+                .format(TABLE_RC_USER), (room_id, user_id))
+            logger.info('[+] User "{0}" sucessfully removed from the'
+                        ' "{0}" room'.format(username, room_name))
 
     def remove_message(self, cr_id):
         pass
@@ -701,15 +700,16 @@ class DBHelper:
             if room_id is None:
                 room_id = self._get_room_id(cur, room_name)
 
-            cur.execute('''
-                DELETE FROM {0} WHERE {1} LIKE ?;'''
-                .format(TABLE_ROOMS, 'room_id'), (room_id,))
+            cur.execute(
+                '''DELETE FROM {} WHERE room_id LIKE ?;'''
+                .format(TABLE_ROOMS), (room_id,))
 
-            cur.execute('''
-                DELETE FROM {0} WHERE {1} LIKE ?;'''
-                .format(TABLE_RC_USER, 'room_id'), (room_id,))
+            cur.execute(
+                '''DELETE FROM {} WHERE room_id LIKE ?;'''
+                .format(TABLE_RC_USER), (room_id,))
 
-            logger.info('[+] Room "{0}" was sucessfully removed'.format(room_name))
+            logger.info('[+] Room "{0}" was sucessfully removed'
+                        .format(room_name))
 
     def get_history(self, src, dst, count, src_name='user_one',
                     dst_name='user_two', conv_table=TABLE_CONVERSATION,
@@ -736,7 +736,8 @@ class DBHelper:
         with con:
             cur = con.cursor()
             try:
-                msg_data = self._get_message_data(cur, src=src, src_name=src_name,
+                msg_data = self._get_message_data(cur, src=src,
+                                                  src_name=src_name,
                                                   table=conv_table, dst=dst,
                                                   dst_name=dst_name,
                                                   rc_user=room)
@@ -744,9 +745,8 @@ class DBHelper:
                     c_id = msg_data[0]
                 else:
                     return
-                cur.execute('''
-                    SELECT reply, reply_id, user_id_fk, time
-                    FROM {0}
+                cur.execute(
+                    '''SELECT reply, reply_id, user_id_fk, time FROM {}
                     WHERE c_id_fk LIKE ? ORDER BY cr_id DESC LIMIT ?'''
                     .format(conv_table_reply), (c_id, count))
                 for msg in range(0, count):
@@ -776,38 +776,3 @@ class DBHelper:
                                 dst_name='room_id',
                                 room=True, conv_table=TABLE_ROOM_CONVERSATION,
                                 conv_table_reply=TABLE_ROOM_CONVERSATION_REPLY)
-
-
-if __name__ == '__main__':
-    db = DBHelper()
-
-    db.try_create_database()
-
-    db.save_user(username='Mike')
-    db.save_user(username='Holo')
-
-    db.save_message(src=1, dst=2, message='hi', time=1)
-
-    db.try_create_room(room_name='Wolf and Spice', creator_name='Holo')
-
-    db.add_user2room(username='Mike', room_name='Wolf and Spice')
-
-    db.try_create_room(room_name='Hyouka', creator_name='Mike')
-
-    for user in db.get_users_by_room('Hyouka'):
-        printc(user)
-
-    db.remove_user_from_room('Mike', 'Wolf and Spice')
-
-    db.remove_room(room_name='Hyouka')
-
-    for user in db.get_users_by_room('Wolf and Spice'):
-        printc(user)
-
-    db.save_room_message(src=1, message='hi all', time=1, room_name='Wolf and Spice')
-
-    # for message in db.get_history(src=1, dst=1, count=10, src_name='user_id',
-    #                               dst_name='room_id', room=True,
-    #                               conv_table=TABLE_ROOM_CONVERSATION,
-    #                               conv_table_reply=TABLE_ROOM_CONVERSATION_REPLY):
-    #     logger.info(message)

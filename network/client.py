@@ -39,7 +39,10 @@ class ChatClient:
     Class for network part of the chat
     '''
 
-    def __init__(self, server_host=None):
+    def __init__(self, server_host=None, port=None):
+        if port is not None:
+            global PORT
+            PORT = port
         self._recv_sock = self._create_recv_socket()
         self.host2user_id = dict()
         self.user_id2host = dict()
@@ -153,7 +156,8 @@ class ChatClient:
         self._db.change_username(user_id=self.user_id,
                                  new_username=self.username)
         self._db.save_user(username=self.username, user_id=self.user_id)
-        self._db.save_current_user(username=self.username, user_id=self.user_id,
+        self._db.save_current_user(username=self.username,
+                                   user_id=self.user_id,
                                    root_path=self.root_path)
 
         self.host2user_id[self._host] = self.user_id
@@ -184,8 +188,8 @@ class ChatClient:
                                 username=self.username, user_id=self.user_id)
         self.send_msg(host=self._server_host, msg=data)
 
-    def create_file_data(self, file_location, filename, username='', user_id=-1,
-                         room_name='', json_format=True):
+    def create_file_data(self, file_location, filename, username='',
+                         user_id=-1, room_name='', json_format=True):
         if user_id == -1:
             user_id = self._db.get_user_id(username)
         try:
@@ -206,7 +210,7 @@ class ChatClient:
 
     def create_data(self, msg='', host='', action='', is_server=0,
                     username='', user_id=-1, json_format=True,
-                    room_name='', room_creator = '', new_room_user = '',
+                    room_name='', room_creator='', new_room_user='',
                     remove_room='No', users_in_room=[], visibility=True):
         data = {
             'message': msg,
@@ -255,7 +259,8 @@ class ChatClient:
                                                             inputs, 2)
             for sock in readable:
                 if sock is self._recv_sock:
-                    # A "readable" server socket is ready to accept a connection
+                    # A "readable" server socket is ready to
+                    # accept a connection
                     conn, addr = self._recv_sock.accept()
                     conn.setblocking(0)
                     inputs.append(conn)
@@ -276,13 +281,14 @@ class ChatClient:
                             outputs.remove(sock)
                         inputs.remove(sock)
                         sock.close()
-                        message_queues[sock] = message_queues[sock].decode('utf-8')
+                        message_queues[sock] = message_queues[sock].decode(
+                                                                    'utf-8')
                         logger.info('[+] Recieved: %s' % message_queues[sock])
                         self._parse_data(message_queues[sock])
                         del message_queues[sock]
 
     def _update_visibility(self, data):
-        self._db.set_visibility(data['user_id'], 1 if not ('visible' in data)\
+        self._db.set_visibility(data['user_id'], 1 if not ('visible' in data)
                                 else data['visible'])
 
     def _save_file(self, filename, _file):
@@ -327,11 +333,11 @@ class ChatClient:
         # host in our network
         if data['action'] == 'connect':
             self._handle_host_action(data=data, action_type='connect',
-                                    message='[+] Adding host: ')
+                                     message='[+] Adding host: ')
         # The same with disconnection
         if data['action'] == 'disconnect':
             self._handle_host_action(data=data, action_type='disconnect',
-                                    message='[+] Removing host: ')
+                                     message='[+] Removing host: ')
         if data['action'] == '_get_connected':
             self._send_connected(host=data['host'])
 
@@ -479,7 +485,7 @@ class ChatClient:
         online_hosts = self.get_connected()
         self.disconnect()
         for host in online_hosts:
-            if host is not self._host and self.restart(host):
+            if host != self._host and self.restart(host):
                 return True
         return False
 
@@ -500,8 +506,3 @@ class ChatClient:
                     RESTART_CHAT = True
                 else:
                     RESTART_CHAT = False
-
-if __name__ == '__main__':
-    pass
-    # client = ChatClient(('192.168.0.101', PORT))
-    # client.start()

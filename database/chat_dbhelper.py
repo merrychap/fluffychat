@@ -41,7 +41,8 @@ class ChatDBHelper:
             self._db.save_room_message(src=user_id, message=message,
                                        time=cur_time, room_name=room)
         else:
-            self._db.save_message(self._client.user_id, user_id, message, cur_time)
+            self._db.save_message(self._client.user_id, user_id,
+                                  message, cur_time)
 
     def create_room(self, room_name):
         return self._db.try_create_room(room_name=room_name,
@@ -91,7 +92,8 @@ class ChatDBHelper:
 
     def change_visibility(self):
         self._db.set_visibility(self._client.user_id,
-                                not self._db.get_visibility(self._client.user_id))
+                                not self._db
+                                        .get_visibility(self._client.user_id))
 
     def get_last_user_id(self):
         self._db.get_last_user_id()

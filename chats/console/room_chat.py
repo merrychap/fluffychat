@@ -1,6 +1,7 @@
 import threading
 
-from chats.console.base_chat import parse_function, BaseChat, INDENT, operation_done
+from chats.console.base_chat import parse_function, BaseChat, INDENT
+from chats.console.base_chat import operation_done
 from chats.console.base_chat import BreakLoopException, lock, print_information
 
 import chats.console.base_chat as bc

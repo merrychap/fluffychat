@@ -37,14 +37,15 @@ class UserChat(BaseChat):
             bc.operation_done = True
         except KeyError:
             if send_file_parse:
-                self.parse_sending_file(send_file_parse, username=self.username)
+                self.parse_sending_file(send_file_parse,
+                                        username=self.username)
             else:
                 if not self.send_message(username=self.username, text=command):
                     printc('<lred>[-]</lred> Connection failed')
 
     def open(self):
         self.print_last_messages(self.user_id)
-        
+
         while True:
             try:
                 try:
@@ -57,7 +58,6 @@ class UserChat(BaseChat):
             except BreakLoopException:
                 self.self_chat = False
                 break
-
 
     def create_command_descrypt(self):
         return {

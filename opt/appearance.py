@@ -24,7 +24,7 @@ def printc(text='', end='\n'):
                 color = color_f
             txt = match.group(2)
         if os.name != 'nt':
-            print(Colors.color[color] + txt + Colors.color[DEFAULT  ], end='')
+            print(Colors.color[color] + txt + Colors.color[DEFAULT], end='')
         else:
             print(txt)
     print(end=end)

@@ -29,15 +29,16 @@ class MainChat(BaseChat):
         self.db_helper.change_visibility()
         self.send_visibility()
         printc('<lgreen>[+]</lgreen> You changed visibility: <lred>{0}</lred>'
-              .format(self.db_helper.get_visibility(user_id=self.client.user_id)))
+               .format(self.db_helper
+                           .get_visibility(user_id=self.client.user_id)))
 
     @print_information
     def print_users(self):
         for user_id in self.client.host2user_id.values():
-            if (self.db_helper.get_visibility(user_id=user_id) or \
-               user_id == self.db_helper.get_cur_user_id()) and \
-               self.is_online(user_id=user_id):
-                printc('<lyellow>+</lyellow> <lblue>%s</lblue>' % \
+            if (self.db_helper.get_visibility(user_id=user_id) or
+            user_id == self.db_helper.get_cur_user_id()) and \
+            self.is_online(user_id=user_id):
+                printc('<lyellow>+</lyellow> <lblue>%s</lblue>' %
                        self.db_helper.get_username(user_id))
 
     @print_information
@@ -106,7 +107,7 @@ class MainChat(BaseChat):
         else:
             printc('Hello again, <lblue>{}</lblue>!'
                    .format(self.client.username))
-            printc('Your storage directory: <lyellow>%s</lyellow>' % \
+            printc('Your storage directory: <lyellow>%s</lyellow>' %
                    self.db_helper.get_root_path())
         self.db_helper.specify_username(self.client)
         if not self.client.start():
