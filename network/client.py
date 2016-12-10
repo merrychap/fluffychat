@@ -39,10 +39,8 @@ class ChatClient:
     Class for network part of the chat
     '''
 
-    def __init__(self, server_host=None, port=None):
-        if port is not None:
-            global PORT
-            PORT = port
+    def __init__(self, r_port, server_host=None):
+        self.r_port = r_port
         self._recv_sock = self._create_recv_socket()
         self.host2user_id = dict()
         self.user_id2host = dict()
@@ -171,7 +169,7 @@ class ChatClient:
     def _create_recv_socket(self):
         recv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         recv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        recv.bind(('', PORT))
+        recv.bind(('', self.r_port))
         recv.listen(10)
         recv.setblocking(0)
         return recv
@@ -472,7 +470,8 @@ class ChatClient:
             for lc_if in interfaces:
                 if gl_if.startswith(lc_if):
                     try:
-                        return (nf.ifaddresses(gl_if)[2][0]['addr'], PORT)
+                        return (nf.ifaddresses(gl_if)[2][0]['addr'],
+                                self.r_port)
                     except KeyError:
                         pass
 
