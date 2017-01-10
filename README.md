@@ -25,7 +25,7 @@ $ python3 chat_console.py -H [ip] -sP [connection port] -rP [receiving port]
 ```
 Argument | Description
 -------- | -----------
--H | IP of remote host
+**-H** | IP of remote host
 -sP | Default connection port of remote host
 -rP | Port of receiving data from other hosts
 
