@@ -19,7 +19,8 @@ There are two ways of running chat. If you want to create a new chat, then you s
 ```sh
 $ python3 chat_console.py
 ```
-But if you want to join in existed chat, then you should know ip of a host sitting in this chat and then run next:
+But if you want to join in existed chat, then you should know IP and conenction port of a host sitting in this chat. Also you have to
+specify port for receiving messages. When you know all this stuff then run next:
 ```sh
 $ python3 chat_console.py -H [ip] -sP [connection port] -rP [receiving port]
 ```
