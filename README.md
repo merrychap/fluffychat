@@ -19,7 +19,7 @@ There are two ways of running chat. If you want to create a new chat, then you s
 ```sh
 $ python3 chat_console.py
 ```
-But if you want to join in existed chat, then you should know ip of the host sitting in this chat and then run next:
+But if you want to join in existed chat, then you should know ip of a host sitting in this chat and then run next:
 ```sh
 $ python3 chat_console.py -H __ip address of the host__
 ```
