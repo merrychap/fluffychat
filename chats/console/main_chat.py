@@ -105,7 +105,7 @@ class MainChat(BaseChat):
             self.specify_username()
             self.specify_root_path()
         else:
-            printc('Hello again, <lblue>{}</lblue>!'
+            printc('\nHello again, <lblue>{}</lblue>!'
                    .format(self.client.username))
             printc('Your storage directory: <lyellow>%s</lyellow>' %
                    self.db_helper.get_root_path())

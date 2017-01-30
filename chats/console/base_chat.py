@@ -102,7 +102,7 @@ class BaseChat:
                 'commands\n' + INDENT + '\n') % mode)
 
     def specify_username(self):
-        printc('<lpurple>[*]</lpurple> Please, specify your '
+        printc('\n<lpurple>[*]</lpurple> Please, specify your '
                '<lblue>username</lblue>(a-zA-Z_.):> ', end='')
         username = input()
         self.client.specify_username(username)

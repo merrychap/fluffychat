@@ -1,4 +1,5 @@
-'''Module for network clients'''
+'''Module for network functionality'''
+
 # !/usr/bin/env python3
 
 from copy import deepcopy
