@@ -8,6 +8,7 @@ import select
 import socket
 import json
 import datetime
+import traceback
 import threading
 import logging
 
@@ -16,7 +17,7 @@ import database.db_helper as db_helper
 
 from opt.appearance import printc
 
-from encryption import Encryptor
+from .encryption import Encryptor
 
 
 PORT = 9090
@@ -91,6 +92,10 @@ class ChatClient:
             self._handle_username()
             self.host2user_id[self._host] = self.user_id
             self.user_id2host[self.user_id] = self._host
+
+        # Add self public key in keys dictionary
+        self.encryptor.add_pubkey(self.user_id, None, _self=True)
+
         return True
 
     def disconnect(self, exit=False):
@@ -184,7 +189,7 @@ class ChatClient:
         logger.info('[*] Connecting to: %s' % str(self._server_host))
         data = self.create_data(host=self._host, action='connect',
                                 username=self.username, user_id=self.user_id)
-        self.send_msg(host=self._server_host, msg=data)
+        self.send_msg(host=self._server_host, msg=data, pubkey_exchange=True)
 
     def create_file_data(self, file_location, filename, username='',
                          user_id=-1, room_name='', json_format=True):
@@ -235,7 +240,14 @@ class ChatClient:
                 data['users_in_room'] = users_in_room
         return json.dumps(data) if json_format else data
 
-    def send_msg(self, host, msg):
+    def _pubkey_wrapper(self, user_id, msg):
+        return json.dumps({
+            'pubkey': self.encryptor.pubkey.exportKey(),
+            'user_id': user_id,
+            'msg': msg
+        })
+
+    def send_msg(self, host, msg, pubkey_exchange=False, ping=False):
         '''
         Send message to a host in the chat. First of all happens
         message encryption and then message sends
@@ -243,26 +255,40 @@ class ChatClient:
         Args:
             host (tuple) Tuple of IP and port of a host
             msg (str) Message that is sended
+            pubkey_exchange (bool) If this message is public keys exchanging
+            ping (bool) True if this is ping message else False
 
         Return:
             bool True if transfer was successful else False
         '''
 
         try:
+            user_id = self.host2user_id[host]
             send_sock = self._create_send_socket()
             send_sock.connect(host)
 
-            n_msg = self.encryptor.encrypt(self.host2user_id[host], msg)
-            send_sock.sendall(bytes(n_msg, 'utf-8'))
+            # If we ping current machine
+            if ping and user_id == self.user_id:
+                return True
 
+            if pubkey_exchange:
+                n_msg = self._pubkey_wrapper(user_id, msg)
+            else:
+                n_msg = self.encryptor.encrypt(user_id, msg)
+            send_sock.sendall(bytes(n_msg, 'utf-8'))
             return True
         except (Exception, socket.error) as e:
+            traceback.print_exc(e)
             logger.error('[-] Connection failed: %s' % str(host))
             return False
         finally:
             send_sock.close()
 
     def _handle_recv(self):
+        '''
+        Non-blocking handling of received data
+        '''
+
         inputs = [self._recv_sock]
         outputs = []
         message_queues = {}
@@ -301,12 +327,19 @@ class ChatClient:
                         self._handle_received_data(message_queues[sock])
                         del message_queues[sock]
 
-    def _handle_received_data(self, data):
-        data = json.loads(json_data)
-        msg = self.encryptor.decrypt(data['signature'], data['encrypted_msg'])
+    def _handle_received_data(self, json_data):
+        if json_data == '':
+            return
 
+        data = json.loads(json_data)
+        if 'pubkey' in data:
+            self.encryptor.add_pubkey(data['user_id'], data['pubkey'])
+            msg = data['msg']
+        else:
+            msg = self.encryptor.decrypt(data['signature'],
+                                         base64.b64decode(data['encrypted_msg']))
         if msg:
-            self._parse_data(msg)
+            self._parse_data(json.loads(msg))
 
     def _update_visibility(self, data):
         self._db.set_visibility(data['user_id'], 1 if not ('visible' in data)
@@ -334,7 +367,7 @@ class ChatClient:
         self.user_id2filename[data['user_id']] = data['filename']
         file_received.add(data['user_id'])
 
-    def _parse_data(self, json_data, conn=None):
+    def _parse_data(self, data, conn=None):
         '''
         Parse json data that was received from a host. Here all kind of
         data are processed with appropriate handlers
@@ -487,7 +520,8 @@ class ChatClient:
                                self._db.get_visibility(user_id)))
         tun_data['connected'] = _connected
         logger.info('[+] Sending connected hosts to: %s' % str(host))
-        self.send_msg(host=host, msg=json.dumps(tun_data))
+        self.send_msg(host=host, msg=json.dumps(tun_data),
+                      pubkey_exchange=True)
 
     def is_connection_established(self):
         return self._get_ip_addr() is not None

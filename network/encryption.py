@@ -5,6 +5,7 @@ message encryption and decryption
 
 
 import json
+import base64
 import Crypto
 
 from Crypto import Random
@@ -20,15 +21,18 @@ class Encryptor:
 
         self._generate_keys()
 
-    def add_pubkey(self, user_id, pubkey):
+    def add_pubkey(self, user_id, pubkey, _self=False):
         ''' Add public key of a host in chat to the dictionary '''
-        self.user2pubkey[user_id] = pubkey
+        if _self:
+            self.user2pubkey[user_id] = self.pubkey
+        else:
+            self.user2pubkey[user_id] = RSA.importKey(pubkey)
 
     def _generate_keys(self):
         ''' Generate private/public RSA keys '''
 
         self._keypair = RSA.generate(self.key_length, self.random_gen)
-        self.pubkey = self.keypair.publickey()
+        self.pubkey = self._keypair.publickey()
 
     def encrypt(self, user_id, message):
         '''
@@ -48,12 +52,11 @@ class Encryptor:
             message = bytes(message, 'utf-8')
 
         message_hash = SHA256.new(message).digest()
-        signature = self.user2pubkey[user_id].sign(message_hash, '')
+        signature = self._keypair.sign(message_hash, '')
         encrypted_msg = self.user2pubkey[user_id].encrypt(message, 32)
-
         return json.dumps({
-            'signature': signature,
-            'encrypted_msg': encrypted_msg})
+            'signature': signature[0],
+            'encrypted_msg': base64.b64encode(encrypted_msg[0]).decode()})
 
     def decrypt(self, signature, encrypted_msg):
         '''
@@ -70,12 +73,12 @@ class Encryptor:
         decrypted_msg_hash = SHA256.new(decrypted_msg).digest()
 
         if self.verify(decrypted_msg_hash, signature):
-            return decrypted_msg
+            return decrypted_msg.decode('utf-8')
 
 
     def verify(self, _hash, sign):
         ''' Verify message hash by signature '''
-        return self.pubkey.verify(_hash, sign)
+        return self.pubkey.verify(_hash, (sign,))
 
     def save_key(self, key):
         pass

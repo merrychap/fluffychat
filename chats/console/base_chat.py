@@ -169,7 +169,8 @@ class BaseChat:
             user_id = self.db_helper.get_user_id(username)
         try:
             host = self.client.user_id2host[user_id]
-            return self.client.send_msg(host=host, msg=json.dumps(''))
+            return self.client.send_msg(host=host, msg=json.dumps(''),
+                                        ping=True)
         except KeyError:
             return False
 
