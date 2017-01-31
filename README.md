@@ -13,6 +13,7 @@ $ vim app.log
 ### Requirements
 - Python 3.*
     - netifaces
+    - PyCrypto
 
 ### How to run application
 There are two ways of running chat. If you want to create a new chat, then you should run this:

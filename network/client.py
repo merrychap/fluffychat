@@ -1,16 +1,12 @@
-'''Module for network functionality'''
+''' Module for network functionality '''
 
 # !/usr/bin/env python3
-
-from copy import deepcopy
-from multiprocessing import Queue
 
 import os
 import base64
 import select
 import socket
 import json
-import time
 import datetime
 import threading
 import logging
@@ -19,6 +15,8 @@ import netifaces as nf
 import database.db_helper as db_helper
 
 from opt.appearance import printc
+
+from encryption import Encryptor
 
 
 PORT = 9090
@@ -43,6 +41,7 @@ class ChatClient:
     def __init__(self, r_port, server_host=None):
         self.r_port = r_port
         self._recv_sock = self._create_recv_socket()
+        self.encryptor = Encryptor()
         self.host2user_id = dict()
         self.user_id2host = dict()
 
@@ -237,10 +236,25 @@ class ChatClient:
         return json.dumps(data) if json_format else data
 
     def send_msg(self, host, msg):
+        '''
+        Send message to a host in the chat. First of all happens
+        message encryption and then message sends
+
+        Args:
+            host (tuple) Tuple of IP and port of a host
+            msg (str) Message that is sended
+
+        Return:
+            bool True if transfer was successful else False
+        '''
+
         try:
             send_sock = self._create_send_socket()
             send_sock.connect(host)
-            send_sock.sendall(bytes(msg, 'utf-8'))
+
+            n_msg = self.encryptor.encrypt(self.host2user_id[host], msg)
+            send_sock.sendall(bytes(n_msg, 'utf-8'))
+
             return True
         except (Exception, socket.error) as e:
             logger.error('[-] Connection failed: %s' % str(host))
@@ -283,8 +297,16 @@ class ChatClient:
                         message_queues[sock] = message_queues[sock].decode(
                                                                     'utf-8')
                         logger.info('[+] Recieved: %s' % message_queues[sock])
-                        self._parse_data(message_queues[sock])
+
+                        self._handle_received_data(message_queues[sock])
                         del message_queues[sock]
+
+    def _handle_received_data(self, data):
+        data = json.loads(json_data)
+        msg = self.encryptor.decrypt(data['signature'], data['encrypted_msg'])
+
+        if msg:
+            self._parse_data(msg)
 
     def _update_visibility(self, data):
         self._db.set_visibility(data['user_id'], 1 if not ('visible' in data)
@@ -313,10 +335,17 @@ class ChatClient:
         file_received.add(data['user_id'])
 
     def _parse_data(self, json_data, conn=None):
-        data = json.loads(json_data)
+        '''
+        Parse json data that was received from a host. Here all kind of
+        data are processed with appropriate handlers
+
+        Args:
+            json_data (Json Object) Received data in json format
+            conn Apparently this is useless argument
+        '''
+
         if data == '':
             return
-
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
         # If this data is associated with file then handle only
@@ -324,7 +353,6 @@ class ChatClient:
         if 'file' in data:
             self._handle_file_receiving(data, cur_time)
             return
-
         # Updates visibility of connected user
         self._update_visibility(data)
 
@@ -340,7 +368,6 @@ class ChatClient:
         if data['action'] == '_get_connected':
             self._send_connected(host=data['host'])
 
-        # TODO save messages in database or file
         if data['message'] != '':
             # If action connected with room
             if 'room' in data:
@@ -348,7 +375,6 @@ class ChatClient:
                 return
             self._db.save_message(src=data['user_id'], dst=self.user_id,
                                   message=data['message'], time=cur_time)
-
         if 'connected' in data:
             logger.info('[+] Updating tables of connected hosts')
             self._update_connected(data)

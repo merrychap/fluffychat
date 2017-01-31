@@ -1,25 +1,37 @@
 import sys
 
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow
-from PyQt5.Qt import QPushButton, QRect, QLabel
+from PyQt5.Qt import QPushButton, QRect, QLabel, QToolTip, QFont
 
 
-class GUIMain(QMainWindow):
+class GMainChat(QMainWindow):
     def __init__(self, *args):
-        QMainWindow.__init__(self, *args)
-        self.cw = QWidget(self)
-        self.setCentralWidget(self.cw)
+        super().__init__(*args)
 
-    def init_form(self):
-        self.btn = QPushButton('Click pls', self.cw)
-        self.btn1setGeometry(QRect(50, 50, 100, 30))
+        self.init_ui()
 
-        self.label = QLabel('No commands running', self.cw)
-        self.btn.clicked.connect(self.btn, self.make_action)
+    def init_ui(self):
+        QToolTip.setFont(QFont('SansSerif', 10))
+
+        self.statusBar().showMessage('Ready')
+
+        self.create_widgets()
+
+        self.setGeometry(300, 300, 250, 150)
+        self.setWindowTitle('Chat')
+        self.show()
+
+    def create_widgets(self):
+        btn = QPushButton('Button', self)
+        btn.setToolTip('This is <b>QPushButton</b> widget')
+        btn.resize(btn.sizeHint())
+        btn.move(50, 50)
 
 
-if __name__ == '__main__':
+def gmain():
     app = QApplication(sys.argv)
-    form = GUIMain()
+
+    form = GMainChat()
     form.show()
+
     sys.exit(app.exec_())

@@ -13,7 +13,7 @@ from network.client import PORT
 from database.chat_dbhelper import ChatDBHelper
 
 from chats.console.main_chat import MainChat
-# from chats.gui
+from chats.gui.main_chat import GMainChat, gmain
 
 
 LOG_FILE = 'logging_config.ini'
@@ -34,7 +34,7 @@ def main():
         chat = MainChat(client=client)
         chat.run()
     else:
-        pass
+        gmain()
 
 
 if __name__ == '__main__':

@@ -39,7 +39,7 @@ class ArgsParser:
         create = args.create
 
         if gui:
-            return gui
+            return (gui,) * 4
 
         if not create:
             host = self._check_host_IP(host)
