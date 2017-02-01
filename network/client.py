@@ -183,7 +183,8 @@ class ChatClient:
         logger.info('[*] Getting connected hosts')
         data = self.create_data(host=self._host, action='_get_connected',
                                 visibility=False)
-        return self.send_msg(host=self._server_host, msg=data)
+        return self.send_msg(host=self._server_host, msg=data,
+                             pubkey_exchange=True)
 
     def _connect(self, serv_host=None):
         logger.info('[*] Connecting to: %s' % str(self._server_host))
@@ -242,7 +243,7 @@ class ChatClient:
 
     def _pubkey_wrapper(self, msg):
         return json.dumps({
-            'pubkey': self.encryptor.pubkey.exportKey(),
+            'pubkey': self.encryptor.pubkey.exportKey().decode('utf-8'),
             'user_id': self.user_id,
             'msg': msg
         })
@@ -274,6 +275,7 @@ class ChatClient:
                 if ping and user_id == self.user_id:
                     return True
                 n_msg = self.encryptor.encrypt(user_id, msg)
+            print(n_msg)
             send_sock.sendall(bytes(n_msg, 'utf-8'))
             return True
         except (Exception, socket.error) as e:
