@@ -168,7 +168,7 @@ class ChatClient:
 
     def _create_send_socket(self):
         send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        send.settimeout(1)
+        send.settimeout(3)
         return send
 
     def _create_recv_socket(self):
@@ -278,11 +278,11 @@ class ChatClient:
             send_sock.sendall(bytes(n_msg, 'utf-8'))
             return True
         except (Exception, socket.error) as e:
-            traceback.print_exc(e)
             logger.error('[-] Connection failed: %s' % str(host))
             return False
         finally:
             send_sock.close()
+            del send_sock
 
     def _handle_recv(self):
         '''
