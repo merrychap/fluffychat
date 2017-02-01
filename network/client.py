@@ -42,7 +42,7 @@ class ChatClient:
     def __init__(self, r_port, server_host=None):
         self.r_port = r_port
         self._recv_sock = self._create_recv_socket()
-        self.encryptor = Encryptor()
+        self.encryptor = Encryptor(self)
         self.host2user_id = dict()
         self.user_id2host = dict()
 
@@ -274,7 +274,7 @@ class ChatClient:
                 # If we ping current machine
                 if ping and user_id == self.user_id:
                     return True
-                n_msg = self.encryptor.encrypt(user_id, msg)
+                n_msg = self.encryptor.encrypt(user_id, host, msg)
             send_sock.sendall(bytes(n_msg, 'utf-8'))
             return True
         except (Exception, socket.error) as e:
@@ -337,7 +337,8 @@ class ChatClient:
             msg = data['msg']
         else:
             msg = self.encryptor.decrypt(data['signature'],
-                                         base64.b64decode(data['encrypted_msg']))
+                                         base64.b64decode(data['encrypted_msg']),
+                                         tuple(data['host']))
         if msg:
             self._parse_data(json.loads(msg))
 
