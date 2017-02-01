@@ -26,7 +26,7 @@ def printc(text='', end='\n'):
         if os.name != 'nt':
             print(Colors.color[color] + txt + Colors.color[DEFAULT], end='')
         else:
-            print(txt)
+            print(txt, end='')
     print(end=end)
 
 

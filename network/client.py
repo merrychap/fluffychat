@@ -527,9 +527,11 @@ class ChatClient:
         return self._get_ip_addr() is not None
 
     def _get_ip_addr(self):
+        os_name = os.name
         for gl_if in nf.interfaces():
             for lc_if in interfaces:
-                if gl_if.startswith(lc_if):
+                if (gl_if.startswith(lc_if) and os_name != 'nt') or \
+                   os_name == 'nt':
                     try:
                         return (nf.ifaddresses(gl_if)[2][0]['addr'],
                                 self.r_port)
