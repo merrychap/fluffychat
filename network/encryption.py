@@ -72,6 +72,7 @@ class Encryptor:
         '''
 
         user_id = self._client.host2user_id[host]
+        print(user_id)
         decrypted_msg = self._keypair.decrypt(encrypted_msg)
         decrypted_msg_hash = SHA256.new(decrypted_msg).digest()
 

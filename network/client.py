@@ -274,7 +274,7 @@ class ChatClient:
                 # If we ping current machine
                 if ping and user_id == self.user_id:
                     return True
-                n_msg = self.encryptor.encrypt(user_id, host, msg)
+                n_msg = self.encryptor.encrypt(user_id, self._host, msg)
             send_sock.sendall(bytes(n_msg, 'utf-8'))
             return True
         except (Exception, socket.error) as e:
