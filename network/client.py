@@ -240,10 +240,10 @@ class ChatClient:
                 data['users_in_room'] = users_in_room
         return json.dumps(data) if json_format else data
 
-    def _pubkey_wrapper(self, user_id, msg):
+    def _pubkey_wrapper(self, msg):
         return json.dumps({
             'pubkey': self.encryptor.pubkey.exportKey(),
-            'user_id': user_id,
+            'user_id': self.user_id,
             'msg': msg
         })
 
@@ -264,20 +264,20 @@ class ChatClient:
 
         send_sock = self._create_send_socket()
         try:
-            user_id = self.host2user_id[host]
             send_sock.connect(host)
 
-            # If we ping current machine
-            if ping and user_id == self.user_id:
-                return True
-
             if pubkey_exchange:
-                n_msg = self._pubkey_wrapper(user_id, msg)
+                n_msg = self._pubkey_wrapper(msg)
             else:
+                user_id = self.host2user_id[host]
+                # If we ping current machine
+                if ping and user_id == self.user_id:
+                    return True
                 n_msg = self.encryptor.encrypt(user_id, msg)
             send_sock.sendall(bytes(n_msg, 'utf-8'))
             return True
         except (Exception, socket.error) as e:
+            traceback.print_exc(e)
             logger.error('[-] Connection failed: %s' % str(host))
             return False
         finally:
