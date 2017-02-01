@@ -263,8 +263,8 @@ class ChatClient:
             bool True if transfer was successful else False
         '''
 
-        send_sock = self._create_send_socket()
         try:
+            send_sock = self._create_send_socket()
             send_sock.connect(host)
 
             if pubkey_exchange:
@@ -275,7 +275,6 @@ class ChatClient:
                 if ping and user_id == self.user_id:
                     return True
                 n_msg = self.encryptor.encrypt(user_id, msg)
-            print(n_msg)
             send_sock.sendall(bytes(n_msg, 'utf-8'))
             return True
         except (Exception, socket.error) as e:
