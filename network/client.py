@@ -262,9 +262,9 @@ class ChatClient:
             bool True if transfer was successful else False
         '''
 
+        send_sock = self._create_send_socket()
         try:
             user_id = self.host2user_id[host]
-            send_sock = self._create_send_socket()
             send_sock.connect(host)
 
             # If we ping current machine
@@ -278,7 +278,6 @@ class ChatClient:
             send_sock.sendall(bytes(n_msg, 'utf-8'))
             return True
         except (Exception, socket.error) as e:
-            traceback.print_exc(e)
             logger.error('[-] Connection failed: %s' % str(host))
             return False
         finally:
