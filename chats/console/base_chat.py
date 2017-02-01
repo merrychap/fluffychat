@@ -181,9 +181,12 @@ class BaseChat:
         Sends message to destination host
 
         Args:
-            username (str) Username of user that should recieve message
-            text (str) Text of message
-            message (data) Formated data of message
+            room (str) Name of a room
+            user_id (int) Id of a user
+            username (str) Username of a user that should recieve message
+            text (str) Text of a message
+            text (data) Formated data of a message
+            remove_room (str) "No" if don't need to remove room else "Yes"
         '''
 
         if (user_id is None and username is None):
@@ -206,10 +209,9 @@ class BaseChat:
             room_creator = self.db_helper.get_room_creator(room)
         if room == '':
             self.db_helper.save_message(user_id, text, room)
-        message = self.client.create_data(msg=text,
+        message = self.client.create_data(msg=text, room_name=room,
                                           username=self.client.username,
                                           user_id=self.client.user_id,
-                                          room_name=room,
                                           remove_room=remove_room,
                                           room_creator=room_creator,
                                           new_room_user=room_user,

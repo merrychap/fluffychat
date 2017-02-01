@@ -82,33 +82,3 @@ class Encryptor:
 
     def save_key(self, key):
         pass
-
-
-# if __name__ == '__main__':
-#     KEY_LENGTH = 1024
-#     random_gen = Random.new().read
-#
-#     keypair_first  = RSA.generate(KEY_LENGTH, random_gen)
-#     keypair_second = RSA.generate(KEY_LENGTH, random_gen)
-#
-#     pubkey_first  = keypair_first.publickey()
-#     pubkey_second = keypair_second.publickey()
-#
-#     message_to_first  = 'hello, first'
-#     message_to_second = 'hello, second'
-#
-#     hash_of_first_message = SHA256.new(message_to_first.encode()).digest()
-#     signature_second = keypair_second.sign(hash_of_first_message, '')
-#
-#     hash_of_second_message = SHA256.new(message_to_second.encode()).digest()
-#     signature_first = keypair_first.sign(hash_of_second_message, '')
-#
-#     encrypted_for_first  = pubkey_first.encrypt(message_to_first.encode(), 32)
-#     encrypted_for_second = pubkey_second.encrypt(message_to_second.encode(), 32)
-#
-#     decrypt_first  = keypair_first.decrypt(encrypted_for_first)
-#     decrypt_second = keypair_second.decrypt(encrypted_for_second)
-#
-#     hash_first_decrypt = SHA256.new(decrypt_first).digest()
-#     if pubkey_second.verify(hash_first_decrypt, signature_second):
-#         print(decrypt_first)
