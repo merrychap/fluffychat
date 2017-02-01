@@ -71,7 +71,7 @@ class Encryptor:
             None if message isn't verified else decrypted message
         '''
 
-        user_id = self._client.host2user_id(host)
+        user_id = self._client.host2user_id[host]
         decrypted_msg = self._keypair.decrypt(encrypted_msg)
         decrypted_msg_hash = SHA256.new(decrypted_msg).digest()
 
