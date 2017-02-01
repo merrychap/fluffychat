@@ -38,15 +38,23 @@ class ArgsParser:
         host, port, recv_port, gui = args.host, args.p, args.r, args.gui
         create = args.create
 
-        if gui:
-            return (gui,) * 4
-
-        if not create:
-            host = self._check_host_IP(host)
-            if host is not None:
-                port = int(self._check_host_port(port))
         recv_port = int(self._check_recv_port(recv_port))
 
+        if create:
+            return gui, None, None, recv_port
+
+        if host:
+            return self._specify_host_port(gui, host, port, recv_port)
+
+        server_host = input('Do you want to start a new chat? (yes/no): ')
+        if server_host.lower() == 'yes':
+            return gui, None, None, recv_port
+        else:
+            return self._specify_host_port(gui, host, port, recv_port)
+
+    def _specify_host_port(self, gui, host, port, recv_port):
+        host = self._check_host_IP(host)
+        port = int(self._check_host_port(port))
         return gui, host, port, recv_port
 
     def _check_correctness(self, msg, err_msg, obj, is_correct):
@@ -62,9 +70,6 @@ class ArgsParser:
         return obj
 
     def _check_host_IP(self, host):
-        server_host = input('Do you want to start a new chat? (yes/no): ')
-        if server_host:
-            return None
         return self._check_correctness(('Enter IP of a host you want to'
                                        ' connect: '), 'host IP', host,
                                        self._is_correct_host)
