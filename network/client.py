@@ -339,7 +339,8 @@ class ChatClient:
             self.encryptor.add_pubkey(data['user_id'], data['pubkey'])
             msg = data['msg']
         elif self._dis_enc:
-            msg = data['msg']
+            self._parse_data(data)
+            return
         else:
             msg = self.encryptor.decrypt(data['signature'],
                                          base64.b64decode(data['encrypted_msg']),
@@ -353,7 +354,7 @@ class ChatClient:
 
     def _save_file(self, filename, _file):
         ''' Save file on the current machine '''
-        
+
         with open(os.path.join(self.root_path, filename), 'wb') as new_file:
             new_file.write(base64.b64decode(_file))
 
