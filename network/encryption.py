@@ -14,22 +14,27 @@ from Crypto.Hash import SHA256
 
 
 class Encryptor:
-    def __init__(self, client, dis_enc):
+    def __init__(self, client):
         self.key_length = 2048
         self.random_gen = Random.new().read
-        self.user2pubkey = {}
+        self._user2pubkey = {}
+        self._dis_enc = set()
 
         self._client = client
-        self._dis_enc = dis_enc
 
         self._generate_keys()
 
-    def add_pubkey(self, user_id, pubkey, _self=False):
+    def add_pubkey(self, user_id, pubkey, _self=False, dis_enc=False):
         ''' Add public key of a host in chat to the dictionary '''
         if _self:
-            self.user2pubkey[user_id] = self.pubkey
+            self._user2pubkey[user_id] = self.pubkey
         else:
-            self.user2pubkey[user_id] = RSA.importKey(pubkey)
+            self._user2pubkey[user_id] = RSA.importKey(pubkey)
+        if dis_enc:
+            self._dis_enc.add(user_id)
+
+    def get_pubkey(self, user_id):
+        return self._user2pubkey[user_id]
 
     def _generate_keys(self):
         ''' Generate private/public RSA keys '''
@@ -49,7 +54,7 @@ class Encryptor:
             tuple First is signature and second is encrypted message itself
         '''
 
-        if self._dis_enc:
+        if user_id in self._dis_enc:
             return message
         # if message isn't bytes then convert it
         try:
@@ -59,7 +64,7 @@ class Encryptor:
 
         message_hash = SHA256.new(message).digest()
         signature = self._keypair.sign(message_hash, '')
-        encrypted_msg = self.user2pubkey[user_id].encrypt(message, 32)
+        encrypted_msg = self._user2pubkey[user_id].encrypt(message, 32)
         return json.dumps({
             'signature': signature[0],
             'host': list(host),
@@ -85,7 +90,7 @@ class Encryptor:
 
     def verify(self, _hash, sign, user_id):
         ''' Verify message hash by signature '''
-        return self.user2pubkey[user_id].verify(_hash, (sign,))
+        return self._user2pubkey[user_id].verify(_hash, (sign,))
 
     def save_key(self, key):
         pass

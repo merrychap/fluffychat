@@ -29,7 +29,9 @@ class ArgsParser:
         self.parser.add_argument('--gui', action='store_true',
                                  help='Enable GUI mode')
         self.parser.add_argument('--dis-enc', action='store_true',
-                                 help='Disable encryption')
+                                 help=('Disable encryption. it means when '
+                                       'a host from the chat sends you a '
+                                       'message it will not be encrypted'))
 
     def get_params(self):
         '''

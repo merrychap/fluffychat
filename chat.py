@@ -8,7 +8,6 @@ import signal
 from args_parser import ArgsParser
 
 from network.client import ChatClient
-from network.client import PORT
 
 from database.chat_dbhelper import ChatDBHelper
 
@@ -20,7 +19,9 @@ LOG_FILE = 'logging_config.ini'
 
 
 def main():
-    logging.basicConfig(filename='app.log', level=logging.DEBUG)
+    logging.basicConfig(filename='app.log',
+                        format='%(asctime)s : %(module)s : %(levelname)s : %(message)s',
+                        level=logging.DEBUG)
 
     parser = ArgsParser()
     gui, host, port, recv_port, dis_enc = parser.get_params()

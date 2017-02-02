@@ -20,7 +20,6 @@ from opt.appearance import printc
 from .encryption import Encryptor
 
 
-PORT = 9090
 EMPTY = ' '
 RESTART_CHAT = False
 logger = logging.getLogger(__name__)
@@ -42,7 +41,7 @@ class ChatClient:
     def __init__(self, r_port, dis_enc=False, server_host=None):
         self.r_port = r_port
         self._recv_sock = self._create_recv_socket()
-        self.encryptor = Encryptor(self, dis_enc)
+        self.encryptor = Encryptor(self)
         self._dis_enc = dis_enc
         self.host2user_id = dict()
         self.user_id2host = dict()
@@ -243,11 +242,14 @@ class ChatClient:
         return json.dumps(data) if json_format else data
 
     def _pubkey_wrapper(self, msg):
-        return json.dumps({
-            'pubkey': self.encryptor.pubkey.exportKey().decode('utf-8'),
-            'user_id': self.user_id,
-            'msg': msg
-        })
+        try:
+            data = json.loads(msg)
+        except TypeError as e:
+            data = msg
+        data['pubkey'] = self.encryptor.pubkey.exportKey().decode('utf-8')
+        data['sender_id'] = self.user_id
+        data['dis_enc'] = self._dis_enc
+        return json.dumps(data)
 
     def send_msg(self, host, msg, pubkey_exchange=False, ping=False):
         '''
@@ -333,14 +335,9 @@ class ChatClient:
     def _handle_received_data(self, json_data):
         if json_data == '':
             return
-
         data = json.loads(json_data)
-        if 'pubkey' in data:
-            self.encryptor.add_pubkey(data['user_id'], data['pubkey'])
-            msg = data['msg']
-        elif self._dis_enc:
-            self._parse_data(data)
-            return
+        if ('pubkey' in data) or ('signature' not in data):
+            msg = data
         else:
             msg = self.encryptor.decrypt(data['signature'],
                                          base64.b64decode(data['encrypted_msg']),
@@ -461,14 +458,15 @@ class ChatClient:
         for host_data in data['connected']:
             host = tuple(host_data[0])
             user_id = int(host_data[1])
-            username = host_data[2]
-            visibility = host_data[3]
+            username, visibility, pubkey = (host_data[_] for _ in range(2, 5))
 
             logger.info('[+] Connected host: {0}, username: {1}, user_id: {2}'
                         .format(host, username, user_id))
 
             self.host2user_id[host] = user_id
             self.user_id2host[user_id] = host
+
+            self.encryptor.add_pubkey(user_id, pubkey)
 
             self._connected.add(host)
             self._db.save_user(user_id=user_id,
@@ -512,17 +510,30 @@ class ChatClient:
         # Updating table of connected hosts for each host in network
         if data['is_server'] == 0:
             data['is_server'] = 1
+            self.encryptor.add_pubkey(data['sender_id'], data['pubkey'])
             # Update table for existent hosts
             for conn in self._connected:
                 self.send_msg(host=conn, msg=json.dumps(data))
 
         if host not in self._connected:
-            logger.info(message + str(host) + 'user id: %s' % user_id)
+            logger.info(message + str(host) + \
+                        '; user id: {}; public key:{}'.format(user_id, ))
+            publickey = data['publickey']
+            sender_id = data['sender_id']
+            dis_enc   = data['dis_enc']
+
             if action_type == 'connect':
-                self.user_id2host[user_id] = host
-                self.host2user_id[host] = user_id
-                self._connected.add(host)
-                self._db.save_user(username=username, user_id=user_id)
+                self._process_connect_type(user_id, host, username,
+                                           publickey, sender_id)
+
+    def _process_connect_type(self, user_id, host, username, publickey,
+                              sender_id, dis_enc):
+        self.user_id2host[user_id] = host
+        self.host2user_id[host] = user_id
+
+        self.encryptor.add_pubkey(sender_id, publickey, dis_enc=dis_enc)
+        self._connected.add(host)
+        self._db.save_user(username=username, user_id=user_id)
 
     def _send_connected(self, host):
         host = tuple(host)
@@ -530,7 +541,8 @@ class ChatClient:
         _connected = []
         for _host, user_id in self.host2user_id.items():
             _connected.append((_host, user_id, self._db.get_username(user_id),
-                               self._db.get_visibility(user_id)))
+                               self._db.get_visibility(user_id),
+                               self.encryptor.get_pubkey(user_id)))
         tun_data['connected'] = _connected
         logger.info('[+] Sending connected hosts to: %s' % str(host))
         self.send_msg(host=host, msg=json.dumps(tun_data),
