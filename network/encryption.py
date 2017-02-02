@@ -34,7 +34,7 @@ class Encryptor:
             self._dis_enc.add(user_id)
 
     def get_pubkey(self, user_id):
-        return self._user2pubkey[user_id]
+        return self._user2pubkey[user_id].exportKey()
 
     def _generate_keys(self):
         ''' Generate private/public RSA keys '''
