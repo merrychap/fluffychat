@@ -526,7 +526,7 @@ class ChatClient:
                                                               publickey))
             if action_type == 'connect':
                 self._process_connect_type(user_id, host, username,
-                                           publickey, sender_id)
+                                           publickey, sender_id, dis_enc)
 
     def _process_connect_type(self, user_id, host, username, publickey,
                               sender_id, dis_enc):
