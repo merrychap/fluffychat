@@ -32,6 +32,11 @@ class Encryptor:
             self._user2pubkey[user_id] = RSA.importKey(pubkey)
         if dis_enc:
             self._dis_enc.add(user_id)
+        else:
+            try:
+                self._dis_enc.remove(user_id)
+            except Exception as e:
+                pass
 
     def get_pubkey(self, user_id):
         return self._user2pubkey[user_id].exportKey().decode('utf-8')
