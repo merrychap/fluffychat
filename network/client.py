@@ -342,7 +342,7 @@ class ChatClient:
             msg = self.encryptor.decrypt(data['signature'],
                                          base64.b64decode(data['encrypted_msg']),
                                          tuple(data['host']))
-            msg = json.loads(msg)
+            msg = json.loads(msg) if msg is not None else None
         if msg:
             self._parse_data(msg)
 
