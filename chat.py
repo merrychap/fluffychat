@@ -23,13 +23,14 @@ def main():
     logging.basicConfig(filename='app.log', level=logging.DEBUG)
 
     parser = ArgsParser()
-    gui, host, port, recv_port = parser.get_params()
+    gui, host, port, recv_port, dis_enc = parser.get_params()
 
     if not gui:
         if host is None:
-            client = ChatClient(recv_port)
+            client = ChatClient(recv_port, dis_enc=dis_enc)
         else:
-            client = ChatClient(recv_port, (host, port))
+            client = ChatClient(recv_port, dis_enc=dis_enc,
+                                server_host=(host, port))
         # Create entity of console chat
         chat = MainChat(client=client)
         chat.run()

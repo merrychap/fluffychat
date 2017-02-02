@@ -28,6 +28,8 @@ class ArgsParser:
                                        ' current computer'))
         self.parser.add_argument('--gui', action='store_true',
                                  help='Enable GUI mode')
+        self.parser.add_argument('--dis-enc', action='store_tru',
+                                 help='Disable encryption')
 
     def get_params(self):
         '''
@@ -36,26 +38,26 @@ class ArgsParser:
 
         args = self.parser.parse_args()
         host, port, recv_port, gui = args.host, args.p, args.r, args.gui
-        create = args.create
+        create, dis_enc = args.create, args.dis_enc
 
         recv_port = int(self._check_recv_port(recv_port))
 
         if create:
-            return gui, None, None, recv_port
+            return gui, None, None, recv_port, dis_enc
 
         if host:
-            return self._specify_host_port(gui, host, port, recv_port)
+            return self._specify_host_port(gui, host, port, recv_port, dis_enc)
 
         server_host = input('Do you want to start a new chat? (yes/no): ')
         if server_host.lower() == 'yes':
-            return gui, None, None, recv_port
+            return gui, None, None, recv_port, dis_enc
         else:
-            return self._specify_host_port(gui, host, port, recv_port)
+            return self._specify_host_port(gui, host, port, recv_port, dis_enc)
 
-    def _specify_host_port(self, gui, host, port, recv_port):
+    def _specify_host_port(self, gui, host, port, recv_port, dis_enc):
         host = self._check_host_IP(host)
         port = int(self._check_host_port(port))
-        return gui, host, port, recv_port
+        return gui, host, port, recv_port, dis_enc
 
     def _check_correctness(self, msg, err_msg, obj, is_correct):
         '''

@@ -39,10 +39,11 @@ class ChatClient:
     Class for network part of the chat
     '''
 
-    def __init__(self, r_port, server_host=None):
+    def __init__(self, r_port, dis_enc=False, server_host=None):
         self.r_port = r_port
         self._recv_sock = self._create_recv_socket()
-        self.encryptor = Encryptor(self)
+        self.encryptor = Encryptor(self, dis_enc)
+        self._dis_enc = dis_enc
         self.host2user_id = dict()
         self.user_id2host = dict()
 
@@ -251,7 +252,8 @@ class ChatClient:
     def send_msg(self, host, msg, pubkey_exchange=False, ping=False):
         '''
         Send message to a host in the chat. First of all happens
-        message encryption and then message sends
+        message encryption and then message sends. If encryption is
+        disabled then encryptor function encrypt returns msg itself
 
         Args:
             host (tuple) Tuple of IP and port of a host
@@ -278,6 +280,7 @@ class ChatClient:
             send_sock.sendall(bytes(n_msg, 'utf-8'))
             return True
         except (Exception, socket.error) as e:
+            # TODO Plaintext is too large
             logger.error('[-] Connection failed: %s' % str(host))
             return False
         finally:
@@ -335,6 +338,8 @@ class ChatClient:
         if 'pubkey' in data:
             self.encryptor.add_pubkey(data['user_id'], data['pubkey'])
             msg = data['msg']
+        elif self._dis_enc:
+            msg = data['msg']
         else:
             msg = self.encryptor.decrypt(data['signature'],
                                          base64.b64decode(data['encrypted_msg']),
@@ -347,10 +352,16 @@ class ChatClient:
                                 else data['visible'])
 
     def _save_file(self, filename, _file):
+        ''' Save file on the current machine '''
+        
         with open(os.path.join(self.root_path, filename), 'wb') as new_file:
             new_file.write(base64.b64decode(_file))
 
     def remove_file(self, user_id):
+        '''
+        Remove file from queue of waiting for handling files
+        '''
+
         os.remove(self.root_path + self.user_id2filename[user_id])
         del self.user_id2filename[user_id]
 
