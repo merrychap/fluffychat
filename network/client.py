@@ -543,7 +543,7 @@ class ChatClient:
         tun_data = self.create_data(json_format=False, visibility=False)
         _connected = []
         for _host, user_id in self.host2user_id.items():
-            dis_enc = '' if user_id in self.encryptor._dis_enc else True
+            dis_enc = False if user_id in self.encryptor._dis_enc else True
             _connected.append((_host, user_id, self._db.get_username(user_id),
                                self._db.get_visibility(user_id),
                                self.encryptor.get_pubkey(user_id), dis_enc))
