@@ -517,7 +517,7 @@ class ChatClient:
                 self.send_msg(host=conn, msg=json.dumps(data))
 
         if host not in self._connected:
-            publickey = data['publickey']
+            publickey = data['pubkey']
             sender_id = data['sender_id']
             dis_enc   = data['dis_enc']
 

@@ -94,3 +94,5 @@ class Encryptor:
 
     def save_key(self, key):
         pass
+
+    def load_key(self, key)
