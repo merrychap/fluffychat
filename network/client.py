@@ -342,8 +342,9 @@ class ChatClient:
             msg = self.encryptor.decrypt(data['signature'],
                                          base64.b64decode(data['encrypted_msg']),
                                          tuple(data['host']))
+            msg = json.loads(msg)
         if msg:
-            self._parse_data(json.loads(msg))
+            self._parse_data(msg)
 
     def _update_visibility(self, data):
         self._db.set_visibility(data['user_id'], 1 if not ('visible' in data)
