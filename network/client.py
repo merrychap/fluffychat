@@ -459,7 +459,7 @@ class ChatClient:
         for host_data in data['connected']:
             host = tuple(host_data[0])
             user_id = int(host_data[1])
-            username, visibility, pubkey = (host_data[_] for _ in range(2, 5))
+            username, vis, pubkey, dis_enc = (host_data[_] for _ in range(2, 6))
 
             logger.info('[+] Connected host: {0}, username: {1}, user_id: {2}'
                         .format(host, username, user_id))
@@ -467,12 +467,12 @@ class ChatClient:
             self.host2user_id[host] = user_id
             self.user_id2host[user_id] = host
 
-            self.encryptor.add_pubkey(user_id, pubkey)
+            self.encryptor.add_pubkey(user_id, pubkey, dis_enc=dis_enc)
 
             self._connected.add(host)
             self._db.save_user(user_id=user_id,
                                username=username,
-                               visibility=visibility)
+                               visibility=vis)
         if self.user_id == -1:
             self.user_id = self._db.get_last_user_id() + 1
         self.user_id_assigned = True
@@ -542,9 +542,10 @@ class ChatClient:
         tun_data = self.create_data(json_format=False, visibility=False)
         _connected = []
         for _host, user_id in self.host2user_id.items():
+            dis_enc = '' if user_id in self.encryptor._dis_enc else True
             _connected.append((_host, user_id, self._db.get_username(user_id),
                                self._db.get_visibility(user_id),
-                               self.encryptor.get_pubkey(user_id)))
+                               self.encryptor.get_pubkey(user_id), dis_enc))
         tun_data['connected'] = _connected
         logger.info('[+] Sending connected hosts to: %s' % str(host))
         self.send_msg(host=host, msg=json.dumps(tun_data),
