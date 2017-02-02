@@ -517,12 +517,13 @@ class ChatClient:
                 self.send_msg(host=conn, msg=json.dumps(data))
 
         if host not in self._connected:
-            logger.info(message + str(host) + \
-                        '; user id: {}; public key:{}'.format(user_id, ))
             publickey = data['publickey']
             sender_id = data['sender_id']
             dis_enc   = data['dis_enc']
 
+            logger.info(message + str(host) + \
+                        '; user id: {}; public key:{}'.format(user_id,
+                                                              publickey))
             if action_type == 'connect':
                 self._process_connect_type(user_id, host, username,
                                            publickey, sender_id)
