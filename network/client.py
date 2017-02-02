@@ -279,6 +279,7 @@ class ChatClient:
                 if ping and user_id == self.user_id:
                     return True
                 n_msg = self.encryptor.encrypt(user_id, self._host, msg)
+            logger.info('[*] Sending: %s' % msg)
             send_sock.sendall(bytes(n_msg, 'utf-8'))
             return True
         except (Exception, socket.error) as e:
@@ -516,17 +517,17 @@ class ChatClient:
             for conn in self._connected:
                 self.send_msg(host=conn, msg=json.dumps(data))
 
-        if host not in self._connected:
-            publickey = data['pubkey']
-            sender_id = data['sender_id']
-            dis_enc   = data['dis_enc']
+        # if host not in self._connected:
+        publickey = data['pubkey']
+        sender_id = data['sender_id']
+        dis_enc   = data['dis_enc']
 
-            logger.info(message + str(host) + \
-                        '; user id: {}; public key:{}'.format(user_id,
-                                                              publickey))
-            if action_type == 'connect':
-                self._process_connect_type(user_id, host, username,
-                                           publickey, sender_id, dis_enc)
+        logger.info(message + str(host) + \
+                    '; user id: {}; public key:{}'.format(user_id,
+                                                          publickey))
+        if action_type == 'connect':
+            self._process_connect_type(user_id, host, username,
+                                       publickey, sender_id, dis_enc)
 
     def _process_connect_type(self, user_id, host, username, publickey,
                               sender_id, dis_enc):
