@@ -28,7 +28,7 @@ class ArgsParser:
                                        ' current computer'))
         self.parser.add_argument('--gui', action='store_true',
                                  help='Enable GUI mode')
-        self.parser.add_argument('--dis-enc', action='store_tru',
+        self.parser.add_argument('--dis-enc', action='store_true',
                                  help='Disable encryption')
 
     def get_params(self):
