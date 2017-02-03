@@ -41,7 +41,8 @@ class UserChat(BaseChat):
                                         username=self.username)
             else:
                 if not self.send_message(username=self.username, text=command):
-                    printc('<lred>[-]</lred> Connection failed')
+                    printc('<lred>[-]</lred> Error occured while '
+                           'message is sending')
 
     def open(self):
         self.print_last_messages(self.user_id)

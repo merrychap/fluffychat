@@ -22,7 +22,6 @@ def main():
     logging.basicConfig(filename='app.log',
                         format='%(asctime)s : %(module)s : %(levelname)s : %(message)s',
                         level=logging.DEBUG)
-
     parser = ArgsParser()
     gui, host, port, recv_port, dis_enc = parser.get_params()
 
