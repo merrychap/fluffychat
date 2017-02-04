@@ -1,11 +1,12 @@
-# Secure decentralized chat
+# Decentralized chat
 
 ### General description
 You can communicate with people by writing messages and sending different files. This chat provides rooms and private messages between users. Chat is protected by RSA encryption.
+
 For detailed description see DECOMPOSITION.md file.
 
 ### Some details
-Chat works only in local networks due to the fact that this is under development.
+Chat works only in **local networks** due to the fact that this is under development.
 
 ### Requirements
 - Python 3.*
@@ -41,7 +42,7 @@ Argument | Description
 **-p** | Default connection port of a remote host
 **-r** | Port for receiving data from other hosts
 **--create** | Key for creating new chat
-**--gui** | Run chat in gui mode
+**--gui** | Run chat in GUI mode
 **--dis-enc** | Disable RSA encryption. It means when a host from the chat sends you a message it will not be encrypted for you.
 
 ### Already done
