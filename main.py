@@ -12,7 +12,7 @@ from network.client import ChatClient
 from database.chat_dbhelper import ChatDBHelper
 
 from chats.console.main_chat import MainChat
-from chats.gui.main_chat import GMainChat, gmain
+# from chats.gui.main_chat import GMainChat, gmain
 
 
 LOG_FILE = 'logging_config.ini'

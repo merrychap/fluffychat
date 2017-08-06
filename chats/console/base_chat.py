@@ -89,7 +89,7 @@ class BaseChat:
     @print_information
     def print_help(self, message=None):
         printc(('Type commands with <lpurple>@</lpurple> on the left '
-                'side of command.'
+                'side of a command.'
                '\nList of commands:\n'))
         for command, descr in self.commands.items():
             printc('<lyellow>+</lyellow> <lpurple>%s</lpurple> : %s' %
