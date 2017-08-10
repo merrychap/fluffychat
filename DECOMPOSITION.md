@@ -4,6 +4,7 @@
 This is decomposition file with description by each directory and file
 
 ### Directory tree
+```sh
 ├── app.log
 ├── chat_console.py
 ├── chats
@@ -26,6 +27,7 @@ This is decomposition file with description by each directory and file
     └── ...
 
 __Summary__: 5 directories, 13 files, 2055 lines
+```
 
 
 ### Directory descriptions
