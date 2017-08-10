@@ -3,6 +3,8 @@
 ### General description
 You can communicate with people by writing messages and sending different files. This chat provides rooms and private messages between users. Chat is protected by RSA encryption.
 
+Also, you can run several chat entities on the same host. You have to just clone chat in different directories (it will be changed, of course). It's all because of database.db. When you are trying run another entity in the same directory as the first then database.db will be thinking that first entity and yours are the one entity (bad, I know)
+
 For detailed description see DECOMPOSITION.md file.
 
 ### Some details
