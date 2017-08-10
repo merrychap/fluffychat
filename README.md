@@ -10,6 +10,8 @@ For detailed description see DECOMPOSITION.md file.
 ### Some details
 Chat works only in **local networks** due to the fact that this is under development.
 
+Network protocol of this chat is too naive. Because of that, I started [chat_protocol](https://github.com/merrychap/chat-protocol) repository. After this protocol will be finished network functionality of this chat will be replaced with ```chat_protocol``` implementation.
+
 ### Requirements
 - Python 3.*
     - netifaces

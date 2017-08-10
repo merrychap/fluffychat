@@ -1,7 +1,7 @@
 # Decomposition file
 
 ### Description
-This is decomposition file with description by each directory and file
+This is the decomposition file with the description by each directory and file
 
 ### Directory tree
 ```sh
@@ -31,18 +31,18 @@ __Summary__: 5 directories, 13 files, 2055 lines
 
 
 ### Directory descriptions
-- chats/ ─ It contains modules for different types of chat. For instance, room or user chat
+- chats/ ─ It contains modules for different types of the chat. For instance, ```room``` or ```user chat```
 - chats/console/ ─ There are placed console chat modules
-- database/ ─ Contains modules for working with application database
+- database/ ─ Contains modules for working with the application database
 - network/ ─ Module for networking is placed here
-- opt/ ─ Different optional modules that help work with chat. For example, module with colors class
+- opt/ ─ Different optional modules that help working with the chat. For example, module with colors class
 
 ### Files descriptions
 #### Files that contain information
 - ```app.log``` ─ Chat's logging file
 - ```database.db``` ─ Application inner database
-- ```README.md``` ─ Readme file
-- ```DECOMPOSITION.md``` ─ File with decomposition (current file)
+- ```README.md``` ─ README file
+- ```DECOMPOSITION.md``` ─ File with the decomposition (current file)
 
 #### Chats
 - ```chat_console.py``` ─ This script contains main function that runs all application
