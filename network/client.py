@@ -494,8 +494,9 @@ class ChatClient:
         username = data['username']
         user_id = data['user_id']
 
-        if host[0] == self._host[0]:
-            return
+        # if host[0] == self._host[0]:
+        #     return
+        
         host = tuple(host)
 
         if action_type == 'disconnect':

@@ -29,7 +29,7 @@ $ vim app.log
 ### How to run application
 There are two ways of running chat. If you want to create a new chat, then you should run this:
 ```sh
-$ python3 chat.py [--create] [-r R]
+$ python3 main.py [--create] [--recv-port R]
 ```
 But if you want to join in existing chat, then you should know IP and connection port of a host sitting in this chat. Also you have to
 specify port for receiving messages. When you know all this stuff then run next:
@@ -47,6 +47,7 @@ Argument | Description
 
 
 ### Examples
+**To start** typing any command you should at first **press "enter"**
 Below is placed example of creating a new chat
 ```sh
 $ python3 main.py --create -r 8080

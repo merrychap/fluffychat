@@ -35,8 +35,12 @@ def main():
         chat = MainChat(client=client)
         chat.run()
     else:
-        gmain()
+        pass
+        # gmain()
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass

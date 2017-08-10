@@ -21,9 +21,9 @@ class ArgsParser:
                                  help='Create a new chat')
         self.parser.add_argument('--host', action='store', type=str,
                                  help='IP of a host you want to connect')
-        self.parser.add_argument('-p', action='store', type=str,
+        self.parser.add_argument('--port', action='store', type=str,
                                  help='Port of a host you want to connect')
-        self.parser.add_argument('-r', action='store', type=str,
+        self.parser.add_argument('--recv-port', action='store', type=str,
                                  help=('Port for receiving messages on the'
                                        ' current computer'))
         self.parser.add_argument('--gui', action='store_true',
@@ -39,7 +39,7 @@ class ArgsParser:
         '''
 
         args = self.parser.parse_args()
-        host, port, recv_port, gui = args.host, args.p, args.r, args.gui
+        host, port, recv_port, gui = args.host, args.port, args.recv_port, args.gui
         create, dis_enc = args.create, args.dis_enc
 
         recv_port = int(self._check_recv_port(recv_port))
