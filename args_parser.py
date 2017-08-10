@@ -74,12 +74,12 @@ class ArgsParser:
         return obj
 
     def _check_host_IP(self, host):
-        return self._check_correctness(('Enter IP of a host you want to'
+        return self._check_correctness(('Enter IP of the host you want to'
                                        ' connect: '), 'host IP', host,
                                        self._is_correct_host)
 
     def _check_host_port(self, port):
-        return self._check_correctness('Port of a host you want to connect: ',
+        return self._check_correctness('Port of the host you want to connect: ',
                                        'host port', port, self._is_number)
 
     def _check_recv_port(self, recv_port):
