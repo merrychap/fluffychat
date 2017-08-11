@@ -1,36 +1,36 @@
 # Decentralized chat
 
-### General description
+## General description
 You can communicate with people by writing messages and sending different files. This chat provides rooms and private messages between users. Chat is protected by RSA encryption.
 
 Also, you can run several chat entities on the same host. You have to just clone chat in different directories (it will be changed, of course). It's all because of database.db. When you are trying run another entity in the same directory as the first then database.db will be thinking that first entity and yours are the one entity (bad, I know)
 
 For detailed description see DECOMPOSITION.md file.
 
-### Some details
+## Some details
 Chat works only in **local networks** due to the fact that this is under development.
 
 Network protocol of this chat is too naive. Because of that, I started [chat_protocol](https://github.com/merrychap/chat-protocol) repository. After this protocol will be finished network functionality of this chat will be replaced with ```chat_protocol``` implementation.
 
-### Requirements
+## Requirements
 - Python 3.*
     - netifaces
     - PyCrypto
     - PyQt5
 
-### Architecture
+## Architecture
 Here will be a little description about architecture.
 
-### Example of using
+## Example of using
 Here will be examples.
 
-### Where is log file?
+## Where is log file?
 Log file is __app.log__. You can see it by typing next:
 ```sh
 $ vim app.log
 ```
 
-### How to run application
+## How to run application
 There are two ways of running chat. If you want to create a new chat, then you should run this:
 ```sh
 $ python3 main.py [--create] [--recv-port R]
@@ -51,7 +51,7 @@ Argument | Description
 **--dis-enc** | Disable RSA encryption. It means when a host from the chat sends you a message it will not be encrypted for you.
 
 
-### Examples
+## Examples
 **To start** typing any command you should at first **press "enter"**
 Below is placed example of creating a new chat
 ```sh
@@ -100,7 +100,7 @@ Type "@help" for list of commands with the descriptio
 ======================================
 ```
 
-### Already done
+## Already done
 - [x] Private messages
 - [x] Rooms
 - [x] Sending files
