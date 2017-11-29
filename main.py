@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+try:
+    import readline
+except Exception:
+    pass
+
+
 import logging
 import argparse
 import logging.config
