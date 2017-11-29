@@ -77,7 +77,7 @@ class BaseChat:
 
     def back2main(self):
         self.stop_printing = True
-        printc('\n<lpurple>[*]</lpurple> Switched to <blue>command mode'
+        printc('\n<lpurple>[*]</lpurple> Switched to the <blue>command mode'
                '</blue>\n' + INDENT + '\n')
         raise BreakLoopException
 
@@ -96,9 +96,9 @@ class BaseChat:
                    (command, descr))
 
     def print_mode_help(self, mode):
-        printc(('\n<lpurple>[*]</lpurple> Switched to <blue>%s mode</blue>\n'
+        printc(('\n<lpurple>[*]</lpurple> Switched to the <blue>%s mode</blue>\n'
                 'Type "enter" to start typing message\n'
-                'You can type <lpurple>@help</lpurple> for list of available '
+                'You can type <lpurple>@help</lpurple> for the list of available '
                 'commands\n' + INDENT + '\n') % mode)
 
     def specify_username(self):
@@ -110,7 +110,7 @@ class BaseChat:
     def specify_root_path(self):
         while True:
             printc('<lpurple>[*]</lpurple> Specify your '
-                   '<lyellow>root path</lyellow> for storing files:> ', end='')
+                   '<lyellow>base path</lyellow> for storing files:> ', end='')
             root_path = input()
             if self.client.specify_root_path(root_path):
                 break
@@ -127,7 +127,7 @@ class BaseChat:
         Sends message to the certain room
 
         Args:
-            room_name (str) Passed name of the room
+            room_name (str) Passed name of a room
         '''
 
         room_id = self.db_helper.get_room_id(room_name)
@@ -251,11 +251,11 @@ class BaseChat:
                 try:
                     for new_user in cur_users.difference(last_users):
                         printc('\n<lpurple>[*]</lpurple> User <lblue>%s'
-                               '</lblue> comes in the chat' %
+                               '</lblue> has joined.' %
                                self.db_helper.get_username(new_user))
                     for rem_user in last_users.difference(cur_users):
                         printc('\n<lpurple>[*]</lpurple> User <lblue>%s'
-                               '</lblue> goes out of the chat' %
+                               '</lblue> has leaved.' %
                                self.db_helper.get_username(rem_user))
                     last_users = cur_users
                 except TypeError:
