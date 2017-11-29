@@ -7,6 +7,9 @@ Also, you can run several chat entities on the same host. You have to just clone
 
 For detailed description see DECOMPOSITION.md file.
 
+## Future
+I want to completely change a structure of fluffychat in the future . For now, it's not really convinient tool and contains many grammar mistakes. Stay tuned, guys! Make fluffychat great again <3
+
 ## Some details
 Chat works only in **local networks** due to the fact that this is under development.
 
