@@ -64,5 +64,5 @@ class UserChat(BaseChat):
         return {
             'help': 'Shows this output',
             'back': 'Returns to message mode',
-            'send_file "file location"': 'Sends file to the user'
+            'send_file "file location"': 'Sends file to an user'
         }
