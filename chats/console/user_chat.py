@@ -45,6 +45,7 @@ class UserChat(BaseChat):
         while True:
             try:
                 try:
+                    input()
                     with lock:
                         message = self.user_input()
                     self.handle_command(message)

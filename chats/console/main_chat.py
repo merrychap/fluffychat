@@ -14,7 +14,7 @@ class MainChat(BaseChat):
         super().__init__(client)
         self.client = client
 
-    def change_visibility(self):
+    def change_visibility(self, *args):
         self.db_helper.change_visibility()
         self.send_visibility()
         cprint(VISIBILITY_CHANGED.format(self.db_helper.get_visibility(user_id=self.client.user_id)))
@@ -103,8 +103,8 @@ class MainChat(BaseChat):
             '   <white,bold>* username [usrname]</>:    Change the current username.\n'
             '   <white,bold>* rooms</>:                 Show available rooms.\n'
             '   <white,bold>* users</>:                 Show online users.\n'
-            '   <white,bold>* user [username]</>:       Switche to the user private message mode. Enter in a private messages.\n'
-            '   <white,bold>* room [room_name]</>:      Switches to the room message mode. Enter in a room.\n'
+            '   <white,bold>* user [username]</>:       Switch to the user private message mode. Enter in a private messages.\n'
+            '   <white,bold>* room [room_name]</>:      Switch to the room message mode. Enter in a room.\n'
             '   <white,bold>* rmroom [roomname]</>:     Remove current user from a room. Room itself still exists.\n'
             '   <white,bold>* adduser [user] [room]</>: Add an user to a room.\n'
             '   <white,bold>* mkroom [roomname]</>:     Create new room.\n'

@@ -1,7 +1,7 @@
 START_CHAT  = '\nType <white,bold>help</> to see help about commands\n'
 HELLO_AGAIN = '\nHello again, <cyan,bold>{}</>!'
 
-VISIBILITY_CHANGED = '<green,bold>[+]</> Visibility has changed: <red>{0}</>'
+VISIBILITY_CHANGED = '\n<green,bold>[+]</> Visibility has changed: <red>{0}</>\n'
 
 PRINT_USER  = '<yellow>+</> <blue>{}</>'
 PRINT_ROOMS = '<yellow>+</> <yellow>{}</>'
@@ -28,7 +28,8 @@ IP_ADDR = '<green>[+]</> Your host IP: <white,bold>{}:{}</>'
 MAIN_CHAT_PROMPT = '<cyan,bold>{}</> <red>:></>'
 
 BACK_TO_COMMAND = '\n<magenta,bold>[*]</> Switched to the <blue>command mode</>\n{}\n'
-MODE_HELLO      = '\n<magenta,bold>[*]</> Switched to the <blue>{} mode</>\nYou can type <white,bold>help</> for the list of available commands.\n'
+MODE_HELLO      = ('<white,underline>To start typing</>, click <white,bold>enter</>.'
+                   '\n<magenta,bold>[*]</> Switched to the <blue>{} mode</>\nYou can type <white,bold>help</> for the list of available commands.\n')
 
 SPECIFY_USERNAME = '\n<magenta,bold>[*]</> Please, specify your <blue>username</> (a-zA-Z_.):>'
 SPECIFY_PATH     = '<magenta,bold>[*]</> Specify your <yellow,bold>base path</> for storing files:>'
