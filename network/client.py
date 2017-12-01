@@ -369,8 +369,6 @@ class ChatClient:
     def _handle_file_receiving(self, data, cur_time):
         global received_file_message
 
-        print(data)
-
         self._save_file(data['filename'], data['file_data'])
         if 'room' in data:
             self._db.save_room_message(src=data['user_id'],
