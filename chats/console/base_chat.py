@@ -47,12 +47,13 @@ class BaseChat:
     R_ADD_USER    = re.compile(r'^adduser ([a-zA-Z_]+) ([a-zA-Z_]+)$')
     R_ROOT_PATH   = re.compile(r'^chpath ([a-zA-Z0-9/\\_.]+)$')
     R_VISIBILITY  = re.compile(r'^chvis$')
-    R_SEND_FILE   = re.compile(r'^file (.*)$')
+    R_SEND_FILE   = re.compile(r'^file (.+?)$')
     R_EXIT        = re.compile(r'^exit$|^q$|^quit$')
     R_HELP        = re.compile(r'^help$')
     R_USERS       = re.compile(r'^users$')
     R_ROOMS       = re.compile(r'^rooms$')
     R_BACK        = re.compile(r'^back$')
+    R_IN_RMROOM   = re.compile(r'^rmroom$')
 
     def __init__(self, client):
         operation_done = True

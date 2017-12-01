@@ -32,6 +32,7 @@ class UserChat(BaseChat):
             match = pattern.match(command)
             if match:
                 handler(match)
+                return True
         send_file = self.R_SEND_FILE.match(command)
         if send_file:
             self.parse_sending_file(send_file, username=self.username)
@@ -57,5 +58,8 @@ class UserChat(BaseChat):
 
     def help(self, *args):
         cprint((
-            'User help'
+            '\n'
+            '   <white,bold>* help</>:            Show this help\n'
+            '   <white,bold>* back</>:            Back to the main menu.\n'
+            '   <white,bold>* file [filepath]</>: Send a file.\n'
         ))

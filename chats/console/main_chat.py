@@ -29,8 +29,10 @@ class MainChat(BaseChat):
         cprint('<white,bold>{}</>\n'.format(INDENT))
 
     def print_rooms(self, *args):
+        cprint('\n<white,bold>{}</>'.format(INDENT))
         for room in self.db_helper.get_user_rooms():
-            cprint(PRINT_ROOMS.format(room))
+            cprint(PRINT_ROOMS.format(room[0]))
+        cprint('<white,bold>{}</>\n'.format(INDENT))
 
     def parse_root_path(self, parse):
         new_root_path = parse.group(1)
@@ -99,8 +101,9 @@ class MainChat(BaseChat):
 
     def help(self):
         cprint((
+            '\n'
             '   <white,bold>* help</>:                  Show this output\n'
-            '   <white,bold>* username [usrname]</>:    Change the current username.\n'
+            '   <white,bold>* username [usrname]</>:    Change current username.\n'
             '   <white,bold>* rooms</>:                 Show available rooms.\n'
             '   <white,bold>* users</>:                 Show online users.\n'
             '   <white,bold>* user [username]</>:       Switch to the user private message mode. Enter in a private messages.\n'

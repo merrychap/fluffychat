@@ -5,6 +5,7 @@ from chats.console.base_chat import operation_done
 from chats.console.base_chat import BreakLoopException, lock, print_information
 
 from opt.appearance import cprint
+from opt.strings import *
 
 
 class RoomChat(BaseChat):
@@ -17,39 +18,38 @@ class RoomChat(BaseChat):
         self.print_mode_help('room message')
         self.init_print_messages(True)
 
-    def init_command_handlers(self):
-        self.command_handlers = {
-            '@help': self.print_help,
-            '@back': self.back2main,
-            '@remove_room': self._remove_room
+    def create_cmd_handlers(self):
+        self.handlers = {
+            (self.R_HELP,      self.help),
+            (self.R_BACK,      self.back2main),
+            (self.R_IN_RMROOM, self._remove_room)
         }
 
     def parse_add_user(self, parse):
         username = add_parse.group(1)
         if not self.add_user2room(username, self.room_name):
-            cprint('<lred>[-]</lred> Error while trying add user to the room')
+            cprint(ERROR_ADD_USER)
 
     def _remove_room(self):
         self.remove_room(self.room_name)
         raise BreakLoopException
 
     def handle_command(self, command):
-        bc.operation_done = False
-        add_parse = self.ADD_PATTERN.match(command)
-        send_file_parse = self.SEND_FILE_PATTERN.match(command)
+        for pattern, handler in self.handlers:
+            match = pattern.match(command)
+            if match:
+                handler(match)
+                return True
+        
+        add_parse = self.R_ADD_USER.match(command)
+        send_file_parse = self.R_SEND_FILE.match(command)
 
-        try:
-            self.command_handlers[command]()
-            bc.operation_done = True
-        except KeyError:
-            if add_parse:
-                self.parse_add_user(add_parse)
-            elif send_file_parse:
-                self.parse_sending_file(send_file_parse, room=self.room_name)
-            else:
-                self.send_room_message(self.room_name, command)
-        except BreakLoopException:
-            raise BreakLoopException
+        if add_parse:
+            self.parse_add_user(add_parse)
+        elif send_file_parse:
+            self.parse_sending_file(send_file_parse, room=self.room_name)
+        else:
+            self.send_room_message(self.room_name, command)
 
     def open(self):
         self.print_last_messages(self.room_name, True)
@@ -69,10 +69,11 @@ class RoomChat(BaseChat):
                 break
 
     def help(self):
-        return {
-            'help': 'Shows this output',
-            'back': 'Returns to message mode',
-            'add_user "username"': 'Adds passed user to the room',
-            'remove_room "room_name"': 'Removes room from chat',
-            'send_file "path to file"': 'Sends file to the room'
-        }
+        cprint((
+            '\n'
+            '   <white,bold>* help</>:              Show this help\n'
+            '   <white,bold>* back</>:              Change the current username.\n'
+            '   <white,bold>* adduser [usrname]</>: Send a file.\n'
+            '   <white,bold>* rmroom</>:            Remove current room.\n'
+            '   <white,bold>* file [filepath]</>:   Send a file.\n'
+        ))

@@ -4,7 +4,7 @@ HELLO_AGAIN = '\nHello again, <cyan,bold>{}</>!'
 VISIBILITY_CHANGED = '\n<green,bold>[+]</> Visibility has changed: <red>{0}</>\n'
 
 PRINT_USER  = '<yellow>+</> <blue>{}</>'
-PRINT_ROOMS = '<yellow>+</> <yellow>{}</>'
+PRINT_ROOMS = '<yellow>+</> <red>{}</>'
 
 INVALID_COMMAND = '<red,bold>[-]</> Invalid command\n' 
 
