@@ -68,7 +68,7 @@ class RoomChat(BaseChat):
             except BreakLoopException:
                 break
 
-    def create_command_descrypt(self):
+    def help(self):
         return {
             'help': 'Shows this output',
             'back': 'Returns to message mode',
