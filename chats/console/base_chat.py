@@ -44,7 +44,7 @@ class BaseChat:
     R_ROOM        = re.compile(r'^room ([a-zA-Z_.]+)$')
     R_CREATE_ROOM = re.compile(r'^mkroom ([a-zA-Z_.]+)$')
     R_REMOVE_ROOM = re.compile(r'^rmroom ([a-zA-Z_]+)$')
-    R_ADD_USER    = re.compile(r'^add_user ([a-zA-Z_]+) ([a-zA-Z_]+)$')
+    R_ADD_USER    = re.compile(r'^adduser ([a-zA-Z_]+) ([a-zA-Z_]+)$')
     R_ROOT_PATH   = re.compile(r'^chpath ([a-zA-Z0-9/\\_.]+)$')
     R_VISIBILITY  = re.compile(r'^chvis$')
     R_SEND_FILE   = re.compile(r'^file (.*)$')

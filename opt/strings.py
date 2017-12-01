@@ -28,8 +28,9 @@ IP_ADDR = '<green>[+]</> Your host IP: <white,bold>{}:{}</>'
 MAIN_CHAT_PROMPT = '<cyan,bold>{}</> <red>:></>'
 
 BACK_TO_COMMAND = '\n<magenta,bold>[*]</> Switched to the <blue>command mode</>\n{}\n'
-MODE_HELLO      = ('<white,underline>To start typing</>, click <white,bold>enter</>.'
-                   '\n<magenta,bold>[*]</> Switched to the <blue>{} mode</>\nYou can type <white,bold>help</> for the list of available commands.\n')
+MODE_HELLO      = ('\n<magenta,bold>[*]</> Switched to the <blue>{} mode</>\n'
+                   '\n<white,underline>To start typing</>, click <white,bold>enter</>.'
+                   '\nYou can type <white,bold>help</> for the list of available commands.\n')
 
 SPECIFY_USERNAME = '\n<magenta,bold>[*]</> Please, specify your <blue>username</> (a-zA-Z_.):>'
 SPECIFY_PATH     = '<magenta,bold>[*]</> Specify your <yellow,bold>base path</> for storing files:>'
@@ -42,7 +43,7 @@ USER_JOINED = '\n<magenta,bold>[*]</> User <blue>{}</> has joined.'
 USER_LEAVED = '\n<magenta,bold>[*]</> User <blue>{}</> has leaved.'
 
 LAST_MESSAGE  = '<yellow>{0}</>: <blue,bold>{1}</><red> :></> {2}'
-USER_PROMPT   = '<white,bold>Private:<blue>{}</><red> :></>'
+USER_PROMPT   = '<white,bold>Private</>:<blue>{}</><red> :></>'
 RECV_MESSAGE  = '<yellow>{0}</>: <blue,bold>{1}</><red> :></> {2}'
 
 ROOM_REMOVED = '\n<green,bold>[+]</> Room <red>{0}</> was removed\n'

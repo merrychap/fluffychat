@@ -30,7 +30,7 @@ class MainChat(BaseChat):
 
     def print_rooms(self, *args):
         for room in self.db_helper.get_user_rooms():
-            cprint(PRINT_ROOM.format(room))
+            cprint(PRINT_ROOMS.format(room))
 
     def parse_root_path(self, parse):
         new_root_path = parse.group(1)
