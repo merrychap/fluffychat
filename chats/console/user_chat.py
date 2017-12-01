@@ -54,7 +54,7 @@ class UserChat(BaseChat):
                 self.self_chat = False
                 break
 
-    def help(self):
+    def help(self, *args):
         cprint((
             'User help'
         ))

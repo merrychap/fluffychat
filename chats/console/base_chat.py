@@ -79,7 +79,7 @@ class BaseChat:
     def help(self, message=None):
         pass
 
-    def back2main(self):
+    def back2main(self, *args):
         self.stop_printing = True
         cprint(BACK_TO_COMMAND.format(INDENT))
         raise BreakLoopException
