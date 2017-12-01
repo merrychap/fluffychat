@@ -70,7 +70,7 @@ class RoomChat(BaseChat):
             except BreakLoopException:
                 break
 
-    def help(self):
+    def help(self, *args):
         cprint((
             '\n'
             '   <white,bold>* help</>:              Show this help\n'
