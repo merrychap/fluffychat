@@ -94,15 +94,15 @@ class BaseChat:
 
     def specify_username(self):
         cprint('\n<magenta,bold>[*]</> Please, specify your '
-               '<blue>username</> (a-zA-Z_.):> ', end='')
-        username = input()
+               '<blue>username</> (a-zA-Z_.):>', end='')
+        username = input(' ')
         self.client.specify_username(username)
 
     def specify_root_path(self):
         while True:
             cprint('<magenta,bold>[*]</> Specify your '
                    '<yellow,bold>base path</> for storing files:> ', end='')
-            root_path = input()
+            root_path = input(' ')
             if self.client.specify_root_path(root_path):
                 break
 
