@@ -9,7 +9,9 @@ from abc import abstractmethod
 from functools import wraps
 
 from database.chat_dbhelper import ChatDBHelper
+
 from opt.appearance import cprint
+from opt.strings import *
 
 
 EMPTY = ' '
