@@ -369,6 +369,8 @@ class ChatClient:
     def _handle_file_receiving(self, data, cur_time):
         global received_file_message
 
+        print(data)
+
         self._save_file(data['filename'], data['file_data'])
         if 'room' in data:
             self._db.save_room_message(src=data['user_id'],
@@ -394,7 +396,7 @@ class ChatClient:
             return
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
-        # If this data is associated with file then handle only
+        # If this data is associated with a file then handle only
         # in this case
         if 'file' in data:
             self._handle_file_receiving(data, cur_time)
@@ -402,7 +404,7 @@ class ChatClient:
         # Updates visibility of connected user
         self._update_visibility(data)
 
-        # We have request for connection. Then we should send this ip to all
+        # We have a request for connection. Then we should send this ip to all
         # host in our network
         if data['action'] == 'connect':
             self._handle_host_action(data=data, action_type='connect',
@@ -415,7 +417,7 @@ class ChatClient:
             self._send_connected(host=data['host'])
 
         if data['message'] != '':
-            # If action connected with room
+            # If an action connected with room
             if 'room' in data:
                 self._handle_room_data(data, cur_time)
                 return
@@ -429,13 +431,13 @@ class ChatClient:
             self._update_username(data)
 
     def _handle_room_data(self, data, cur_time):
-        # User has deleted the room
+        # User has deleted a room
         if data['remove_room'] != 'No':
             self._db.remove_user_from_room(data['username'],
                                            data['room'])
             return
 
-        # Else message sended in the room
+        # Else message sended in a room
         # then room must be created if not exists
         if not self._db.room_exists(data['room']):
             self._db.try_create_room(room_name=data['room'],
@@ -519,7 +521,7 @@ class ChatClient:
             for conn in self._connected:
                 self.send_msg(host=conn, msg=json.dumps(data))
 
-        # if host not in self._connected:
+        # if host is not in self._connected:
         publickey = data['pubkey']
         sender_id = data['sender_id']
         dis_enc   = data['dis_enc']
