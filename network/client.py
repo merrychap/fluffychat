@@ -16,6 +16,7 @@ import netifaces as nf
 import database.db_helper as db_helper
 
 from opt.appearance import cprint
+from opt.strings import *
 
 from .encryption import Encryptor
 
@@ -76,7 +77,7 @@ class ChatClient:
         self._host = self._get_host_ip()
         if self._host is None:
             return False
-        cprint('<green>[+]</> Your host IP: <white,bold>%s:%s</>' % (self._host[0], str(self._host[1])))
+        cprint(IP_ADDR.format(self._host[0], str(self._host[1])))
 
         self.add_thread(self._handle_recv)
         self.add_thread(self.check_connection)
@@ -146,7 +147,7 @@ class ChatClient:
 
     def specify_root_path(self, root_path):
         if not os.path.isdir(root_path):
-            cprint('\n<lred>[-]</lred> This is not a directory\n')
+            cprint(NOT_A_DIRECTORY)
             return False
         root_path = os.path.join(root_path, '')
         self.root_path = root_path

@@ -23,4 +23,6 @@ STORAGE = 'Your storage directory: <yellow,bold>%s</>'
 
 CONNECTION_ERROR = '<red,bold>[-]</> Sorry. But it seems there isn\'t Internet connection or connection host is down'
 
+IP_ADDR = '<green>[+]</> Your host IP: <white,bold>{}:{}</>'
+
 MAIN_CHAT_PROMPT = '<cyan,bold>{}</> <red>:></>'
