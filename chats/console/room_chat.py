@@ -12,6 +12,8 @@ class RoomChat(BaseChat):
     def __init__(self, room_name, client):
         super().__init__(client)
 
+        print(room_name)
+
         self.room_name = room_name
         self.room_id = self.db_helper.get_room_id(room_name)
 
@@ -59,7 +61,7 @@ class RoomChat(BaseChat):
                 try:
                     input()
                     with lock:
-                        message = self.user_input()
+                        message = self.user_input('Room', self.room_name)
                     self.handle_command(message)
                 except KeyboardInterrupt:
                     self.back2main()
@@ -72,7 +74,7 @@ class RoomChat(BaseChat):
         cprint((
             '\n'
             '   <white,bold>* help</>:              Show this help\n'
-            '   <white,bold>* back</>:              Change the current username.\n'
+            '   <white,bold>* back, Ctrl+C</>:      Change the current username.\n'
             '   <white,bold>* adduser [usrname]</>: Send a file.\n'
             '   <white,bold>* rmroom</>:            Remove current room.\n'
             '   <white,bold>* file [filepath]</>:   Send a file.\n'

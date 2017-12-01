@@ -255,19 +255,18 @@ class BaseChat:
             if message is None or message[1] == -1:
                 continue
             cprint(LAST_MESSAGE
-                   .format(message[3], self.db_helper.get_username(message[2]),
-                           message[0]))
+                   .format(message[3], self.db_helper.get_username(message[2]), message[0]))
 
-    def user_input(self):
-        cprint(USER_PROMPT.format(self.client.username), end='')
+    def user_input(self, mode, entity=''):
+        cprint(USER_PROMPT.format(mode, entity, self.client.username), end='')
         return input(' ')
 
     def init_print_messages(self, room=False):
         self.stop_printing = False
-        if hasattr(self, 'user_id'):
-            dst = self.user_id
-        elif hasattr(self, 'room_name'):
+        if hasattr(self, 'room_name'):
             dst = self.room_name
+        elif hasattr(self, 'user_id'):
+            dst = self.user_id
         printer = threading.Thread(target=self.print_recv_message,
                                    args=(dst, room),
                                    daemon=True)

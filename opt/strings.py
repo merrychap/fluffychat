@@ -6,7 +6,7 @@ VISIBILITY_CHANGED = '\n<green,bold>[+]</> Visibility has changed: <red>{0}</>\n
 PRINT_USER  = '<yellow>+</> <blue>{}</>'
 PRINT_ROOMS = '<yellow>+</> <red>{}</>'
 
-INVALID_COMMAND = '<red,bold>[-]</> Invalid command\n' 
+INVALID_COMMAND = '\n<red,bold>[-]</> Invalid command\n' 
 
 NOT_A_DIRECTORY = '\n<red,bold>[-]</> This is not a directory\n'
 PATH_CHANGED    = '\n<green,bold>[+]</> Path is changed\n'
@@ -42,9 +42,9 @@ USERNAME_CHANGED = '\n<green,bold>[+]</> Username changed, <blue>{}</>!\n'
 USER_JOINED = '\n<magenta,bold>[*]</> User <blue>{}</> has joined.'
 USER_LEAVED = '\n<magenta,bold>[*]</> User <blue>{}</> has leaved.'
 
-LAST_MESSAGE  = '<yellow>{0}</>: <blue,bold>{1}</><red> :></> {2}'
-USER_PROMPT   = '<white,bold>Private</>:<blue>{}</><red> :></>'
-RECV_MESSAGE  = '<yellow>{0}</>: <blue,bold>{1}</><red> :></> {2}'
+LAST_MESSAGE  = '<yellow>{0}</>: <blue>{1}</><red> :></> {2}'
+USER_PROMPT   = '<white,bold>{} > </><yellow>{}</>::<blue>{}</><red>:></>'
+RECV_MESSAGE  = '<yellow>{0}</>: <blue>{1}</><red> :></> {2}'
 
 ROOM_REMOVED = '\n<green,bold>[+]</> Room <red>{0}</> was removed\n'
 

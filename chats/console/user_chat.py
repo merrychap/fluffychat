@@ -48,7 +48,7 @@ class UserChat(BaseChat):
                 try:
                     input()
                     with lock:
-                        message = self.user_input()
+                        message = self.user_input('Private', self.username)
                     self.handle_command(message)
                 except KeyboardInterrupt:
                     self.back2main()
@@ -60,6 +60,6 @@ class UserChat(BaseChat):
         cprint((
             '\n'
             '   <white,bold>* help</>:            Show this help\n'
-            '   <white,bold>* back</>:            Back to the main menu.\n'
+            '   <white,bold>* back, Ctrl+C</>:    Back to the main menu.\n'
             '   <white,bold>* file [filepath]</>: Send a file.\n'
         ))
