@@ -34,6 +34,7 @@ class UserChat(BaseChat):
                 handler(match)
                 return True
         send_file = self.R_SEND_FILE.match(command)
+        print(send_file)
         if send_file:
             self.parse_sending_file(send_file, username=self.username)
         else:

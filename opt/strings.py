@@ -50,6 +50,6 @@ ROOM_REMOVED = '\n<green,bold>[+]</> Room <red>{0}</> was removed\n'
 
 ERROR_WHILE_SENDING = '<red,bold>[-]</> Error occured while message is sending'
 
-YOU_INVITED  = '\n<green,bold>[+]</> You have invited <blue,bold>{0}</> to the <red>{1}</> room\n'
+YOU_INVITED  = '\n<green,bold>[+]</> You have invited <blue,bold>{0}</> to <red>{1}</>\n'
 
 BYE = '\n<yellow,bold>Bye!</>'
