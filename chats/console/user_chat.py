@@ -10,7 +10,7 @@ from opt.strings import *
 class UserChat(BaseChat):
     def __init__(self, username, client):
         super().__init__(client)
-        self.init_command_handlers()
+        self.create_cmd_handlers()
 
         self.username = username
         self.user_id = self.db_helper.get_user_id(username)

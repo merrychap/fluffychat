@@ -1,4 +1,4 @@
-START_CHAT  = '\nType <white,bold>help</> to see help about commands'
+START_CHAT  = '\nType <white,bold>help</> to see help about commands\n'
 HELLO_AGAIN = '\nHello again, <cyan,bold>{}</>!'
 
 VISIBILITY_CHANGED = '<green,bold>[+]</> Visibility has changed: <red>{0}</>'
