@@ -258,8 +258,7 @@ class BaseChat:
                            message[0]))
 
     def user_input(self):
-        cprint(USER_PROMPT
-               .format(self.client.username, end=''))
+        cprint(USER_PROMPT.format(self.client.username), end='')
         return input(' ')
 
     def init_print_messages(self, room=False):
