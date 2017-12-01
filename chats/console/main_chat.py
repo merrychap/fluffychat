@@ -1,62 +1,46 @@
+import os
+
 from chats.console.base_chat import BaseChat, INDENT, BreakLoopException, lock
-from chats.console.base_chat import print_information, parse_function
+from chats.console.base_chat import print_information
 from chats.console.room_chat import RoomChat
 from chats.console.user_chat import UserChat
 
-import chats.console.base_chat as bc
-from opt.appearance import printc
-
-import os
+from opt.appearance import cprint
+from opt.strings import *
 
 
 class MainChat(BaseChat):
     def __init__(self, client):
         super().__init__(client)
         self.client = client
-        self.commands = self.create_command_descrypt()
 
-    def init_command_handlers(self):
-        self.command_handlers = {
-            '@help': self.print_help,
-            '@users': self.print_users,
-            '@rooms': self.print_rooms,
-            '@exit': self.exit,
-            '@change_visibility': self.change_visibility
-        }
-
-    @print_information
     def change_visibility(self):
         self.db_helper.change_visibility()
         self.send_visibility()
-        printc('<lgreen>[+]</lgreen> You changed visibility: <lred>{0}</lred>'
-               .format(self.db_helper
-                           .get_visibility(user_id=self.client.user_id)))
+        cprint(VISIBILITY_CHANGED.format(self.db_helper.get_visibility(user_id=self.client.user_id)))
 
-    @print_information
-    def print_users(self):
+    def print_users(self, *args):
+        cprint('\n<white,bold>{}</>'.format(INDENT))
         for user_id in self.client.host2user_id.values():
             if (self.db_helper.get_visibility(user_id=user_id) or
             user_id == self.db_helper.get_cur_user_id()) and \
             self.is_online(user_id=user_id):
-                printc('<lyellow>+</lyellow> <lblue>%s</lblue>' %
-                       self.db_helper.get_username(user_id))
+                cprint(PRINT_USER.format(self.db_helper.get_username(user_id)))
+        cprint('<white,bold>{}</>\n'.format(INDENT))
 
-    @print_information
-    def print_rooms(self):
+    def print_rooms(self, *args):
         for room in self.db_helper.get_user_rooms():
-            printc('<lyellow>+</lyellow> <lred>%s</lred>' % room)
+            cprint(PRINT_ROOM.format(room))
 
-    @parse_function
     def parse_root_path(self, parse):
         new_root_path = parse.group(1)
         if not os.path.isdir(new_root_path):
-            printc('\n<lred>[-]</lred> This is not a directory\n')
+            cprint(NOT_A_DIRECTORY)
         if new_root_path[-1] != '/':
             new_root_path += '/'
         self.db_helper.set_root_path(new_root_path)
-        printc('\n<lgreen>[+]</lgreen> Root path changed\n')
+        cprint(PATH_CHANGED)
 
-    @parse_function
     def parse_user(self, parse):
         username = parse.group(1)
         if self.db_helper.user_exists(username) and \
@@ -64,114 +48,110 @@ class MainChat(BaseChat):
            self.is_online(username=username):
             UserChat(username=username, client=self.client).open()
         else:
-            printc('\n<lred>[-]</lred> No such user in the chat\n')
+            cprint(NO_SUCH_USER)
 
-    @parse_function
     def parse_room(self, parse):
         room_name = parse.group(1)
         if self.db_helper.room_exists(room_name):
             RoomChat(room_name=room_name, client=self.client).open()
         else:
-            printc('\n<lred>[-]</lred> No such room in the chat\n')
+            cprint(NO_SUCH_ROOM)
 
-    @parse_function
     def parse_create_room(self, parse):
         room_name = parse.group(1)
         if self.db_helper.create_room(room_name):
-            printc('\n<lgreen>[+]</lgreen> You\'ve created room <lred>{0}'
-                   '</lred>\n'.format(room_name))
+            cprint(ROOM_CREATED.format(room_name))
         else:
-            printc('\n<lred>[-]</lred> Room with this name already exists\n')
+            cprint(ROOM_ALREADY_EXISTS)
 
-    @parse_function
     def parse_username(self, parse):
         self.change_username(parse.group(1))
 
-    @parse_function
     def parse_remove_room(self, parse):
         room_name = parse.group(1)
         self.remove_room(room_name)
 
-    @parse_function
     def parse_add_user(self, parse):
         username = parse.group(1)
         room_name = parse.group(2)
         if not self.add_user2room(username, room_name):
-            printc('\n<lred>[-]</lred> Error while trying add user'
-                   'to the room\n')
+            cprint(ERROR_ADD_USER)
+
+    def parse_exit(self, parse):
+        self.exit()
+
+    def parse_help(self, parse):
+        self.help()
 
     def run(self):
         if not self.cur_user_exists():
             self.specify_username()
             self.specify_root_path()
         else:
-            printc('\nHello again, <lblue>{}</lblue>!'
-                   .format(self.client.username))
-            printc('Your storage directory: <lyellow>%s</lyellow>' %
-                   self.db_helper.get_root_path())
+            cprint(HELLO_AGAIN.format(self.client.username))
+            cprint(STORAGE.format(self.db_helper.get_root_path()))
         self.db_helper.specify_username(self.client)
         if not self.client.start():
-            printc('<lred>[-]</lred> Sorry. But it seems there isn\'t '
-                   'Internet connection or connection host is down')
+            cprint(CONNECTION_ERROR)
             self.exit()
         self.init_print_users()
         self.command_mode()
 
-    def create_command_descrypt(self):
-        return {
-            'help': 'Shows this output',
-            'username "username"': 'Changes the current username. ',
-            'rooms': 'Shows available rooms.',
-            'users': 'Shows online users.',
-            'user "username"': 'Switches to the user message mode. ',
-            'room "room_name"': 'Switches to the room message mode. ',
-            'remove_room "roomname"': 'Removes created room.',
-            'add_user': '"username" "room_name"',
-            'create_room "roomname"': 'Creates new room. ',
-            'exit': 'Closes chat.',
-            'change_visibility': 'Changes your visibility in the chat',
-            'change_root_path "root path"': 'Changes the directory '
-                                            'of storing files'
+    def help(self):
+        cprint((
+            '   <white,bold>* help</>:                  Show this output\n'
+            '   <white,bold>* username [usrname]</>:    Change the current username.\n'
+            '   <white,bold>* rooms</>:                 Show available rooms.\n'
+            '   <white,bold>* users</>:                 Show online users.\n'
+            '   <white,bold>* user [username]</>:       Switche to the user private message mode. Enter in a private messages.\n'
+            '   <white,bold>* room [room_name]</>:      Switches to the room message mode. Enter in a room.\n'
+            '   <white,bold>* rmroom [roomname]</>:     Remove current user from a room. Room itself still exists.\n'
+            '   <white,bold>* adduser [user] [room]</>: Add an user to a room.\n'
+            '   <white,bold>* mkroom [roomname]</>:     Create new room.\n'
+            '   <white,bold>* exit, q, quit</>:         Finish current chat session.\n'
+            '   <white,bold>* chvis</>:                 Change your visibility in the chat.\n'
+            '   <white,bold>* chpath [path]</>:         Change the directory for storing files.\n'
+        ))
+
+    def create_cmd_handlers(self):
+        self.handlers = {
+            (self.R_USER,        self.parse_user),
+            (self.R_ROOM,        self.parse_room),
+            (self.R_USERNAME,    self.parse_username),
+            (self.R_CREATE_ROOM, self.parse_create_room),
+            (self.R_REMOVE_ROOM, self.parse_remove_room),
+            (self.R_ADD_USER,    self.parse_add_user),
+            (self.R_ROOT_PATH,   self.parse_root_path),
+            (self.R_EXIT,        self.parse_exit),
+            (self.R_HELP,        self.parse_help),
+            (self.R_USERS,       self.print_users),
+            (self.R_ROOMS,       self.print_rooms),
+            (self.R_VISIBILITY,  self.change_visibility)
         }
 
     def handle_command(self, command):
-        bc.operation_done = False
-        user_parse = self.USER_PATTERN.match(command)
-        room_parse = self.ROOM_PATTERN.match(command)
-        username_parse = self.USERNAME_PATTERN.match(command)
-        create_room_parse = self.CREATE_ROOM_PATTERN.match(command)
-        remove_room_parse = self.REMOVE_ROOM_PATTERN.match(command)
-        add_user_parse = self.ADD_USER_PATTERN.match(command)
-        root_path_parse = self.ROOT_PATH_PATTERN.match(command)
+        for pattern, handler in self.handlers:
+            match = pattern.match(command)
+            if match:
+                handler(match)
+                return True
+        return False
 
-        try:
-            self.command_handlers[command]()
-            bc.operation_done = True
-        except KeyError:
-            self.parse_user(user_parse)
-            self.parse_room(room_parse)
-            self.parse_username(username_parse)
-            self.parse_create_room(create_room_parse)
-            self.parse_remove_room(remove_room_parse)
-            self.parse_add_user(add_user_parse)
-            self.parse_root_path(root_path_parse)
-        else:
-            if not bc.operation_done:
-                printc('<lred>[-]</lred> Invalid command\n')
 
     def handle_signal(self, signal, frame):
         self.exit()
 
     def command_mode(self):
-        printc('\nType "<lpurple>@help</lpurple>" for list'
-               ' of commands with the description')
+        cprint(START_CHAT)
 
         while True:
             try:
-                input()
-                printc('<lpurple>[*]</lpurple> Enter command:> ', end='')
+                cprint(MAIN_CHAT_PROMPT.format(self.client.username), end='')
                 with lock:
-                    command = input()
-                self.handle_command(command)
+                    command = input(' ')
+                if command == '':
+                    continue
+                if not self.handle_command(command):
+                    cprint(INVALID_COMMAND)
             except KeyboardInterrupt as e:
-                self.exit()
+                cprint('')

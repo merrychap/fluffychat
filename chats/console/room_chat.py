@@ -1,12 +1,10 @@
 import threading
 
-from chats.console.base_chat import parse_function, BaseChat, INDENT
+from chats.console.base_chat import BaseChat, INDENT
 from chats.console.base_chat import operation_done
 from chats.console.base_chat import BreakLoopException, lock, print_information
 
-import chats.console.base_chat as bc
-
-from opt.appearance import printc
+from opt.appearance import cprint
 
 
 class RoomChat(BaseChat):
@@ -26,11 +24,10 @@ class RoomChat(BaseChat):
             '@remove_room': self._remove_room
         }
 
-    @parse_function
     def parse_add_user(self, parse):
         username = add_parse.group(1)
         if not self.add_user2room(username, self.room_name):
-            printc('<lred>[-]</lred> Error while trying add user to the room')
+            cprint('<lred>[-]</lred> Error while trying add user to the room')
 
     def _remove_room(self):
         self.remove_room(self.room_name)

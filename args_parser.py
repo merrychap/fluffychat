@@ -5,7 +5,7 @@ Module includes class for parsing command line arguments
 import argparse
 import re
 
-from opt.appearance import printc
+from opt.appearance import cprint
 
 
 class ArgsParser:
@@ -69,7 +69,7 @@ class ArgsParser:
         if not obj:
             obj = input(msg)
         while not is_correct(obj):
-            printc('<lred>[-]</lred> Incorrect {}'.format(err_msg))
+            cprint('<lred>[-]</lred> Incorrect {}'.format(err_msg))
             obj = input(msg)
         return obj
 

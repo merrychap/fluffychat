@@ -1,11 +1,9 @@
 import threading
 
 from chats.console.base_chat import BaseChat, INDENT, BreakLoopException, lock
-from chats.console.base_chat import print_information, parse_function
+from chats.console.base_chat import print_information
 
-import chats.console.base_chat as bc
-
-from opt.appearance import printc
+from opt.appearance import cprint
 
 
 class UserChat(BaseChat):
@@ -22,14 +20,7 @@ class UserChat(BaseChat):
         self.print_mode_help('message')
         self.init_print_messages()
 
-    def init_command_handlers(self):
-        self.command_handlers = {
-            '@help': self.print_help,
-            '@back': self.back2main,
-        }
-
     def handle_command(self, command):
-        bc.operation_done = False
         send_file_parse = self.SEND_FILE_PATTERN.match(command)
 
         try:
@@ -41,7 +32,7 @@ class UserChat(BaseChat):
                                         username=self.username)
             else:
                 if not self.send_message(username=self.username, text=command):
-                    printc('<lred>[-]</lred> Error occured while '
+                    cprint('<lred>[-]</lred> Error occured while '
                            'message is sending')
 
     def open(self):

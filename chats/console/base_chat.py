@@ -4,10 +4,12 @@ import re
 import json
 import network.client as nc
 
+from abc import abstractmethod
+
 from functools import wraps
 
 from database.chat_dbhelper import ChatDBHelper
-from opt.appearance import printc
+from opt.appearance import cprint
 
 
 EMPTY = ' '
@@ -23,21 +25,10 @@ def print_information(printer):
     def wrapper(self):
         global operation_done
 
-        printc('\n' + INDENT)
+        cprint('\n' + INDENT)
         printer(self)
-        printc(INDENT + '\n')
+        cprint(INDENT + '\n')
         operation_done = True
-    return wrapper
-
-
-def parse_function(handler):
-    @wraps(handler)
-    def wrapper(self, parse, *args, **kwargs):
-        global operation_done
-
-        if parse:
-            handler(self, parse, *args, **kwargs)
-            operation_done = True
     return wrapper
 
 
@@ -46,16 +37,19 @@ class BreakLoopException(Exception):
 
 
 class BaseChat:
-    USER_PATTERN = re.compile(r'^@user "([a-zA-Z_.]+)"$')
-    USERNAME_PATTERN = re.compile(r'@username "([a-zA-Z_.]+)"$')
-    ROOM_PATTERN = re.compile(r'^@room "([a-zA-Z_.]+)"$')
-    CREATE_ROOM_PATTERN = re.compile(r'^@create_room "([a-zA-Z_.]+)"$')
-    REMOVE_ROOM_PATTERN = re.compile(r'^@remove_room "([a-zA-Z_]+)"$')
-    ADD_USER_PATTERN = re.compile(r'^@add_user "([a-zA-Z_]+)" "([a-zA-Z_]+)"$')
-    ADD_PATTERN = re.compile(r'^@add_user "([a-zA-Z_]+)"$')
-    ROOT_PATH_PATTERN = re.compile(r'^@change_root_path '
-                                   '"([a-zA-Z0-9/\\_.]+)"$')
-    SEND_FILE_PATTERN = re.compile(r'^@send_file "(.*)"$')
+    R_USER        = re.compile(r'^user ([a-zA-Z_.]+)$')
+    R_USERNAME    = re.compile(r'^username ([a-zA-Z_.]+)$')
+    R_ROOM        = re.compile(r'^room ([a-zA-Z_.]+)$')
+    R_CREATE_ROOM = re.compile(r'^mkroom ([a-zA-Z_.]+)$')
+    R_REMOVE_ROOM = re.compile(r'^rmroom ([a-zA-Z_]+)$')
+    R_ADD_USER    = re.compile(r'^add_user ([a-zA-Z_]+) ([a-zA-Z_]+)$')
+    R_ROOT_PATH   = re.compile(r'^chpath ([a-zA-Z0-9/\\_.]+)$')
+    R_VISIBILITY  = re.compile(r'^chvis$')
+    R_SEND_FILE   = re.compile(r'^send_file (.*)$')
+    R_EXIT        = re.compile(r'^exit$|^q$|^quit$')
+    R_HELP        = re.compile(r'^help$')
+    R_USERS       = re.compile(r'^users$')
+    R_ROOMS       = re.compile(r'^rooms$')
 
     def __init__(self, client):
         operation_done = True
@@ -63,54 +57,51 @@ class BaseChat:
         self.db_helper = ChatDBHelper()
         self.db_helper.specify_username(client)
 
-        self.client = client
-        self.commands = self.create_command_descrypt()
+        self.client        = client
         self.stop_printing = True
 
         self.inner_threads = []
-        self.init_command_handlers()
+        self.create_cmd_handlers()
 
         self.self_chat = False
 
-    def init_command_handlers():
+        self.user_id   = ''
+        self.room_name = ''
+
+    @abstractmethod
+    def create_cmd_handlers(self):
+        pass
+
+    @abstractmethod
+    def help(self, message=None):
         pass
 
     def back2main(self):
         self.stop_printing = True
-        printc('\n<lpurple>[*]</lpurple> Switched to the <blue>command mode'
+        cprint('\n<lpurple>[*]</lpurple> Switched to the <blue>command mode'
                '</blue>\n' + INDENT + '\n')
         raise BreakLoopException
 
-    @parse_function
     def parse_sending_file(self, parse, username='', room=''):
         file_location = parse.group(1)
         self.send_file(file_location, username, room)
 
-    @print_information
-    def print_help(self, message=None):
-        printc(('Type commands with <lpurple>@</lpurple> on the left '
-                'side of a command.'
-               '\nList of commands:\n'))
-        for command, descr in self.commands.items():
-            printc('<lyellow>+</lyellow> <lpurple>%s</lpurple> : %s' %
-                   (command, descr))
-
     def print_mode_help(self, mode):
-        printc(('\n<lpurple>[*]</lpurple> Switched to the <blue>%s mode</blue>\n'
+        cprint(('\n<lpurple>[*]</lpurple> Switched to the <blue>%s mode</blue>\n'
                 'Type "enter" to start typing message\n'
                 'You can type <lpurple>@help</lpurple> for the list of available '
                 'commands\n' + INDENT + '\n') % mode)
 
     def specify_username(self):
-        printc('\n<lpurple>[*]</lpurple> Please, specify your '
-               '<lblue>username</lblue>(a-zA-Z_.):> ', end='')
+        cprint('\n<magenta,bold>[*]</> Please, specify your '
+               '<blue>username</> (a-zA-Z_.):> ', end='')
         username = input()
         self.client.specify_username(username)
 
     def specify_root_path(self):
         while True:
-            printc('<lpurple>[*]</lpurple> Specify your '
-                   '<lyellow>base path</lyellow> for storing files:> ', end='')
+            cprint('<magenta,bold>[*]</> Specify your '
+                   '<yellow,bold>base path</> for storing files:> ', end='')
             root_path = input()
             if self.client.specify_root_path(root_path):
                 break
@@ -132,8 +123,6 @@ class BaseChat:
 
         room_id = self.db_helper.get_room_id(room_name)
         users = self._get_users(room_name, room_id)
-        # if text.replace(' ', '') != '':
-        #     self.db_helper.save_message(self.client.user_id, text, room_name)
         for user in users:
             if remove_room == 'Yes' and user == self.client.user_id:
                 continue
@@ -154,7 +143,7 @@ class BaseChat:
                                                user_id=self.client.user_id,
                                                room_name=room)
         if message is None:
-            printc('<lred>[-]</lred> Maybe that file doesn\'t exist')
+            cprint('<lred>[-]</lred> Maybe that file doesn\'t exist')
             return
 
         if room != '':
@@ -240,7 +229,7 @@ class BaseChat:
 
     def change_username(self, username):
         self.db_helper.change_username(username)
-        printc('\n<lpurple>[+]</lpurple> Username changed, <lblue>%s'
+        cprint('\n<lpurple>[+]</lpurple> Username changed, <lblue>%s'
                '</lblue>!\n' % username)
 
     def print_entered_users(self):
@@ -250,11 +239,11 @@ class BaseChat:
             if last_users != cur_users:
                 try:
                     for new_user in cur_users.difference(last_users):
-                        printc('\n<lpurple>[*]</lpurple> User <lblue>%s'
+                        cprint('\n<lpurple>[*]</lpurple> User <lblue>%s'
                                '</lblue> has joined.' %
                                self.db_helper.get_username(new_user))
                     for rem_user in last_users.difference(cur_users):
-                        printc('\n<lpurple>[*]</lpurple> User <lblue>%s'
+                        cprint('\n<lpurple>[*]</lpurple> User <lblue>%s'
                                '</lblue> has leaved.' %
                                self.db_helper.get_username(rem_user))
                     last_users = cur_users
@@ -272,12 +261,12 @@ class BaseChat:
         for message in list(self.db_helper.get_history(dst, 10, room))[::-1]:
             if message is None or message[1] == -1:
                 continue
-            printc('<yellow>{0}</yellow>: <lblue>{1}</lblue><red>:></red> {2}'
+            cprint('<yellow>{0}</yellow>: <lblue>{1}</lblue><red>:></red> {2}'
                    .format(message[3], self.db_helper.get_username(message[2]),
                            message[0]))
 
     def user_input(self):
-        printc('<lblue>%s</lblue><red>:></red> ' %
+        cprint('<lblue>%s</lblue><red>:></red> ' %
                self.client.username, end='')
         return input()
 
@@ -303,7 +292,7 @@ class BaseChat:
                                                       room)
                 for message in messages:
                     if self.self_chat or message[2] != self.client.user_id:
-                        printc('<yellow>{0}</yellow>: '
+                        cprint('<yellow>{0}</yellow>: '
                                '<lblue>{1}</lblue><red>:></red> {2}'
                                .format(message[3],
                                        self.db_helper.get_username(message[2]),
@@ -315,12 +304,12 @@ class BaseChat:
         self.send_room_message(room_name, "Room was deleted",
                                remove_room='Yes')
         self.db_helper.remove_room(room_name)
-        printc('\n<lgreen>[+]</lgreen> Room <lred>{0}</lred> was '
+        cprint('\n<lgreen>[+]</lgreen> Room <lred>{0}</lred> was '
                'deleted\n'.format(room_name))
 
     def add_user2room(self, username, room_name):
         if not self.db_helper.user_exists(username):
-            printc('<lred>[-]</lred> No such user in the chat\n')
+            cprint('<lred>[-]</lred> No such user in the chat\n')
             return False
         self.db_helper.add_user2room(username=username,
                                      room_name=room_name)
@@ -328,7 +317,7 @@ class BaseChat:
         # empty message
         self.send_room_message(room_name, EMPTY,
                                room_user=username)
-        printc('\n<lgreen>[+]</lgreen> You have invited <lblue>{0}</lblue>'
+        cprint('\n<lgreen>[+]</lgreen> You have invited <lblue>{0}</lblue>'
                ' to the <lred>{1}</lred> room\n'
                .format(username, room_name))
         return True
@@ -345,5 +334,5 @@ class BaseChat:
         self.stop_printing_users = True
         for thread in self.inner_threads:
             thread.join()
-        printc('\n<yellow>Bye!</yellow>')
+        cprint('\n<yellow,bold>Bye!</>')
         sys.exit()
