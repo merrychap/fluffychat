@@ -40,9 +40,9 @@ USERNAME_CHANGED = '\n<green,bold>[+]</> Username changed, <blue>{}</>!\n'
 USER_JOINED = '\n<magenta,bold>[*]</> User <blue>{}</> has joined.'
 USER_LEAVED = '\n<magenta,bold>[*]</lpurple> User <blue>{}</> has leaved.'
 
-LAST_MESSAGE = '<yellow>{0}</>: <blue,bold>{1}</><red>:></> {2}'
-USER_INPUT   = '<blue>{}</><red>:></>'
-RECV_MESSAGE = '<yellow>{0}</>: <blue,bold>{1}</><red>:></> {2}'
+LAST_MESSAGE = '<yellow>{0}</>: <blue,bold>{1}</><red> :></> {2}'
+USER_PROMPT   = '<white,bold>Private:<blue>{}</><red> :></>'
+RECV_MESSAGE = '<yellow>{0}</>: <blue,bold>{1}</><red> :></> {2}'
 
 ROOM_REMOVED = '\n<green,bold>[+]</> Room <red>{0}</> was removed\n'
 

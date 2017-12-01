@@ -256,7 +256,7 @@ class BaseChat:
                            message[0]))
 
     def user_input(self):
-        cprint(USER_INPUT
+        cprint(USER_PROMPT
                .format(self.client.username, end=''))
         return input(' ')
 
