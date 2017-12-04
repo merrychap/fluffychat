@@ -1,4 +1,4 @@
-# Decentralized chat
+# fluffychat (project is frozen)
 
 ## General description
 You can communicate with people by writing messages and sending different files. This chat provides rooms and private messages between users. Chat is protected by RSA encryption.
